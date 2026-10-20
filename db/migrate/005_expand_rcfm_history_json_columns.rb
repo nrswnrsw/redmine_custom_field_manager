@@ -4,6 +4,10 @@ class ExpandRcfmHistoryJsonColumns < ActiveRecord::Migration[7.2]
   LONG_TEXT_LIMIT = 4.gigabytes - 1
 
   def up
+    # PostgreSQL and SQLite already use a large native TEXT type. Passing the
+    # MySQL LONGTEXT byte limit to PostgreSQL is invalid on recent Rails.
+    return unless connection.adapter_name.match?(/mysql/i)
+
     change_column :rcfm_histories, :changes_json, :text, :null => false, :limit => LONG_TEXT_LIMIT
     change_column :rcfm_histories, :snapshot_json, :text, :null => false, :limit => LONG_TEXT_LIMIT
   end
