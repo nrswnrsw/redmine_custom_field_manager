@@ -32,7 +32,6 @@
 
 .rcfm-selection-summary,
 .rcfm-selection-controls,
-.rcfm-state-actions,
 .rcfm-commit-controls,
 .rcfm-history-actions,
 .rcfm-final-actions {
@@ -95,9 +94,25 @@
 }
 
 .rcfm-destructive-actions {
-  border-inline-start: 1px solid var(--oc-gray-3, #ddd);
-  margin-inline-start: auto;
-  padding-inline-start: 0.75em;
+  border-top: 1px solid var(--oc-gray-3, #ddd);
+  grid-column: 1 / -1;
+  margin-top: 0.15em;
+  padding-top: 0.65em;
+}
+
+.rcfm-destructive-actions button {
+  width: 100%;
+}
+
+.rcfm-state-actions {
+  display: grid;
+  gap: 0.55em;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.rcfm-state-actions > button {
+  min-width: 0;
+  width: 100%;
 }
 
 .rcfm-move-controls {
@@ -145,8 +160,21 @@
   vertical-align: text-bottom;
 }
 
-.rcfm-redo .icon-svg {
-  transform: scaleX(-1);
+.rcfm-undo::before,
+.rcfm-redo::before {
+  display: inline-block;
+  font-size: 1.25em;
+  line-height: 0;
+  margin-inline-end: 0.3em;
+  vertical-align: -0.05em;
+}
+
+.rcfm-undo::before {
+  content: "↶";
+}
+
+.rcfm-redo::before {
+  content: "↷";
 }
 
 .rcfm-button-quiet {
@@ -389,20 +417,9 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .rcfm-state-actions {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
   .rcfm-destructive-actions {
-    border-inline-start: 0;
-    border-top: 1px solid var(--oc-gray-3, #ddd);
     margin: 0.25em 0 0;
     padding: 0.65em 0 0;
-  }
-
-  .rcfm-destructive-actions button {
-    width: 100%;
   }
 
   .rcfm-target-field {

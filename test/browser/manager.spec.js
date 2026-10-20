@@ -59,7 +59,7 @@ test.describe.serial('custom field manager browser behavior', function() {
     const resetBox = await commitBar.locator('.rcfm-reset').boundingBox();
     expect(selectionBox.y).toBeLessThan(stateBox.y);
     expect(stateBox.x).toBeLessThan(moveBox.x);
-    expect(deactivateBox.x).toBeLessThan(deleteBox.x);
+    expect(deactivateBox.y).toBeLessThan(deleteBox.y);
     expect(resetBox.x).toBeLessThan(saveBox.x);
 
     await page.locator('.rcfm-enumerations tbody tr').nth(0).locator('.rcfm-active').uncheck();
@@ -72,6 +72,24 @@ test.describe.serial('custom field manager browser behavior', function() {
     });
     expect(saveBackground).not.toBe(resetBackground);
     await commitBar.locator('.rcfm-reset').click();
+
+    await page.setViewportSize({width: 1044, height: 834});
+    const mediumStateBox = await statePanel.boundingBox();
+    const mediumDeleteBox = await statePanel.locator('.rcfm-delete-selected').boundingBox();
+    expect(mediumDeleteBox.x).toBeGreaterThanOrEqual(mediumStateBox.x);
+    expect(mediumDeleteBox.x + mediumDeleteBox.width).toBeLessThanOrEqual(
+      mediumStateBox.x + mediumStateBox.width
+    );
+    await expect(commitBar.locator('.rcfm-undo')).not.toHaveClass(/icon/);
+    await expect(commitBar.locator('.rcfm-redo')).not.toHaveClass(/icon/);
+    const undoIcon = await commitBar.locator('.rcfm-undo').evaluate(function(element) {
+      return window.getComputedStyle(element, '::before').content;
+    });
+    const redoIcon = await commitBar.locator('.rcfm-redo').evaluate(function(element) {
+      return window.getComputedStyle(element, '::before').content;
+    });
+    expect(undoIcon).toBe('"↶"');
+    expect(redoIcon).toBe('"↷"');
 
     await page.setViewportSize({width: 720, height: 900});
     const narrowStateBox = await statePanel.boundingBox();
