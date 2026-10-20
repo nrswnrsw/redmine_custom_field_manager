@@ -65,7 +65,12 @@
       var id = String(row.data('rcfm-client-id'));
       manager.selected[id] = this.checked;
       row.toggleClass('rcfm-selected', this.checked);
+      manager.hideTargetCandidates();
       manager.refreshSelection();
+    });
+
+    this.form.on('input', '.rcfm-target', function() {
+      manager.hideTargetCandidates();
     });
 
     this.form.on('change', '.rcfm-active', function() {
@@ -130,6 +135,10 @@
 
     this.form.on('click', '.rcfm-move-selected', function() {
       manager.moveSelected();
+    });
+
+    this.form.on('click', '.rcfm-target-candidate', function() {
+      manager.moveSelected($(this).attr('data-rcfm-target-client-id'));
     });
 
     this.form.on('click', '.rcfm-add-lines', function() {
@@ -274,6 +283,7 @@
           manager.form.find('.rcfm-conflict').prop('hidden', true);
         }
         draggedRows = [];
+        manager.refreshTargetList();
         manager.refresh();
       }
     });
@@ -335,6 +345,18 @@
     );
   };
 
+  EnumerationManager.prototype.refreshTargetList = function() {
+    var manager = this;
+    var targetList = this.form.find('.rcfm-target-list').empty();
+    this.items.filter(function(item) { return !item.deleted; }).forEach(function(item, index) {
+      var targetId = item.id || item.client_id;
+      var label = manager.form.data('rcfm-target-candidate')
+        .replace('__POSITION__', index + 1)
+        .replace('__NAME__', item.name);
+      targetList.append($('<option>').val(label + ' (#' + targetId + ')'));
+    });
+  };
+
   EnumerationManager.prototype.setSelectedActive = function(active) {
     var ids = this.selectedIds();
     if (!ids.length) {
@@ -375,17 +397,55 @@
     }.bind(this), true);
   };
 
-  EnumerationManager.prototype.moveSelected = function() {
+  EnumerationManager.prototype.hideTargetCandidates = function() {
+    this.form.find('.rcfm-target-candidates').prop('hidden', true)
+      .find('.rcfm-target-candidate-list').empty();
+  };
+
+  EnumerationManager.prototype.showTargetCandidates = function(candidates, selectedIds) {
+    var manager = this;
+    var panel = this.form.find('.rcfm-target-candidates');
+    var list = panel.find('.rcfm-target-candidate-list').empty();
+    var activeItems = this.items.filter(function(item) { return !item.deleted; });
+
+    panel.find('.rcfm-target-candidates-message').text(this.form.data('rcfm-target-ambiguous'));
+    candidates.forEach(function(item) {
+      var clientId = String(item.client_id);
+      var label = manager.form.data('rcfm-target-candidate')
+        .replace('__POSITION__', activeItems.indexOf(item) + 1)
+        .replace('__NAME__', item.name);
+      var button = $('<button type="button" class="rcfm-target-candidate">')
+        .attr('data-rcfm-target-client-id', clientId)
+        .prop('disabled', selectedIds.indexOf(clientId) >= 0)
+        .append($('<span>').text(label));
+      if (item.id) {
+        button.append($('<span class="rcfm-record-id">').text('#' + item.id));
+      }
+      if (button.prop('disabled')) {
+        button.attr('title', manager.form.data('rcfm-target-error'));
+      }
+      list.append(button);
+    });
+    this.form.find('.rcfm-error').prop('hidden', true).text('');
+    panel.prop('hidden', false);
+  };
+
+  EnumerationManager.prototype.moveSelected = function(targetClientId) {
     var ids = this.selectedIds();
     var value = this.form.find('.rcfm-target').val().trim();
     var match = value.match(/\(#([^\)]+)\)\s*$/);
+    this.hideTargetCandidates();
     if (!ids.length) {
       this.showError(this.form.data('rcfm-selection-error'));
       return;
     }
 
     var candidates;
-    if (match) {
+    if (targetClientId) {
+      candidates = this.items.filter(function(item) {
+        return String(item.client_id) === targetClientId && !item.deleted;
+      });
+    } else if (match) {
       candidates = this.items.filter(function(item) {
         return (String(item.id) === match[1] || String(item.client_id) === match[1]) && !item.deleted;
       });
@@ -399,7 +459,7 @@
         return;
       }
       if (candidates.length > 1) {
-        this.showError(this.form.data('rcfm-target-ambiguous'));
+        this.showTargetCandidates(candidates, ids);
         return;
       }
     }
@@ -430,6 +490,7 @@
     } else {
       targetRow.before(movingRows);
     }
+    this.refreshTargetList();
   };
 
   EnumerationManager.prototype.addLines = function() {
@@ -464,6 +525,7 @@
   EnumerationManager.prototype.render = function() {
     var manager = this;
     var fragment = document.createDocumentFragment();
+    this.hideTargetCandidates();
     this.body.empty();
 
     this.items.forEach(function(item) {
@@ -529,11 +591,7 @@
 
     this.body[0].appendChild(fragment);
     this.body.sortable('refresh');
-    var targetList = this.form.find('#rcfm-enumeration-targets').empty();
-    this.items.filter(function(item) { return !item.deleted; }).forEach(function(item) {
-      var targetId = item.id || item.client_id;
-      targetList.append($('<option>').val(item.name + ' (#' + targetId + ')'));
-    });
+    this.refreshTargetList();
   };
 
   EnumerationManager.prototype.changeCounts = function() {

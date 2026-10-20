@@ -35,7 +35,8 @@ ja:
   rcfm_move_target: 移動先
   rcfm_move_target_placeholder: 移動先の名前を入力
   rcfm_target_not_found: 入力した名前の移動先が見つかりません。候補から選択してください。
-  rcfm_target_ambiguous: 同じ名前の移動先が複数あります。候補に表示されるID付きの名前を選択してください。
+  rcfm_target_ambiguous: 同じ名前の移動先が複数あります。現在の一覧位置を見て移動先を選んでください。
+  rcfm_target_candidate: "%{name} — 現在の%{position}番目"
   rcfm_no_changes: 未保存の変更はありません
   rcfm_restore_item: 復元
   rcfm_save_error: 変更を保存できませんでした。

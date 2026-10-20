@@ -16,6 +16,8 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select 'button.rcfm-redo', :text => 'Redo'
     assert_select '.rcfm-selection-count', :text => '0 selected'
     assert_select 'input.rcfm-target[placeholder="Enter a destination name"]'
+    assert_select 'form.rcfm-manager[data-rcfm-target-candidate*="current position"]'
+    assert_select '.rcfm-target-candidates[hidden]'
     assert_select '.rcfm-conflict .rcfm-conflict-merge'
     assert_select 'script[src*="plugin_assets/redmine_custom_field_manager"]'
   end
@@ -37,6 +39,8 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select 'button.rcfm-redo', :text => 'Redo'
     assert_select '.rcfm-selection-count', :text => '0 selected'
     assert_select 'input.rcfm-target[placeholder="Enter a destination name"]'
+    assert_select 'form.rcfm-enumeration-manager[data-rcfm-target-candidate*="current position"]'
+    assert_select '.rcfm-target-candidates[hidden]'
     assert_select '.rcfm-conflict .rcfm-conflict-merge'
     assert_select 'a.rcfm-csv-export'
     assert_select 'a.rcfm-csv-template[href*="template=1"]'

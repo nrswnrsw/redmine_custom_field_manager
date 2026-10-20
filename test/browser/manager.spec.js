@@ -94,6 +94,41 @@ test.describe.serial('custom field manager browser behavior', function() {
     await expect(page.locator('.rcfm-csv-apply-button')).toBeVisible();
   });
 
+  test('chooses a duplicate-name destination by its current position', async function({page}) {
+    await page.goto('/custom_fields/' + fieldId + '/enumerations', {waitUntil: 'networkidle'});
+    const rows = page.locator('.rcfm-enumerations tbody tr');
+    await expect(rows).toHaveCount(5);
+
+    for (let index = 0; index < 2; index += 1) {
+      await rows.nth(index).locator('.rcfm-edit').click();
+      await rows.nth(index).locator('.rcfm-name-input').fill('Duplicate destination');
+      await rows.nth(index).locator('.rcfm-name-input').press('Enter');
+    }
+
+    const sourceId = await rows.nth(4).getAttribute('data-rcfm-client-id');
+    await rows.nth(4).locator('.rcfm-select').check();
+    await expect(page.locator('.rcfm-target-list option').nth(0)).toHaveAttribute(
+      'value',
+      /Duplicate destination — current position 1 \(#\d+\)/
+    );
+    await page.locator('.rcfm-target').fill('Duplicate destination');
+    await page.locator('.rcfm-move-selected').click();
+
+    const candidates = page.locator('.rcfm-target-candidates');
+    await expect(candidates).toBeVisible();
+    await expect(candidates.locator('.rcfm-target-candidate')).toHaveCount(2);
+    await expect(candidates.locator('.rcfm-target-candidate').nth(0)).toContainText(
+      'Duplicate destination — current position 1'
+    );
+
+    await candidates.locator('.rcfm-target-candidate').nth(0).click();
+    await expect(candidates).toBeHidden();
+    await expect(rows.nth(0)).toHaveAttribute('data-rcfm-client-id', sourceId);
+
+    await page.locator('.rcfm-reset').click();
+    await expect(page.locator('.rcfm-save')).toBeDisabled();
+  });
+
   test('shows an explicit conflict and applies a safe merge only after confirmation', async function({page, context}) {
     const otherPage = await context.newPage();
     await page.goto('/custom_fields/' + fieldId + '/enumerations', {waitUntil: 'networkidle'});

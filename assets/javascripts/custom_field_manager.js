@@ -48,6 +48,7 @@
         this.body.append(rows[id]);
       }
     }, this);
+    this.refreshTargetList();
     this.refresh();
   };
 
@@ -60,6 +61,7 @@
     this.redoStack = [];
     this.conflict = null;
     this.form.find('.rcfm-conflict').prop('hidden', true);
+    this.refreshTargetList();
     this.refresh();
   };
 
@@ -100,7 +102,12 @@
 
     this.form.on('change', '.rcfm-select', function() {
       $(this).closest('tr').toggleClass('rcfm-selected', this.checked);
+      manager.hideTargetCandidates();
       manager.refreshSelection();
+    });
+
+    this.form.on('input', '.rcfm-target', function() {
+      manager.hideTargetCandidates();
     });
 
     this.form.on('click', '.rcfm-select-all', function() {
@@ -113,6 +120,10 @@
 
     this.form.on('click', '.rcfm-move-selected', function() {
       manager.moveSelected();
+    });
+
+    this.form.on('click', '.rcfm-target-candidate', function() {
+      manager.moveSelected($(this).attr('data-rcfm-target-id'));
     });
 
     this.form.on('click', '.rcfm-undo', function() {
@@ -180,12 +191,46 @@
     });
   };
 
-  CustomFieldManager.prototype.moveSelected = function() {
+  CustomFieldManager.prototype.hideTargetCandidates = function() {
+    this.form.find('.rcfm-target-candidates').prop('hidden', true)
+      .find('.rcfm-target-candidate-list').empty();
+  };
+
+  CustomFieldManager.prototype.showTargetCandidates = function(targets, selected) {
+    var manager = this;
+    var panel = this.form.find('.rcfm-target-candidates');
+    var list = panel.find('.rcfm-target-candidate-list').empty();
+    var rows = this.body.children('tr[data-rcfm-id]');
+
+    panel.find('.rcfm-target-candidates-message').text(this.form.data('rcfm-target-ambiguous'));
+    targets.each(function() {
+      var row = $(this);
+      var id = String(row.data('rcfm-id'));
+      var name = String(row.attr('data-rcfm-name'));
+      var label = manager.form.data('rcfm-target-candidate')
+        .replace('__POSITION__', rows.index(row) + 1)
+        .replace('__NAME__', name);
+      var button = $('<button type="button" class="rcfm-target-candidate">')
+        .attr('data-rcfm-target-id', id)
+        .prop('disabled', selected.filter(row).length > 0)
+        .append($('<span>').text(label))
+        .append($('<span class="rcfm-record-id">').text('#' + id));
+      if (button.prop('disabled')) {
+        button.attr('title', manager.form.data('rcfm-target-error'));
+      }
+      list.append(button);
+    });
+    this.form.find('.rcfm-error').prop('hidden', true).text('');
+    panel.prop('hidden', false);
+  };
+
+  CustomFieldManager.prototype.moveSelected = function(targetId) {
     var selected = this.body.find('.rcfm-select:checked').closest('tr');
     var value = this.form.find('.rcfm-target').val().trim();
     var match = value.match(/\(#(\d+)\)\s*$/);
     var error = this.form.find('.rcfm-error');
 
+    this.hideTargetCandidates();
     error.prop('hidden', true).text('');
     if (!selected.length) {
       error.text(this.form.data('rcfm-selection-error')).prop('hidden', false);
@@ -193,7 +238,9 @@
     }
 
     var target;
-    if (match) {
+    if (targetId) {
+      target = this.body.find('tr[data-rcfm-id="' + targetId + '"]');
+    } else if (match) {
       target = this.body.find('tr[data-rcfm-id="' + match[1] + '"]');
     } else {
       var lowered = value.toLocaleLowerCase();
@@ -205,7 +252,7 @@
         return;
       }
       if (target.length > 1) {
-        error.text(this.form.data('rcfm-target-ambiguous')).prop('hidden', false);
+        this.showTargetCandidates(target, selected);
         return;
       }
     }
@@ -234,6 +281,19 @@
     this.form.find('.rcfm-selection-count').text(
       this.form.data('rcfm-selected-count').replace('__COUNT__', count)
     );
+  };
+
+  CustomFieldManager.prototype.refreshTargetList = function() {
+    var manager = this;
+    var targetList = this.form.find('.rcfm-target-list').empty();
+    this.body.children('tr[data-rcfm-id]').each(function(index) {
+      var row = $(this);
+      var id = String(row.data('rcfm-id'));
+      var label = manager.form.data('rcfm-target-candidate')
+        .replace('__POSITION__', index + 1)
+        .replace('__NAME__', String(row.attr('data-rcfm-name')));
+      targetList.append($('<option>').val(label + ' (#' + id + ')'));
+    });
   };
 
   CustomFieldManager.prototype.refresh = function() {

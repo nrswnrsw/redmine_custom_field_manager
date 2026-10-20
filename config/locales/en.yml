@@ -35,7 +35,8 @@ en:
   rcfm_move_target: Destination
   rcfm_move_target_placeholder: Enter a destination name
   rcfm_target_not_found: No destination has that name. Select one of the suggestions.
-  rcfm_target_ambiguous: More than one destination has that name. Select the ID-qualified suggestion.
+  rcfm_target_ambiguous: More than one destination has that name. Choose the destination by its current list position.
+  rcfm_target_candidate: "%{name} — current position %{position}"
   rcfm_no_changes: No unsaved changes
   rcfm_restore_item: Restore
   rcfm_save_error: The changes could not be saved.

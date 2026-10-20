@@ -54,6 +54,7 @@
         :rcfm_target_error => l(:rcfm_target_error),
         :rcfm_target_not_found => l(:rcfm_target_not_found),
         :rcfm_target_ambiguous => l(:rcfm_target_ambiguous),
+        :rcfm_target_candidate => l(:rcfm_target_candidate, :position => '__POSITION__', :name => '__NAME__'),
         :rcfm_selected_count => l(:rcfm_selected_count, :count => '__COUNT__'),
         :rcfm_save_error => l(:rcfm_save_error),
         :rcfm_name_blank => l(:rcfm_error_name_blank),
@@ -136,14 +137,18 @@
                autocomplete="off"
                placeholder="<%= l(:rcfm_move_target_placeholder) %>">
       </label>
-      <datalist id="rcfm-enumeration-targets">
-        <% values.each do |value| %>
-          <option value="<%= h "#{value.name} (##{value.id})" %>"></option>
+      <datalist id="rcfm-enumeration-targets" class="rcfm-target-list">
+        <% values.each_with_index do |value, index| %>
+          <option value="<%= h "#{l(:rcfm_target_candidate, :position => index + 1, :name => value.name)} (##{value.id})" %>"></option>
         <% end %>
       </datalist>
       <label><input type="radio" name="rcfm_enumeration_move_side" value="before" checked> <%= l(:rcfm_before) %></label>
       <label><input type="radio" name="rcfm_enumeration_move_side" value="after"> <%= l(:rcfm_after) %></label>
       <%= button_tag l(:button_move), :type => 'button', :class => 'rcfm-move-selected' %>
+      <div class="rcfm-target-candidates" hidden aria-live="polite">
+        <p class="rcfm-target-candidates-message"></p>
+        <div class="rcfm-target-candidate-list"></div>
+      </div>
     </div>
 
     <details class="rcfm-bulk-add">

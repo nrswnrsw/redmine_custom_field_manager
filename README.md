@@ -22,7 +22,7 @@ The screenshots below use Redmine 7.0 with the English locale. Labels may differ
 
 ### Staged custom-field ordering
 
-Select several fields and move them before or after a named destination, or drag individual rows. A unique destination can be entered by name alone; the displayed ID is only needed to distinguish duplicate names. The selection counter, status line, and **Save** button make it clear what is selected and that the new order has not yet reached the database.
+Select several fields and move them before or after a named destination, or drag individual rows. A unique destination can be entered by name alone. If names are duplicated, the page presents clickable choices labeled with their current list positions; users never need to know or enter an internal ID. IDs remain visible only as supplementary information. The selection counter, status line, and **Save** button make it clear what is selected and that the new order has not yet reached the database.
 
 ![Staged custom-field ordering](docs/images/custom-field-ordering.png)
 
@@ -75,7 +75,7 @@ For an update, replace the plugin files while Redmine is stopped, run the same m
 
 1. Open **Administration → Custom fields** and select a field-type tab.
 2. Drag a row, or select multiple rows and enter a destination field name.
-3. Choose **Before** or **After**, then move the selection.
+3. Choose **Before** or **After**, then move the selection. If several destinations have the same name, click the choice identified by its current list position.
 4. Review the pending state. Use **Undo**, **Redo**, or **Cancel** if needed.
 5. Press **Save** to commit the complete order for that field type.
 

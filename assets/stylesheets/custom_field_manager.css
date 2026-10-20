@@ -22,6 +22,25 @@
   min-width: 24em;
 }
 
+.rcfm-target-candidates {
+  flex: 1 0 100%;
+  margin-top: 0.25em;
+}
+
+.rcfm-target-candidates-message {
+  margin: 0 0 0.4em;
+}
+
+.rcfm-target-candidate-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+}
+
+.rcfm-target-candidate .rcfm-record-id {
+  font-weight: normal;
+}
+
 .rcfm-status {
   color: var(--fg-color-muted, #666);
 }
@@ -115,7 +134,8 @@
 }
 
 .rcfm-conflict[hidden],
-.rcfm-error[hidden] {
+.rcfm-error[hidden],
+.rcfm-target-candidates[hidden] {
   display: none;
 }
 
