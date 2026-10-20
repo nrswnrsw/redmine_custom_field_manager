@@ -53,7 +53,7 @@ Redmine ルートから実行します。
 bundle exec rake redmine:plugins:test NAME=redmine_custom_field_manager RAILS_ENV=test
 ```
 
-GitHub Actions は Redmine 7.0.2、6.1.5、6.0.11 を公式配布物のSHA-256検証後に試験します。10,000件のブラウザ性能試験については [`docs/performance.md`](docs/performance.md) を参照してください。
+GitHub Actions は Redmine 7.0.2、6.1.5、6.0.11 を公式配布物のSHA-256検証後、SQLite、MySQL 8.4、MariaDB 11.4、PostgreSQL 17で試験します。行ロックを使う実同時実行試験とPlaywrightによるブラウザ操作試験も含みます。10,000件のブラウザ性能試験については [`docs/performance.md`](docs/performance.md) を参照してください。
 
 ## ライセンス
 

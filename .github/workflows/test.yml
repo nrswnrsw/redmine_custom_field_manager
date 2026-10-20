@@ -8,9 +8,9 @@ permissions:
   contents: read
 
 jobs:
-  redmine:
-    name: Redmine ${{ matrix.redmine }} / Ruby ${{ matrix.ruby }}
-    runs-on: ubuntu-latest
+  sqlite:
+    name: Redmine ${{ matrix.redmine }} / Ruby ${{ matrix.ruby }} / SQLite
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - name: Check out plugin
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: plugin
 
@@ -63,6 +63,207 @@ jobs:
         run: bundle exec rake db:migrate redmine:plugins:migrate
 
       - name: Run plugin tests
+        working-directory: redmine
+        env:
+          RAILS_ENV: test
+        run: bundle exec rake redmine:plugins:test NAME=redmine_custom_field_manager
+
+      - name: Verify the replaced standard view
+        working-directory: redmine
+        env:
+          RAILS_ENV: test
+        run: bundle exec rails test test/functional/custom_fields_controller_test.rb -n test_index
+
+      - name: Run static checks
+        if: matrix.redmine == '7.0.2'
+        working-directory: redmine/plugins/redmine_custom_field_manager
+        run: |
+          find app lib test db/migrate init.rb -type f -name '*.rb' -print0 | xargs -0 bundle exec rubocop
+          node --check assets/javascripts/custom_field_manager.js
+          node --check assets/javascripts/enumeration_manager.js
+          node --check test/browser/manager.spec.js
+
+      - name: Install browser test dependencies
+        if: matrix.redmine == '7.0.2'
+        working-directory: redmine/plugins/redmine_custom_field_manager
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Prepare browser test data
+        if: matrix.redmine == '7.0.2'
+        working-directory: redmine
+        env:
+          RAILS_ENV: test
+        run: |
+          bundle exec rake db:fixtures:load
+          FIELD_ID="$(bundle exec rails runner plugins/redmine_custom_field_manager/test/browser/prepare.rb | tail -n 1)"
+          echo "RCFM_FIELD_ID=${FIELD_ID}" >> "$GITHUB_ENV"
+
+      - name: Run browser behavior tests
+        if: matrix.redmine == '7.0.2'
+        working-directory: redmine
+        env:
+          RAILS_ENV: test
+          RCFM_BASE_URL: http://127.0.0.1:3210
+        run: |
+          bundle exec rails server --binding 127.0.0.1 --port 3210 > /tmp/rcfm-rails.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:3210/login > /dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 60 ]; then
+              cat /tmp/rcfm-rails.log
+              exit 1
+            fi
+            sleep 1
+          done
+          npm --prefix plugins/redmine_custom_field_manager run test:browser
+
+  databases:
+    name: Redmine ${{ matrix.redmine }} / Ruby ${{ matrix.ruby }} / ${{ matrix.database_label }}
+    runs-on: ubuntu-24.04
+    services:
+      database:
+        image: ${{ matrix.database_image }}
+        env:
+          MYSQL_DATABASE: redmine_test
+          MYSQL_USER: redmine
+          MYSQL_PASSWORD: redmine
+          MYSQL_ROOT_PASSWORD: root
+          MARIADB_DATABASE: redmine_test
+          MARIADB_USER: redmine
+          MARIADB_PASSWORD: redmine
+          MARIADB_ROOT_PASSWORD: root
+          POSTGRES_DB: redmine_test
+          POSTGRES_USER: redmine
+          POSTGRES_PASSWORD: redmine
+        ports:
+          - ${{ matrix.database_port }}:${{ matrix.database_port }}
+        options: >-
+          --health-cmd="${{ matrix.health_command }}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - redmine: 7.0.2
+            ruby: '4.0'
+            sha256: d45e6d4c373cc3c8d33f1f4d4a2ffae1e1adb18703160707467493de7b4be591
+            database: mysql
+            database_label: MySQL 8.4
+            database_image: mysql:8.4
+            database_port: 3306
+            health_command: mysqladmin ping --host=127.0.0.1 --user=root --password=root
+          - redmine: 7.0.2
+            ruby: '4.0'
+            sha256: d45e6d4c373cc3c8d33f1f4d4a2ffae1e1adb18703160707467493de7b4be591
+            database: mariadb
+            database_label: MariaDB 11.4
+            database_image: mariadb:11.4
+            database_port: 3306
+            health_command: mariadb-admin ping --host=127.0.0.1 --user=root --password=root
+          - redmine: 7.0.2
+            ruby: '4.0'
+            sha256: d45e6d4c373cc3c8d33f1f4d4a2ffae1e1adb18703160707467493de7b4be591
+            database: postgresql
+            database_label: PostgreSQL 17
+            database_image: postgres:17
+            database_port: 5432
+            health_command: pg_isready --username=redmine --dbname=redmine_test
+          - redmine: 6.1.5
+            ruby: '3.3'
+            sha256: 4b653d8863c012fdb226aedf6f8a18bdfa08d04625d15e8aafbbc3c4f6b70144
+            database: mysql
+            database_label: MySQL 8.4
+            database_image: mysql:8.4
+            database_port: 3306
+            health_command: mysqladmin ping --host=127.0.0.1 --user=root --password=root
+          - redmine: 6.1.5
+            ruby: '3.3'
+            sha256: 4b653d8863c012fdb226aedf6f8a18bdfa08d04625d15e8aafbbc3c4f6b70144
+            database: mariadb
+            database_label: MariaDB 11.4
+            database_image: mariadb:11.4
+            database_port: 3306
+            health_command: mariadb-admin ping --host=127.0.0.1 --user=root --password=root
+          - redmine: 6.1.5
+            ruby: '3.3'
+            sha256: 4b653d8863c012fdb226aedf6f8a18bdfa08d04625d15e8aafbbc3c4f6b70144
+            database: postgresql
+            database_label: PostgreSQL 17
+            database_image: postgres:17
+            database_port: 5432
+            health_command: pg_isready --username=redmine --dbname=redmine_test
+          - redmine: 6.0.11
+            ruby: '3.3'
+            sha256: 7c5fc0d968c61e0deb4c90ceff6073e58dd19aedfcb840f02ce615da8af2cd9e
+            database: mysql
+            database_label: MySQL 8.4
+            database_image: mysql:8.4
+            database_port: 3306
+            health_command: mysqladmin ping --host=127.0.0.1 --user=root --password=root
+          - redmine: 6.0.11
+            ruby: '3.3'
+            sha256: 7c5fc0d968c61e0deb4c90ceff6073e58dd19aedfcb840f02ce615da8af2cd9e
+            database: mariadb
+            database_label: MariaDB 11.4
+            database_image: mariadb:11.4
+            database_port: 3306
+            health_command: mariadb-admin ping --host=127.0.0.1 --user=root --password=root
+          - redmine: 6.0.11
+            ruby: '3.3'
+            sha256: 7c5fc0d968c61e0deb4c90ceff6073e58dd19aedfcb840f02ce615da8af2cd9e
+            database: postgresql
+            database_label: PostgreSQL 17
+            database_image: postgres:17
+            database_port: 5432
+            health_command: pg_isready --username=redmine --dbname=redmine_test
+
+    steps:
+      - name: Check out plugin
+        uses: actions/checkout@v5
+        with:
+          path: plugin
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+
+      - name: Download verified Redmine release
+        env:
+          REDMINE_VERSION: ${{ matrix.redmine }}
+          REDMINE_SHA256: ${{ matrix.sha256 }}
+          DATABASE: ${{ matrix.database }}
+        run: |
+          curl --fail --location --retry 3 \
+            "https://www.redmine.org/releases/redmine-${REDMINE_VERSION}.tar.gz" \
+            --output redmine.tar.gz
+          echo "${REDMINE_SHA256}  redmine.tar.gz" | sha256sum --check
+          tar --extract --gzip --file redmine.tar.gz
+          mv "redmine-${REDMINE_VERSION}" redmine
+          mv plugin redmine/plugins/redmine_custom_field_manager
+          cp "redmine/plugins/redmine_custom_field_manager/.github/test-database-${DATABASE}.yml" \
+            redmine/config/database.yml
+
+      - name: Install dependencies
+        working-directory: redmine
+        run: |
+          bundle config set path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: Prepare database
+        working-directory: redmine
+        env:
+          RAILS_ENV: test
+        run: bundle exec rake db:migrate redmine:plugins:migrate
+
+      - name: Run plugin tests, including real row-lock concurrency
         working-directory: redmine
         env:
           RAILS_ENV: test

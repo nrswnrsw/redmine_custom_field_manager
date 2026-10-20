@@ -1,0 +1,10 @@
+test:
+  adapter: mysql2
+  database: redmine_test
+  host: 127.0.0.1
+  port: 3306
+  username: redmine
+  password: redmine
+  encoding: utf8mb4
+  variables:
+    transaction_isolation: "READ-COMMITTED"

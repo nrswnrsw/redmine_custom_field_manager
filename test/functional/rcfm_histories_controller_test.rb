@@ -33,6 +33,21 @@ class Rcfm::HistoriesControllerTest < Redmine::ControllerTest
     assert_select "a[href='#{rcfm_history_path(@history)}']"
   end
 
+  def test_index_paginates_history_metadata
+    template = @history.attributes.except('id', 'created_at')
+    30.times do |index|
+      RedmineCustomFieldManager::History.create!(template.merge(:created_at => (index + 1).minutes.ago))
+    end
+
+    get :index
+
+    assert_response :success
+    histories = @controller.instance_variable_get(:@histories)
+    pages = @controller.instance_variable_get(:@history_pages)
+    assert_operator histories.length, :<=, pages.per_page
+    assert_select '.pagination'
+  end
+
   def test_show_loads_reconstructed_details_on_demand
     get :show, :params => {:id => @history.id}
 

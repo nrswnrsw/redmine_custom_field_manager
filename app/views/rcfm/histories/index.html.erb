@@ -33,6 +33,7 @@
       <% end %>
     </tbody>
   </table>
+  <span class="pagination"><%= pagination_links_full @history_pages, @history_count %></span>
   <% if @histories.any? %>
     <p><%= submit_tag l(:button_delete), :data => {:confirm => l(:rcfm_confirm_history_delete)} %></p>
   <% else %>

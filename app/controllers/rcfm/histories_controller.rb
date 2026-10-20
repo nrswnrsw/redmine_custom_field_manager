@@ -9,9 +9,14 @@ module Rcfm
     before_action :find_history, :only => [:show, :restore_preview, :restore]
 
     def index
+      @history_count = RedmineCustomFieldManager::History.count
+      @history_pages = Paginator.new(@history_count, per_page_option, params[:page])
       @histories = RedmineCustomFieldManager::History
                    .select(:id, :scope_key, :target_type, :target_id, :operation, :user_id, :has_snapshot, :created_at)
+                   .includes(:user)
                    .order(:id => :desc)
+                   .limit(@history_pages.per_page)
+                   .offset(@history_pages.offset)
     end
 
     def show

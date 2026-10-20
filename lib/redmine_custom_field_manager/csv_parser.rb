@@ -78,7 +78,7 @@ module RedmineCustomFieldManager
         raise InvalidChangeError, "CSV row #{row_number} has inconsistent source metadata"
       end
 
-      name = decode_cell(row['name'], row['name_escaped']).strip
+      name = decode_cell(row['name'], row['name_escaped'])
       raise InvalidChangeError, "CSV row #{row_number} has a blank name" if name.blank?
       if name.length > 60
         raise InvalidChangeError, "CSV row #{row_number} name exceeds 60 characters"

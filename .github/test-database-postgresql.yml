@@ -1,0 +1,8 @@
+test:
+  adapter: postgresql
+  database: redmine_test
+  host: 127.0.0.1
+  port: 5432
+  username: redmine
+  password: redmine
+  encoding: unicode

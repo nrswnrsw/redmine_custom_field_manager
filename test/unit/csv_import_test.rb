@@ -20,16 +20,16 @@ class RedmineCustomFieldManagerCsvImportTest < ActiveSupport::TestCase
 
   def test_export_is_safe_for_spreadsheets_and_round_trips_exact_names
     @field.update!(:name => '=Dangerous field')
-    @first.update!(:name => "+Dangerous\nvalue")
+    @first.update!(:name => "  =Dangerous\nvalue  ")
 
     data = RedmineCustomFieldManager::CsvExporter.new(@field).generate
     table = CSV.parse(data.delete_prefix("\uFEFF"), :headers => true)
 
     assert_equal "'=Dangerous field", table.first['source_field_name']
-    assert_equal "'+Dangerous\nvalue", table[1]['name']
+    assert_equal "'  =Dangerous\nvalue  ", table[1]['name']
     parsed = RedmineCustomFieldManager::CsvParser.new(data).parse
     assert_equal '=Dangerous field', parsed.metadata.fetch('source_field_name')
-    assert_equal "+Dangerous\nvalue", parsed.rows.first.name
+    assert_equal "  =Dangerous\nvalue  ", parsed.rows.first.name
   end
 
   def test_export_contains_metadata_when_the_list_is_empty

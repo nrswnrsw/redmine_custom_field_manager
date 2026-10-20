@@ -81,7 +81,7 @@ module RedmineCustomFieldManager
         {
           'client_id' => attributes['client_id'].presence || id || "new-#{index}",
           'id' => id && Integer(id.to_s, 10),
-          'name' => attributes['name'].to_s.strip,
+          'name' => attributes['name'].to_s,
           'active' => ActiveModel::Type::Boolean.new.cast(attributes['active']),
           'deleted' => ActiveModel::Type::Boolean.new.cast(attributes['deleted'])
         }

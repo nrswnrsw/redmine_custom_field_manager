@@ -68,9 +68,8 @@ module RedmineCustomFieldManager
 
       ids = targets.map(&:id)
       scopes = targets.map(&:scope_key).uniq
-      snapshots = {}
-      History.where(:scope_key => scopes).where.not(:id => ids).order(:id).each do |history|
-        snapshots[history.id] = HistoryReconstructor.new(history).snapshot
+      snapshots = boundary_histories(scopes, ids).to_h do |history|
+        [history.id, HistoryReconstructor.new(history).snapshot]
       end
       snapshots.each do |id, snapshot|
         History.where(:id => id).update_all(
@@ -79,6 +78,25 @@ module RedmineCustomFieldManager
         )
       end
       History.where(:id => ids).delete_all
+    end
+
+    def boundary_histories(scopes, deleted_ids)
+      deleted = deleted_ids.to_set
+      boundary_ids = scopes.flat_map do |scope|
+        previous_deleted = false
+        History.where(:scope_key => scope).order(:id).pluck(:id).filter_map do |id|
+          if deleted.include?(id)
+            previous_deleted = true
+            next
+          end
+
+          if previous_deleted
+            previous_deleted = false
+            id
+          end
+        end
+      end
+      History.where(:id => boundary_ids, :has_snapshot => false).order(:id).to_a
     end
 
     def lock_scopes!(scopes)

@@ -26,7 +26,7 @@ class RedmineCustomFieldManagerModelTrackingTest < ActiveSupport::TestCase
     assert revision_for("custom_field_enumerations:#{second_field.id}").sequence.positive?
   end
 
-  def test_custom_value_save_bumps_the_enumeration_revision
+  def test_custom_value_save_uses_the_revision_as_a_mutex_without_bumping_it
     field = GroupCustomField.create!(:name => 'RCFM value tracking', :field_format => 'enumeration')
     value = field.enumerations.create!(:name => 'Tracked')
     revision = revision_for("custom_field_enumerations:#{field.id}")
@@ -36,7 +36,42 @@ class RedmineCustomFieldManagerModelTrackingTest < ActiveSupport::TestCase
     group.custom_field_values = {field.id.to_s => value.id.to_s}
     group.save!
 
-    assert_operator revision.reload.sequence, :>, previous_sequence
+    assert_equal previous_sequence, revision.reload.sequence
+  end
+
+  def test_unchanged_custom_value_save_does_not_lock_the_revision
+    field = GroupCustomField.create!(:name => 'RCFM unchanged value', :field_format => 'enumeration')
+    value = field.enumerations.create!(:name => 'Tracked')
+    group = Group.generate!
+    custom_value = CustomValue.create!(
+      :customized => group,
+      :custom_field => field,
+      :value => value.id.to_s
+    )
+    RedmineCustomFieldManager::Revision.expects(:lock_for!).never
+    custom_value.save!
+  end
+
+  def test_changing_a_custom_values_field_revalidates_against_the_destination_field
+    source_field = GroupCustomField.create!(:name => 'RCFM source value', :field_format => 'enumeration')
+    source_value = source_field.enumerations.create!(:name => 'Source')
+    destination_field = GroupCustomField.create!(
+      :name => 'RCFM destination value',
+      :field_format => 'enumeration'
+    )
+    destination_field.enumerations.create!(:name => 'Destination')
+    group = Group.generate!
+    custom_value = CustomValue.create!(
+      :customized => group,
+      :custom_field => source_field,
+      :value => source_value.id.to_s
+    )
+
+    assert_raises ActiveRecord::RecordInvalid do
+      custom_value.update!(:custom_field_id => destination_field.id)
+    end
+    assert_equal source_field.id, custom_value.reload.custom_field_id
+    assert_equal source_value.id.to_s, custom_value.value
   end
 
   private

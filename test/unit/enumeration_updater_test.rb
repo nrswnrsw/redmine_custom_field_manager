@@ -97,6 +97,27 @@ class RedmineCustomFieldManagerEnumerationUpdaterTest < ActiveSupport::TestCase
     end
   end
 
+  def test_reordering_does_not_normalize_an_unchanged_existing_name
+    @first.update_column(:name, '  Existing value  ')
+    @base_digest = digest
+
+    updater([item_for(@second), item_for(@first)]).call
+
+    assert_equal '  Existing value  ', @first.reload.name
+  end
+
+  def test_database_failure_rolls_back_values_and_history_together
+    original = @field.enumerations.reorder(:position, :id).pluck(:id, :name, :position)
+    items = [item_for(@second, :name => 'Must roll back'), item_for(@first)]
+
+    RedmineCustomFieldManager::HistoryRecorder.stubs(:record!).raises('simulated history failure')
+    assert_raises RuntimeError do
+      updater(items).call
+    end
+
+    assert_equal original, @field.reload.enumerations.reorder(:position, :id).pluck(:id, :name, :position)
+  end
+
   private
 
   def item_for(record, overrides = {})

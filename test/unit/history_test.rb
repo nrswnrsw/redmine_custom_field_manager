@@ -45,6 +45,23 @@ class RedmineCustomFieldManagerHistoryTest < ActiveSupport::TestCase
     assert_equal 'Value 3', survivor.reconstructed_snapshot.first.fetch('name')
   end
 
+  def test_manual_deletion_materializes_only_diff_chain_boundaries
+    before = [{'id' => 1, 'name' => 'Value 0', 'active' => true, 'position' => 1}]
+    6.times do |index|
+      after = [{'id' => 1, 'name' => "Value #{index + 1}", 'active' => true, 'position' => 1}]
+      record(before, after)
+      before = after
+    end
+    histories = RedmineCustomFieldManager::History.order(:id).to_a
+
+    RedmineCustomFieldManager::HistoryMaintenance.delete_ids!([histories[1].id, histories[3].id])
+
+    survivors = RedmineCustomFieldManager::History.order(:id).to_a
+    assert_equal [true, true, true, false], survivors.map(&:has_snapshot?)
+    assert_equal ['Value 1', 'Value 3', 'Value 5', 'Value 6'],
+                 survivors.map {|history| history.reconstructed_snapshot.first.fetch('name')}
+  end
+
   def test_max_generation_retention_keeps_restorable_latest_histories
     Setting.plugin_redmine_custom_field_manager = {
       'retention_days' => '',
@@ -59,8 +76,23 @@ class RedmineCustomFieldManagerHistoryTest < ActiveSupport::TestCase
 
     histories = RedmineCustomFieldManager::History.order(:id).to_a
     assert_equal 2, histories.length
-    assert histories.all?(&:has_snapshot?)
+    assert_equal [true, false], histories.map(&:has_snapshot?)
     assert_equal ['Value 2', 'Value 3'], histories.map {|history| history.reconstructed_snapshot.first.fetch('name')}
+  end
+
+  def test_history_columns_accept_a_ten_thousand_item_snapshot_and_diff
+    before = Array.new(10_000) do |index|
+      {'id' => index + 1, 'name' => "Value #{index + 1}", 'active' => true, 'position' => index + 1}
+    end
+    after = before.reverse_each.with_index.map do |item, index|
+      item.merge('position' => index + 1)
+    end
+
+    history = record(before, after)
+
+    assert_operator history.snapshot_json.bytesize, :>, 65_535
+    assert_operator history.changes_json.bytesize, :>, 65_535
+    assert_equal after, history.reconstructed_snapshot
   end
 
   private
