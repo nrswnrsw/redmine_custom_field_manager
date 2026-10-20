@@ -41,7 +41,6 @@ en:
   rcfm_move_selected_group: Move multiple items
   rcfm_bulk_move_help: Select the items to move in the list, then enter the destination name and choose whether to place them before or after it.
   rcfm_move_selected_count: "Move %{count} selected"
-  rcfm_move_selection_group: Items to move
   rcfm_target_not_found: No destination has that name. Select one of the suggestions.
   rcfm_target_ambiguous: More than one destination has that name. Choose the destination by its current list position.
   rcfm_target_candidate: "%{name} — current position %{position}"

@@ -41,7 +41,6 @@ ja:
   rcfm_move_selected_group: まとめて移動
   rcfm_bulk_move_help: 一覧で移動したい項目をチェックし、移動先の項目名と、その前後どちらへ置くかを指定してください。
   rcfm_move_selected_count: "選択した%{count}件を移動"
-  rcfm_move_selection_group: まとめて移動する項目
   rcfm_target_not_found: 入力した名前の移動先が見つかりません。候補から選択してください。
   rcfm_target_ambiguous: 同じ名前の移動先が複数あります。現在の一覧位置を見て移動先を選んでください。
   rcfm_target_candidate: "%{name} — 現在の%{position}番目"

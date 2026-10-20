@@ -14,14 +14,16 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select 'input.rcfm-base-snapshot'
     assert_select 'button.rcfm-undo', :text => 'Undo'
     assert_select 'button.rcfm-redo', :text => 'Redo'
-    assert_select '.rcfm-selection-bar button.rcfm-select-all'
-    assert_select 'details.rcfm-operation-panel--move:not([open]) button.rcfm-move-selected'
+    assert_select '.rcfm-selection-bar', :count => 0
+    assert_select '.rcfm-custom-field-bulk-tools details.rcfm-operation-panel--move:not([open]) button.rcfm-move-selected'
+    assert_select '.rcfm-custom-field-bulk-tools button.rcfm-select-all'
     assert_select '.rcfm-operation-panel--move summary', :text => /Move multiple items/
     assert_select '.rcfm-bulk-move-help', :text => /Select the items to move/
     assert_select '.rcfm-commit-bar button.rcfm-save.rcfm-button-primary', :text => 'Save changes'
     assert_select '.rcfm-commit-bar button.rcfm-reset', :text => 'Discard all unsaved changes'
-    assert_select '.rcfm-selection-count', :text => '0 selected'
-    assert_select '.rcfm-selection-summary', :text => /Items to move/
+    assert_select '.rcfm-bulk-move-count', :text => '0 selected'
+    assert_operator response.body.index('class="list custom_fields rcfm-sortable"'), :<,
+                    response.body.index('class="rcfm-custom-field-bulk-tools"')
     assert_select 'th', :text => /Individual actions/
     assert_select 'input.rcfm-select[aria-label*="for moving"]'
     assert_select 'a.rcfm-delete-custom-field[data-confirm*="Other checked fields will not be deleted"]'

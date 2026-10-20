@@ -22,7 +22,7 @@ The screenshots below use Redmine 7.0 with the Japanese locale. Labels may diffe
 
 ### Staged custom-field ordering
 
-Drag individual rows, or open the collapsed **Move multiple items** panel to select several fields and move them before or after a named destination. A unique destination can be entered by name alone. If names are duplicated, the page presents clickable choices labeled with their current list positions; users never need to know or enter an internal ID. IDs remain visible only as supplementary information. Checkboxes are used only for bulk moves; per-row actions are shown separately. The pending counter reports the smallest set of moved rows that explains the new order, so moving the last of 100 fields to the top is shown as one move rather than 100 changed positions.
+Drag individual rows, or select rows in the list and open the collapsed **Move multiple items** panel directly below it to move several fields before or after a named destination. A unique destination can be entered by name alone. If names are duplicated, the page presents clickable choices labeled with their current list positions; users never need to know or enter an internal ID. IDs remain visible only as supplementary information. Checkboxes are used only for bulk moves; per-row actions are shown separately. The pending counter reports the smallest set of moved rows that explains the new order, so moving the last of 100 fields to the top is shown as one move rather than 100 changed positions.
 
 **Delete this field** always deletes only that row, immediately. Its confirmation names the field, explains that other checked rows are unaffected, and warns that the field, its options, and stored values will be deleted and cannot be restored by this plugin.
 
@@ -76,7 +76,7 @@ For an update, replace the plugin files while Redmine is stopped, run the same m
 ### Reorder custom fields
 
 1. Open **Administration → Custom fields** and select a field-type tab.
-2. Drag a row, or open **Move multiple items** and select the rows to move.
+2. Drag a row, or select the rows to move and open **Move multiple items** below the list.
 3. Enter a destination field name, choose **Before** or **After**, and move the selection. If several destinations have the same name, click the choice identified by its current list position.
 4. Review the pending state. Use **Undo one step**, **Redo one step**, or **Discard all unsaved changes** if needed.
 5. Press **Save** to commit the complete order for that field type.

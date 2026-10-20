@@ -276,7 +276,12 @@ test.describe.serial('custom field manager browser behavior', function() {
     const manager = page.locator('.rcfm-manager').filter({has: page.locator('input[name="field_type"][value="GroupCustomField"]')});
     const source = manager.locator('tr[data-rcfm-id="' + fieldId + '"]');
     const target = manager.locator('tr[data-rcfm-id]').filter({hasText: 'RCFM browser target'});
-    await expect(manager.locator('.rcfm-selection-summary')).toContainText('Items to move');
+    await expect(manager.locator('.rcfm-selection-bar')).toHaveCount(0);
+    const tableBox = await manager.locator('table.custom_fields').boundingBox();
+    const bulkMoveBox = await manager.locator('.rcfm-custom-field-bulk-tools').boundingBox();
+    expect(tableBox).not.toBeNull();
+    expect(bulkMoveBox).not.toBeNull();
+    expect(tableBox.y).toBeLessThan(bulkMoveBox.y);
     await expect(source.locator('.rcfm-select')).toHaveAttribute('aria-label', /for moving/);
     await expect(source.locator('.rcfm-delete-custom-field')).toHaveAttribute(
       'data-confirm',
@@ -288,7 +293,7 @@ test.describe.serial('custom field manager browser behavior', function() {
     await expect(manager.locator('.rcfm-error')).toContainText('Select one or more items');
     await source.locator('.rcfm-select').check();
     await expect(manager.locator('.rcfm-error')).toBeHidden();
-    await expect(manager.locator('.rcfm-selection-count')).toHaveText('1 selected');
+    await expect(manager.locator('.rcfm-bulk-move-count')).toHaveText('1 selected');
     await expect(manager.locator('.rcfm-move-selected-label')).toHaveText('Move 1 selected');
     await manager.locator('.rcfm-target').fill('RCFM browser target');
     await manager.locator('input[type="radio"][value="after"]').check();

@@ -146,6 +146,30 @@
   margin: 0 0 0.75em;
 }
 
+.rcfm-custom-field-bulk-tools {
+  margin-top: 1em;
+}
+
+.rcfm-custom-field-bulk-tools > .rcfm-error {
+  margin-top: 0.75em;
+}
+
+.rcfm-bulk-move-introduction {
+  align-items: center;
+  display: flex;
+  gap: 1em;
+  justify-content: space-between;
+  margin-bottom: 0.75em;
+}
+
+.rcfm-bulk-move-introduction .rcfm-bulk-move-help {
+  margin: 0;
+}
+
+.rcfm-bulk-move-introduction .rcfm-selection-controls {
+  flex: 0 0 auto;
+}
+
 .rcfm-destructive-actions {
   border-top: 1px solid var(--oc-gray-3, #ddd);
   grid-column: 1 / -1;
@@ -480,6 +504,11 @@
 
   .rcfm-selection-controls {
     width: 100%;
+  }
+
+  .rcfm-bulk-move-introduction {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .rcfm-operation-grid,
