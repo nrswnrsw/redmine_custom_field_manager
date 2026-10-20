@@ -40,6 +40,8 @@ en:
   rcfm_selection_error: Select one or more fields and a destination.
   rcfm_server_state_summary: "The current server list contains %{count} values."
   rcfm_target_error: The destination cannot be one of the selected fields.
+  rcfm_undo: Undo
+  rcfm_redo: Redo
   rcfm_csv_apply: Apply this import
   rcfm_csv_apply_confirm: Apply every change shown in this preview?
   rcfm_csv_confirm_mapping: Select a confirmed destination or create a new value.

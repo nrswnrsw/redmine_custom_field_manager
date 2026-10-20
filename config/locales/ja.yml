@@ -40,6 +40,8 @@ ja:
   rcfm_selection_error: 1件以上の項目と移動先を選択してください。
   rcfm_server_state_summary: "サーバーの現在のリストは%{count}件です。"
   rcfm_target_error: 選択中の項目自身は移動先に指定できません。
+  rcfm_undo: 元に戻す
+  rcfm_redo: やり直す
   rcfm_csv_apply: この内容でインポート
   rcfm_csv_apply_confirm: プレビューに表示された変更をすべて適用しますか？
   rcfm_csv_confirm_mapping: 対応先を確認するか、新規項目として作成してください。

@@ -1,7 +1,7 @@
 # Redmine Custom Field Manager — 製品仕様書
 
 - リポジトリ／プラグインID：`redmine_custom_field_manager`
-- ステータス：**機能要件確定・実装前**
+- ステータス：**機能要件確定・実装済み（検証継続中）**
 - 仕様基準日：2026-10-20
 - 対象：Redmine管理者向けのカスタムフィールド管理画面
 

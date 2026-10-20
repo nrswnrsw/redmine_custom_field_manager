@@ -12,6 +12,8 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select 'form.rcfm-manager[data-rcfm-manager="custom-fields"]'
     assert_select 'input.rcfm-ordered-ids'
     assert_select 'input.rcfm-base-snapshot'
+    assert_select 'button.rcfm-undo', :text => 'Undo'
+    assert_select 'button.rcfm-redo', :text => 'Redo'
     assert_select '.rcfm-conflict .rcfm-conflict-merge'
     assert_select 'script[src*="plugin_assets/redmine_custom_field_manager"]'
   end
@@ -28,6 +30,8 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select '.rcfm-enumeration-name', :text => 'Visible value'
     assert_select 'input.rcfm-items'
     assert_select 'input.rcfm-base-snapshot'
+    assert_select 'button.rcfm-undo', :text => 'Undo'
+    assert_select 'button.rcfm-redo', :text => 'Redo'
     assert_select '.rcfm-conflict .rcfm-conflict-merge'
     assert_select 'a.rcfm-csv-export'
     assert_select 'input.rcfm-csv-file'
