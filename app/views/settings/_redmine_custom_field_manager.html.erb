@@ -1,0 +1,10 @@
+<p>
+  <label><%= l(:rcfm_retention_days) %></label>
+  <%= number_field_tag 'settings[retention_days]', @settings['retention_days'], :min => 1 %>
+  <em class="info"><%= l(:rcfm_retention_blank_unlimited) %></em>
+</p>
+<p>
+  <label><%= l(:rcfm_max_generations) %></label>
+  <%= number_field_tag 'settings[max_generations]', @settings['max_generations'], :min => 1 %>
+  <em class="info"><%= l(:rcfm_retention_blank_unlimited) %></em>
+</p>

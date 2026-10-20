@@ -1,0 +1,49 @@
+<div class="contextual">
+  <%= link_to l(:label_custom_field_plural), custom_fields_path, :class => 'icon icon-list' %>
+</div>
+
+<%= title l(:rcfm_history_title) %>
+
+<p><%= l(:rcfm_history_help) %></p>
+
+<%= form_tag rcfm_delete_histories_path, :method => :delete do %>
+  <table class="list rcfm-history-list">
+    <thead>
+      <tr>
+        <th><span class="hidden-for-sighted"><%= l(:rcfm_select) %></span></th>
+        <th><%= l(:field_created_on) %></th>
+        <th><%= l(:field_user) %></th>
+        <th><%= l(:rcfm_history_target) %></th>
+        <th><%= l(:rcfm_history_operation) %></th>
+        <th><%= l(:rcfm_history_snapshot) %></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @histories.each do |history| %>
+        <tr>
+          <td><%= check_box_tag 'history_ids[]', history.id, false, :aria => {:label => l(:rcfm_select_history, :id => history.id)} %></td>
+          <td><%= format_time(history.created_at) %></td>
+          <td><%= link_to_user(history.user) if history.user %></td>
+          <td><%= history.scope_key %></td>
+          <td><%= history.operation %></td>
+          <td><%= checked_image history.has_snapshot? %></td>
+          <td><%= link_to l(:button_view), rcfm_history_path(history), :class => 'icon icon-magnifier' %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <% if @histories.any? %>
+    <p><%= submit_tag l(:button_delete), :data => {:confirm => l(:rcfm_confirm_history_delete)} %></p>
+  <% else %>
+    <p class="nodata"><%= l(:label_no_data) %></p>
+  <% end %>
+<% end %>
+
+<div class="box">
+  <h3><%= l(:rcfm_history_cleanup) %></h3>
+  <%= form_tag rcfm_cleanup_histories_path, :method => :post do %>
+    <label><%= l(:rcfm_history_delete_before) %> <%= date_field_tag :before, nil, :required => true %></label>
+    <%= submit_tag l(:button_delete), :data => {:confirm => l(:rcfm_confirm_history_cleanup)} %>
+  <% end %>
+</div>

@@ -1,0 +1,119 @@
+.rcfm-introduction {
+  color: var(--fg-color-muted, #666);
+}
+
+.rcfm-toolbar {
+  margin-bottom: 1em;
+}
+
+.rcfm-toolbar-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin-bottom: 0.75em;
+}
+
+.rcfm-toolbar-row:last-child {
+  margin-bottom: 0;
+}
+
+.rcfm-bulk-move .rcfm-target {
+  min-width: 24em;
+}
+
+.rcfm-status {
+  color: var(--fg-color-muted, #666);
+}
+
+.rcfm-selection {
+  text-align: center;
+  width: 2em;
+}
+
+.rcfm-record-id {
+  color: var(--fg-color-muted, #777);
+  font-size: 0.85em;
+  margin-left: 0.5em;
+}
+
+.rcfm-selected td {
+  background: var(--bg-color-selection, #fffbd8);
+}
+
+.rcfm-sort-handle {
+  cursor: grab;
+  touch-action: none;
+}
+
+.rcfm-sort-placeholder {
+  height: 2.5em;
+}
+
+.rcfm-sort-placeholder td,
+.rcfm-sort-placeholder {
+  background: var(--bg-color-highlight, #ffffdd);
+  border: 1px dashed var(--border-color, #bbb);
+}
+
+.rcfm-actions {
+  margin-top: 1em;
+}
+
+.rcfm-bulk-add {
+  margin-bottom: 0.75em;
+}
+
+.rcfm-csv-import {
+  margin-bottom: 0.75em;
+}
+
+.rcfm-csv-preview {
+  border-top: 1px solid var(--border-color, #ddd);
+  margin-top: 1em;
+  padding-top: 0.5em;
+}
+
+.rcfm-csv-diffs {
+  margin-top: 0.75em;
+}
+
+.rcfm-csv-source {
+  display: inline-block;
+  min-width: 18em;
+}
+
+.rcfm-bulk-add-input {
+  box-sizing: border-box;
+  margin-top: 0.5em;
+  max-width: 50em;
+  width: 100%;
+}
+
+.rcfm-deleted {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.rcfm-protected .rcfm-enumeration-name::after {
+  content: "\1f512";
+  font-size: 0.8em;
+  margin-left: 0.4em;
+  text-decoration: none;
+}
+
+.rcfm-conflict[hidden],
+.rcfm-error[hidden] {
+  display: none;
+}
+
+.rcfm-conflict-comparison {
+  margin: 0.75em 0;
+}
+
+@media screen and (max-width: 899px) {
+  .rcfm-bulk-move .rcfm-target {
+    min-width: 14em;
+    width: 100%;
+  }
+}

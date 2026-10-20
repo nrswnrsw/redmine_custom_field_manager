@@ -1,0 +1,19 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'custom_field_manager', :plugin => 'redmine_custom_field_manager' %>
+  <%= javascript_include_tag 'custom_field_manager', :plugin => 'redmine_custom_field_manager', :defer => true %>
+<% end %>
+
+<div class="contextual">
+  <%= link_to l(:rcfm_history_title), rcfm_histories_path, :class => 'icon icon-history' %>
+  <%= link_to_function sprite_icon('add', l(:label_custom_field_new)), "location.href = '#{new_custom_field_path}?tab=' + encodeURIComponent(($('.tabs a.selected').attr('id')||'').split('tab-').pop())", :class => 'icon icon-add' %>
+</div>
+
+<%= title l(:label_custom_field_plural) %>
+
+<p class="rcfm-introduction"><%= l(:rcfm_custom_fields_help) %></p>
+
+<% if @custom_fields_by_type.present? %>
+  <%= render_custom_fields_tabs(@custom_fields_by_type.keys) %>
+<% else %>
+  <p class="nodata"><%= l(:label_no_data) %></p>
+<% end %>

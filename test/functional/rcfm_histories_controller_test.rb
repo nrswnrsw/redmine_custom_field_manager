@@ -1,0 +1,69 @@
+# frozen_string_literal: true
+
+require_relative '../test_helper'
+
+class Rcfm::HistoriesControllerTest < Redmine::ControllerTest
+  fixtures :users
+
+  def setup
+    @request.session[:user_id] = 1
+    Setting.plugin_redmine_custom_field_manager = {'retention_days' => '', 'max_generations' => ''}
+    field = GroupCustomField.create!(:name => 'RCFM history controller', :field_format => 'enumeration')
+    value = field.enumerations.create!(:name => 'Before')
+    RedmineCustomFieldManager::EnumerationUpdater.new(
+      :custom_field => field,
+      :items => [{
+        'client_id' => value.id.to_s,
+        'id' => value.id,
+        'name' => 'After',
+        'active' => true,
+        'deleted' => false
+      }],
+      :base_digest => RedmineCustomFieldManager::Snapshot.enumerations_digest(field),
+      :user => User.find(1)
+    ).call
+    @history = RedmineCustomFieldManager::History.last
+  end
+
+  def test_index_loads_only_history_metadata
+    get :index
+
+    assert_response :success
+    assert_select '.rcfm-history-list'
+    assert_select "a[href='#{rcfm_history_path(@history)}']"
+  end
+
+  def test_show_loads_reconstructed_details_on_demand
+    get :show, :params => {:id => @history.id}
+
+    assert_response :success
+    assert_select '.rcfm-json-detail', :count => 2
+  end
+
+  def test_restore_preview_is_rendered_before_apply
+    post :restore_preview, :params => {:id => @history.id}
+
+    assert_response :success
+    assert_select "form[action='#{rcfm_restore_history_path(@history)}']"
+    assert_select 'input[name="plan_digest"]'
+  end
+
+  def test_history_actions_require_an_administrator
+    @request.session[:user_id] = 2
+
+    get :index
+
+    assert_response :forbidden
+  end
+
+  def test_destroy_does_not_change_current_values
+    current = @history.reconstructed_snapshot
+
+    delete :destroy, :params => {:history_ids => [@history.id]}
+
+    assert_redirected_to rcfm_histories_path
+    assert_not RedmineCustomFieldManager::History.exists?(@history.id)
+    field = CustomField.find(@history.target_id)
+    assert_equal current, RedmineCustomFieldManager::Snapshot.enumerations(field)
+  end
+end

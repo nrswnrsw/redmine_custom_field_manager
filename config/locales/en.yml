@@ -1,0 +1,96 @@
+en:
+  rcfm_activate_selected: Activate selected
+  rcfm_active_field: "Active: %{name}"
+  rcfm_after: After
+  rcfm_before: Before
+  rcfm_bulk_add: Add multiple values
+  rcfm_bulk_add_help: Enter one value per line. Nothing is saved until you press Save.
+  rcfm_changed_count: "%{count} item(s) moved — not saved"
+  rcfm_clear_selection: Clear selection
+  rcfm_confirm_discard: Discard your unsaved changes and load the current server state?
+  rcfm_confirm_force: Force overwrite the current server state with your changes? Data-protection rules still apply.
+  rcfm_conflict_base: Editing started
+  rcfm_conflict_mine: Your edit
+  rcfm_conflict_merge: Proposed merged result
+  rcfm_conflict_server: Current server
+  rcfm_conflict_title: Concurrent change detected
+  rcfm_continue_editing: Continue editing
+  rcfm_custom_fields_help: Changes to the order stay in this browser until you press Save.
+  rcfm_deactivate_selected: Deactivate selected
+  rcfm_delete_selected: Delete selected
+  rcfm_discard_and_reload: Discard and reload
+  rcfm_enumeration_changes_summary: "Unsaved: %{added} added, %{updated} updated, %{deleted} deleted, %{moved} moved"
+  rcfm_enumerations_help: Edit, reorder, activate, deactivate, add, or delete values. All changes are saved atomically when you press Save.
+  rcfm_error_conflict: Another administrator changed these custom fields. Your unsaved order has been kept; review the current server state before saving again.
+  rcfm_error_delete_protected: This value is in use or is the default and cannot be deleted. Deactivate it instead.
+  rcfm_error_enumeration_conflict: Another administrator changed this list. Your unsaved changes have been kept. Review the server state before choosing an action.
+  rcfm_error_name_blank: Value names cannot be blank.
+  rcfm_error_name_too_long: Value names cannot exceed 60 characters.
+  rcfm_error_used_enumerations: One or more values became used and cannot be deleted. No changes were saved.
+  rcfm_force_overwrite: Force overwrite with my changes
+  rcfm_merge_and_save: Review and save merge proposal
+  rcfm_move_target: Destination
+  rcfm_move_target_placeholder: Type a field name
+  rcfm_no_changes: No unsaved changes
+  rcfm_restore_item: Restore
+  rcfm_save_error: The changes could not be saved.
+  rcfm_select: Select
+  rcfm_select_all: Select all
+  rcfm_select_field: "Select %{name}"
+  rcfm_selection_error: Select one or more fields and a destination.
+  rcfm_server_state_summary: "The current server list contains %{count} values."
+  rcfm_target_error: The destination cannot be one of the selected fields.
+  rcfm_csv_apply: Apply this import
+  rcfm_csv_apply_confirm: Apply every change shown in this preview?
+  rcfm_csv_confirm_mapping: Select a confirmed destination or create a new value.
+  rcfm_csv_delete: Delete
+  rcfm_csv_diff_action: Change
+  rcfm_csv_diff_name: Value
+  rcfm_csv_disable: Deactivate
+  rcfm_csv_export: Export the current list as CSV
+  rcfm_csv_file: CSV file
+  rcfm_csv_import: CSV export/import
+  rcfm_csv_import_success: The CSV import was saved.
+  rcfm_csv_mapping: Cross-environment mappings requiring confirmation
+  rcfm_csv_missing: Existing values missing from the CSV
+  rcfm_csv_missing_default: "Default action for unused values missing from the CSV:"
+  rcfm_csv_mode_append: Append
+  rcfm_csv_mode_sync: Full synchronization
+  rcfm_csv_mode_update: Update and add
+  rcfm_csv_new_item: Create as a new value
+  rcfm_csv_no_differences: No changes were found.
+  rcfm_csv_preview: Preview import
+  rcfm_csv_preview_heading: Import preview
+  rcfm_csv_preview_stale: Preview options changed. Preview the import again before applying it.
+  rcfm_csv_read_error: The CSV file could not be read.
+  rcfm_diff_activate: Activate
+  rcfm_diff_add: Add
+  rcfm_diff_deactivate: Deactivate
+  rcfm_diff_delete: Delete
+  rcfm_diff_move: Move
+  rcfm_diff_rename: Rename
+  rcfm_confirm_history_cleanup: Delete all histories older than the selected date? Remaining histories will be made independently restorable.
+  rcfm_confirm_history_delete: Delete the selected histories? Current custom-field settings will not change.
+  rcfm_confirm_restore_apply: Restore the entire target to this state? The restore will be recorded in history.
+  rcfm_confirm_restore_preview: Build a restore preview for this history?
+  rcfm_history_changes: Recorded changes
+  rcfm_history_cleanup: Delete histories by date
+  rcfm_history_delete_before: Delete histories older than
+  rcfm_history_deleted: History records were deleted. Current settings were not changed.
+  rcfm_history_help: Details and snapshots are loaded only when a history is opened. Retention defaults to unlimited.
+  rcfm_history_operation: Operation
+  rcfm_history_snapshot: Snapshot
+  rcfm_history_state: Reconstructed target state
+  rcfm_history_target: Target
+  rcfm_history_title: Change history
+  rcfm_history_restored: The entire target was restored and the restore was recorded.
+  rcfm_max_generations: Maximum generations per target
+  rcfm_restore_apply: Restore entire target
+  rcfm_restore_blocked: This restore cannot be applied safely. Nothing has been changed.
+  rcfm_restore_conflict: The target changed after the preview. Review a new restore preview.
+  rcfm_restore_preview: Preview restore
+  rcfm_restore_preview_help: "Differences for restoring the entire target to history #%{id}:"
+  rcfm_restore_result: Restored state
+  rcfm_retention_blank_unlimited: Leave blank for unlimited retention.
+  rcfm_retention_days: Retention days
+  rcfm_select_history: "Select history #%{id}"

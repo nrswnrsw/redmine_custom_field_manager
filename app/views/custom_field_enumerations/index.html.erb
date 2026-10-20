@@ -1,0 +1,208 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'custom_field_manager', :plugin => 'redmine_custom_field_manager' %>
+  <%= javascript_include_tag 'enumeration_manager', :plugin => 'redmine_custom_field_manager', :defer => true %>
+<% end %>
+
+<% values = @custom_field.enumerations.reorder(:position, :id).to_a %>
+<% used_ids = RedmineCustomFieldManager::EnumerationUsage.used_ids(@custom_field) %>
+<% initial_items = values.map do |value|
+     {
+       'client_id' => value.id.to_s,
+       'id' => value.id,
+       'name' => value.name,
+       'active' => value.active?,
+       'deleted' => false,
+       'protected' => used_ids.include?(value.id)
+     }
+   end %>
+
+<%= custom_field_title @custom_field %>
+
+<div class="contextual">
+  <%= link_to l(:rcfm_history_title), rcfm_histories_path, :class => 'icon icon-history' %>
+</div>
+
+<p class="rcfm-introduction"><%= l(:rcfm_enumerations_help) %></p>
+
+<%= form_tag(
+      rcfm_custom_field_enumerations_path(@custom_field),
+      :method => :put,
+      :id => 'rcfm-enumerations',
+      :class => 'rcfm-manager rcfm-enumeration-manager',
+      :data => {
+        :rcfm_manager => 'enumerations',
+        :rcfm_no_changes => l(:rcfm_no_changes),
+        :rcfm_changes_summary => l(
+          :rcfm_enumeration_changes_summary,
+          :added => '__ADDED__',
+          :updated => '__UPDATED__',
+          :deleted => '__DELETED__',
+          :moved => '__MOVED__'
+        ),
+        :rcfm_selection_error => l(:rcfm_selection_error),
+        :rcfm_target_error => l(:rcfm_target_error),
+        :rcfm_save_error => l(:rcfm_save_error),
+        :rcfm_name_blank => l(:rcfm_error_name_blank),
+        :rcfm_name_too_long => l(:rcfm_error_name_too_long),
+        :rcfm_delete_protected => l(:rcfm_error_delete_protected),
+        :rcfm_server_state => l(:rcfm_server_state_summary, :count => '__COUNT__'),
+        :rcfm_confirm_discard => l(:rcfm_confirm_discard),
+        :rcfm_confirm_force => l(:rcfm_confirm_force),
+        :rcfm_conflict_base => l(:rcfm_conflict_base),
+        :rcfm_conflict_mine => l(:rcfm_conflict_mine),
+        :rcfm_conflict_server => l(:rcfm_conflict_server),
+        :rcfm_conflict_merge => l(:rcfm_conflict_merge),
+        :rcfm_edit_label => l(:button_edit),
+        :rcfm_delete_label => l(:button_delete),
+        :rcfm_restore_label => l(:rcfm_restore_item),
+        :rcfm_import_preview_url => rcfm_preview_custom_field_enumerations_import_path(@custom_field),
+        :rcfm_import_apply_url => rcfm_import_custom_field_enumerations_path(@custom_field),
+        :rcfm_import_read_error => l(:rcfm_csv_read_error),
+        :rcfm_import_confirm_mapping => l(:rcfm_csv_confirm_mapping),
+        :rcfm_import_new_item => l(:rcfm_csv_new_item),
+        :rcfm_import_apply_confirm => l(:rcfm_csv_apply_confirm),
+        :rcfm_import_success => l(:rcfm_csv_import_success),
+        :rcfm_import_preview_stale => l(:rcfm_csv_preview_stale),
+        :rcfm_import_preview_heading => l(:rcfm_csv_preview_heading),
+        :rcfm_import_mapping_heading => l(:rcfm_csv_mapping),
+        :rcfm_import_missing_heading => l(:rcfm_csv_missing),
+        :rcfm_import_no_differences => l(:rcfm_csv_no_differences),
+        :rcfm_import_diff_action => l(:rcfm_csv_diff_action),
+        :rcfm_import_diff_name => l(:rcfm_csv_diff_name),
+        :rcfm_import_apply_label => l(:rcfm_csv_apply),
+        :rcfm_import_disable_label => l(:rcfm_csv_disable),
+        :rcfm_import_delete_label => l(:rcfm_csv_delete),
+        :rcfm_diff_add => l(:rcfm_diff_add),
+        :rcfm_diff_rename => l(:rcfm_diff_rename),
+        :rcfm_diff_activate => l(:rcfm_diff_activate),
+        :rcfm_diff_deactivate => l(:rcfm_diff_deactivate),
+        :rcfm_diff_move => l(:rcfm_diff_move),
+        :rcfm_diff_delete => l(:rcfm_diff_delete)
+      }
+    ) %>
+  <%= hidden_field_tag :base_digest, RedmineCustomFieldManager::Snapshot.enumerations_digest(@custom_field) %>
+  <%= hidden_field_tag :base_snapshot,
+                       RedmineCustomFieldManager::Snapshot.enumerations(@custom_field, values).to_json,
+                       :class => 'rcfm-base-snapshot' %>
+  <%= hidden_field_tag :items, initial_items.to_json, :class => 'rcfm-items' %>
+  <%= hidden_field_tag :force, '0', :class => 'rcfm-force' %>
+  <%= hidden_field_tag :confirmed_digest, '', :class => 'rcfm-confirmed-digest' %>
+  <%= hidden_field_tag :resolution, 'normal', :class => 'rcfm-resolution' %>
+
+  <div class="rcfm-toolbar box">
+    <div class="rcfm-toolbar-row">
+      <%= button_tag l(:rcfm_select_all), :type => 'button', :class => 'rcfm-select-all' %>
+      <%= button_tag l(:rcfm_clear_selection), :type => 'button', :class => 'rcfm-clear-selection' %>
+      <%= button_tag l(:button_undo), :type => 'button', :class => 'rcfm-undo', :disabled => true %>
+      <%= button_tag l(:button_redo), :type => 'button', :class => 'rcfm-redo', :disabled => true %>
+      <%= button_tag l(:button_cancel), :type => 'button', :class => 'rcfm-reset', :disabled => true %>
+    </div>
+
+    <div class="rcfm-toolbar-row">
+      <%= button_tag l(:rcfm_activate_selected), :type => 'button', :class => 'rcfm-activate-selected' %>
+      <%= button_tag l(:rcfm_deactivate_selected), :type => 'button', :class => 'rcfm-deactivate-selected' %>
+      <%= button_tag l(:rcfm_delete_selected), :type => 'button', :class => 'rcfm-delete-selected' %>
+    </div>
+
+    <div class="rcfm-toolbar-row rcfm-bulk-move">
+      <label>
+        <%= l(:rcfm_move_target) %>
+        <input type="text"
+               class="rcfm-target"
+               list="rcfm-enumeration-targets"
+               autocomplete="off"
+               placeholder="<%= l(:rcfm_move_target_placeholder) %>">
+      </label>
+      <datalist id="rcfm-enumeration-targets">
+        <% values.each do |value| %>
+          <option value="<%= h "#{value.name} (##{value.id})" %>"></option>
+        <% end %>
+      </datalist>
+      <label><input type="radio" name="rcfm_enumeration_move_side" value="before" checked> <%= l(:rcfm_before) %></label>
+      <label><input type="radio" name="rcfm_enumeration_move_side" value="after"> <%= l(:rcfm_after) %></label>
+      <%= button_tag l(:button_move), :type => 'button', :class => 'rcfm-move-selected' %>
+    </div>
+
+    <details class="rcfm-bulk-add">
+      <summary><%= l(:rcfm_bulk_add) %></summary>
+      <p><%= l(:rcfm_bulk_add_help) %></p>
+      <textarea class="rcfm-bulk-add-input" rows="6"></textarea>
+      <p><%= button_tag l(:button_add), :type => 'button', :class => 'rcfm-add-lines' %></p>
+    </details>
+
+    <details class="rcfm-csv-import">
+      <summary><%= l(:rcfm_csv_import) %></summary>
+      <p>
+        <%= link_to l(:rcfm_csv_export),
+                    rcfm_export_custom_field_enumerations_path(@custom_field),
+                    :class => 'icon icon-download rcfm-csv-export' %>
+      </p>
+      <p><label><%= l(:rcfm_csv_file) %> <input type="file" class="rcfm-csv-file" accept=".csv,text/csv"></label></p>
+      <p>
+        <label><input type="radio" name="rcfm_csv_mode" value="append"> <%= l(:rcfm_csv_mode_append) %></label>
+        <label><input type="radio" name="rcfm_csv_mode" value="update" checked> <%= l(:rcfm_csv_mode_update) %></label>
+        <label><input type="radio" name="rcfm_csv_mode" value="sync"> <%= l(:rcfm_csv_mode_sync) %></label>
+      </p>
+      <p class="rcfm-csv-missing-default" hidden>
+        <%= l(:rcfm_csv_missing_default) %>
+        <label><input type="radio" name="rcfm_csv_missing_default" value="disable" checked> <%= l(:rcfm_csv_disable) %></label>
+        <label><input type="radio" name="rcfm_csv_missing_default" value="delete"> <%= l(:rcfm_csv_delete) %></label>
+      </p>
+      <p><%= button_tag l(:rcfm_csv_preview), :type => 'button', :class => 'rcfm-csv-preview-button' %></p>
+      <div class="rcfm-csv-preview" hidden></div>
+    </details>
+
+    <div class="rcfm-status" aria-live="polite"><%= l(:rcfm_no_changes) %></div>
+    <div class="rcfm-error error" hidden></div>
+  </div>
+
+  <div class="rcfm-conflict box error" hidden>
+    <h3><%= l(:rcfm_conflict_title) %></h3>
+    <p class="rcfm-conflict-message"></p>
+    <p class="rcfm-conflict-server-state"></p>
+    <div class="rcfm-conflict-diffs"></div>
+    <div class="rcfm-toolbar-row">
+      <%= button_tag l(:rcfm_continue_editing), :type => 'button', :class => 'rcfm-conflict-continue' %>
+      <%= button_tag l(:rcfm_discard_and_reload), :type => 'button', :class => 'rcfm-conflict-reload' %>
+      <%= button_tag l(:rcfm_merge_and_save), :type => 'button', :class => 'rcfm-conflict-merge', :hidden => true %>
+      <%= button_tag l(:rcfm_force_overwrite), :type => 'button', :class => 'rcfm-conflict-force' %>
+    </div>
+  </div>
+
+  <table class="list rcfm-enumerations rcfm-sortable">
+    <thead>
+      <tr>
+        <th class="rcfm-selection"><span class="hidden-for-sighted"><%= l(:rcfm_select) %></span></th>
+        <th><%= l(:field_name) %></th>
+        <th><%= l(:field_active) %></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% initial_items.each do |item| %>
+        <tr data-rcfm-client-id="<%= item['client_id'] %>" class="<%= 'rcfm-protected' if item['protected'] %>">
+          <td class="rcfm-selection"><input type="checkbox" class="rcfm-select" aria-label="<%= h l(:rcfm_select_field, :name => item['name']) %>"></td>
+          <td class="name">
+            <span class="rcfm-enumeration-name"><%= item['name'] %></span>
+            <span class="rcfm-record-id">#<%= item['id'] %></span>
+          </td>
+          <td><input type="checkbox" class="rcfm-active" <%= 'checked' if item['active'] %> aria-label="<%= h l(:rcfm_active_field, :name => item['name']) %>"></td>
+          <td class="buttons">
+            <%= tag.span sprite_icon('reorder', ''), :class => 'icon-only icon-sort-handle sort-handle rcfm-sort-handle', :title => l(:button_move) %>
+            <%= button_tag sprite_icon('edit', l(:button_edit)), :type => 'button', :class => 'icon icon-edit rcfm-edit' %>
+            <%= button_tag sprite_icon('del', l(:button_delete)),
+                           :type => 'button',
+                           :class => 'icon icon-del rcfm-delete',
+                           :disabled => item['protected'],
+                           :title => (item['protected'] ? l(:rcfm_error_delete_protected) : l(:button_delete)) %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <p class="rcfm-actions">
+    <%= submit_tag l(:button_save), :class => 'rcfm-save', :disabled => true %> |
+    <%= link_to l(:button_back), edit_custom_field_path(@custom_field) %>
+  </p>
+</form>

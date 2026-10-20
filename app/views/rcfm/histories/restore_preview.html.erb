@@ -1,0 +1,37 @@
+<div class="contextual">
+  <%= link_to l(:button_back), rcfm_history_path(@history), :class => 'icon icon-cancel' %>
+</div>
+
+<%= title l(:rcfm_restore_preview) %>
+
+<p><%= l(:rcfm_restore_preview_help, :id => @history.id) %></p>
+
+<% if @preview.blockers.any? %>
+  <div class="error">
+    <p><%= l(:rcfm_restore_blocked) %></p>
+    <ul>
+      <% @preview.blockers.each do |blocker| %><li><%= blocker %></li><% end %>
+    </ul>
+  </div>
+<% end %>
+
+<table class="list">
+  <thead><tr><th>ID</th><th><%= l(:rcfm_conflict_server) %></th><th><%= l(:rcfm_restore_result) %></th></tr></thead>
+  <tbody>
+    <% @preview.diffs.each do |diff| %>
+      <tr>
+        <td><%= diff['id'] %></td>
+        <td><%= diff['before'] ? "#{diff['before']['name']} @#{diff['before']['position']}" : '—' %></td>
+        <td><%= diff['after'] ? "#{diff['after']['name']} @#{diff['after']['position']}" : l(:button_delete) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<% if @preview.blockers.empty? %>
+  <%= form_tag rcfm_restore_history_path(@history), :method => :post do %>
+    <%= hidden_field_tag :base_digest, @preview.base_digest %>
+    <%= hidden_field_tag :plan_digest, @preview.plan_digest %>
+    <%= submit_tag l(:rcfm_restore_apply), :data => {:confirm => l(:rcfm_confirm_restore_apply)} %>
+  <% end %>
+<% end %>

@@ -1,0 +1,75 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  redmine:
+    name: Redmine ${{ matrix.redmine }} / Ruby ${{ matrix.ruby }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - redmine: 7.0.2
+            ruby: '4.0'
+            sha256: d45e6d4c373cc3c8d33f1f4d4a2ffae1e1adb18703160707467493de7b4be591
+          - redmine: 6.1.5
+            ruby: '3.3'
+            sha256: 4b653d8863c012fdb226aedf6f8a18bdfa08d04625d15e8aafbbc3c4f6b70144
+          - redmine: 6.0.11
+            ruby: '3.3'
+            sha256: 7c5fc0d968c61e0deb4c90ceff6073e58dd19aedfcb840f02ce615da8af2cd9e
+
+    steps:
+      - name: Check out plugin
+        uses: actions/checkout@v4
+        with:
+          path: plugin
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+
+      - name: Download verified Redmine release
+        env:
+          REDMINE_VERSION: ${{ matrix.redmine }}
+          REDMINE_SHA256: ${{ matrix.sha256 }}
+        run: |
+          curl --fail --location --retry 3 \
+            "https://www.redmine.org/releases/redmine-${REDMINE_VERSION}.tar.gz" \
+            --output redmine.tar.gz
+          echo "${REDMINE_SHA256}  redmine.tar.gz" | sha256sum --check
+          tar --extract --gzip --file redmine.tar.gz
+          mv "redmine-${REDMINE_VERSION}" redmine
+          mv plugin redmine/plugins/redmine_custom_field_manager
+          cp redmine/plugins/redmine_custom_field_manager/.github/test-database.yml redmine/config/database.yml
+
+      - name: Install dependencies
+        working-directory: redmine
+        run: |
+          bundle config set path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: Prepare database
+        working-directory: redmine
+        env:
+          RAILS_ENV: test
+        run: bundle exec rake db:migrate redmine:plugins:migrate
+
+      - name: Run plugin tests
+        working-directory: redmine
+        env:
+          RAILS_ENV: test
+        run: bundle exec rake redmine:plugins:test NAME=redmine_custom_field_manager
+
+      - name: Verify the replaced standard view
+        working-directory: redmine
+        env:
+          RAILS_ENV: test
+        run: bundle exec rails test test/functional/custom_fields_controller_test.rb -n test_index

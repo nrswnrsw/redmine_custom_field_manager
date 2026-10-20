@@ -1,0 +1,124 @@
+<% fields = (@custom_fields_by_type[tab[:name]] || []).sort %>
+<% manager_id = "rcfm-custom-fields-#{tab[:name].underscore.dasherize}" %>
+
+<%= form_tag(
+      rcfm_custom_field_order_path,
+      :method => :put,
+      :id => manager_id,
+      :class => 'rcfm-manager',
+      :data => {
+        :rcfm_manager => 'custom-fields',
+        :rcfm_selection_error => l(:rcfm_selection_error),
+        :rcfm_target_error => l(:rcfm_target_error),
+        :rcfm_no_changes => l(:rcfm_no_changes),
+        :rcfm_changed_count => l(:rcfm_changed_count, :count => '__COUNT__'),
+        :rcfm_save_error => l(:rcfm_save_error),
+        :rcfm_server_state => l(:rcfm_server_state_summary, :count => '__COUNT__'),
+        :rcfm_confirm_discard => l(:rcfm_confirm_discard),
+        :rcfm_confirm_force => l(:rcfm_confirm_force),
+        :rcfm_conflict_base => l(:rcfm_conflict_base),
+        :rcfm_conflict_mine => l(:rcfm_conflict_mine),
+        :rcfm_conflict_server => l(:rcfm_conflict_server),
+        :rcfm_conflict_merge => l(:rcfm_conflict_merge)
+      }
+    ) %>
+  <%= hidden_field_tag :field_type, tab[:name] %>
+  <%= hidden_field_tag :base_digest, RedmineCustomFieldManager::Snapshot.custom_fields_digest(:field_type => tab[:name]) %>
+  <%= hidden_field_tag :base_snapshot,
+                       RedmineCustomFieldManager::Snapshot.custom_fields(:field_type => tab[:name], :records => fields).to_json,
+                       :class => 'rcfm-base-snapshot' %>
+  <%= hidden_field_tag :ordered_ids, fields.map(&:id).to_json, :class => 'rcfm-ordered-ids' %>
+  <%= hidden_field_tag :force, '0', :class => 'rcfm-force' %>
+  <%= hidden_field_tag :confirmed_digest, '', :class => 'rcfm-confirmed-digest' %>
+  <%= hidden_field_tag :resolution, 'normal', :class => 'rcfm-resolution' %>
+
+  <div class="rcfm-toolbar box">
+    <div class="rcfm-toolbar-row">
+      <%= button_tag l(:rcfm_select_all), :type => 'button', :class => 'rcfm-select-all' %>
+      <%= button_tag l(:rcfm_clear_selection), :type => 'button', :class => 'rcfm-clear-selection' %>
+      <%= button_tag l(:button_undo), :type => 'button', :class => 'rcfm-undo', :disabled => true %>
+      <%= button_tag l(:button_redo), :type => 'button', :class => 'rcfm-redo', :disabled => true %>
+      <%= button_tag l(:button_cancel), :type => 'button', :class => 'rcfm-reset', :disabled => true %>
+    </div>
+
+    <div class="rcfm-toolbar-row rcfm-bulk-move">
+      <label>
+        <%= l(:rcfm_move_target) %>
+        <input type="text"
+               class="rcfm-target"
+               list="<%= manager_id %>-targets"
+               autocomplete="off"
+               placeholder="<%= l(:rcfm_move_target_placeholder) %>">
+      </label>
+      <datalist id="<%= manager_id %>-targets">
+        <% fields.each do |field| %>
+          <option value="<%= h "#{field.name} (##{field.id})" %>"></option>
+        <% end %>
+      </datalist>
+      <label><input type="radio" name="rcfm_move_side_<%= manager_id %>" value="before" checked> <%= l(:rcfm_before) %></label>
+      <label><input type="radio" name="rcfm_move_side_<%= manager_id %>" value="after"> <%= l(:rcfm_after) %></label>
+      <%= button_tag l(:button_move), :type => 'button', :class => 'rcfm-move-selected' %>
+    </div>
+
+    <div class="rcfm-status" aria-live="polite"><%= l(:rcfm_no_changes) %></div>
+    <div class="rcfm-error error" hidden></div>
+  </div>
+
+  <div class="rcfm-conflict box error" hidden>
+    <h3><%= l(:rcfm_conflict_title) %></h3>
+    <p class="rcfm-conflict-message"></p>
+    <p class="rcfm-conflict-server-state"></p>
+    <div class="rcfm-conflict-diffs"></div>
+    <div class="rcfm-toolbar-row">
+      <%= button_tag l(:rcfm_continue_editing), :type => 'button', :class => 'rcfm-conflict-continue' %>
+      <%= button_tag l(:rcfm_discard_and_reload), :type => 'button', :class => 'rcfm-conflict-reload' %>
+      <%= button_tag l(:rcfm_merge_and_save), :type => 'button', :class => 'rcfm-conflict-merge', :hidden => true %>
+      <%= button_tag l(:rcfm_force_overwrite), :type => 'button', :class => 'rcfm-conflict-force' %>
+    </div>
+  </div>
+
+  <table class="list custom_fields rcfm-sortable">
+    <thead>
+      <tr>
+        <th class="rcfm-selection"><span class="hidden-for-sighted"><%= l(:rcfm_select) %></span></th>
+        <th><%= l(:field_name) %></th>
+        <th><%= l(:field_field_format) %></th>
+        <th><%= l(:field_is_required) %></th>
+        <% if tab[:name] == 'IssueCustomField' %>
+          <th><%= l(:field_is_for_all) %></th>
+          <th><%= l(:label_used_by) %></th>
+        <% end %>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% fields.each do |custom_field| %>
+        <% back_url = custom_fields_path(:tab => tab[:name]) %>
+        <tr data-rcfm-id="<%= custom_field.id %>" data-rcfm-name="<%= h custom_field.name %>">
+          <td class="rcfm-selection">
+            <input type="checkbox" class="rcfm-select" aria-label="<%= h l(:rcfm_select_field, :name => custom_field.name) %>">
+          </td>
+          <td class="name">
+            <%= link_to custom_field.name, edit_custom_field_path(custom_field) %>
+            <span class="rcfm-record-id">#<%= custom_field.id %></span>
+          </td>
+          <td><%= l(custom_field.format.label) %></td>
+          <td><%= checked_image custom_field.is_required? %></td>
+          <% if tab[:name] == 'IssueCustomField' %>
+            <td><%= checked_image custom_field.is_for_all? %></td>
+            <td><%= l(:label_x_projects, :count => @custom_fields_projects_count[custom_field.id] || 0) if custom_field.is_a?(IssueCustomField) && !custom_field.is_for_all? %></td>
+          <% end %>
+          <td class="buttons">
+            <%= tag.span sprite_icon('reorder', ''), :class => 'icon-only icon-sort-handle sort-handle rcfm-sort-handle', :title => l(:button_move) %>
+            <%= link_to_function sprite_icon('copy', l(:button_copy)), "location.href = '#{new_custom_field_path(:copy => custom_field)}&type=' + encodeURIComponent(($('.tabs a.selected').attr('id')||'').split('tab-').pop())", :class => 'icon icon-copy' %>
+            <%= delete_link custom_field_path(custom_field) %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <p class="rcfm-actions">
+    <%= submit_tag l(:button_save), :class => 'rcfm-save', :disabled => true %>
+  </p>
+</form>

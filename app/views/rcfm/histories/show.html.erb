@@ -1,0 +1,22 @@
+<div class="contextual">
+  <%= link_to l(:button_back), rcfm_histories_path, :class => 'icon icon-cancel' %>
+</div>
+
+<%= title "#{l(:rcfm_history_title)} ##{@history.id}" %>
+
+<div class="box tabular">
+  <p><label><%= l(:field_created_on) %></label><%= format_time(@history.created_at) %></p>
+  <p><label><%= l(:field_user) %></label><%= link_to_user(@history.user) if @history.user %></p>
+  <p><label><%= l(:rcfm_history_target) %></label><%= @history.scope_key %></p>
+  <p><label><%= l(:rcfm_history_operation) %></label><%= @history.operation %></p>
+</div>
+
+<h3><%= l(:rcfm_history_changes) %></h3>
+<pre class="rcfm-json-detail"><%= JSON.pretty_generate(@changes) %></pre>
+
+<h3><%= l(:rcfm_history_state) %></h3>
+<pre class="rcfm-json-detail"><%= JSON.pretty_generate(@snapshot) %></pre>
+
+<%= form_tag rcfm_preview_history_restore_path(@history), :method => :post do %>
+  <%= submit_tag l(:rcfm_restore_preview), :data => {:confirm => l(:rcfm_confirm_restore_preview)} %>
+<% end %>
