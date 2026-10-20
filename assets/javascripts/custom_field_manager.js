@@ -100,6 +100,7 @@
 
     this.form.on('change', '.rcfm-select', function() {
       $(this).closest('tr').toggleClass('rcfm-selected', this.checked);
+      manager.refreshSelection();
     });
 
     this.form.on('click', '.rcfm-select-all', function() {
@@ -181,17 +182,33 @@
 
   CustomFieldManager.prototype.moveSelected = function() {
     var selected = this.body.find('.rcfm-select:checked').closest('tr');
-    var value = this.form.find('.rcfm-target').val();
+    var value = this.form.find('.rcfm-target').val().trim();
     var match = value.match(/\(#(\d+)\)\s*$/);
     var error = this.form.find('.rcfm-error');
 
     error.prop('hidden', true).text('');
-    if (!selected.length || !match) {
+    if (!selected.length) {
       error.text(this.form.data('rcfm-selection-error')).prop('hidden', false);
       return;
     }
 
-    var target = this.body.find('tr[data-rcfm-id="' + match[1] + '"]');
+    var target;
+    if (match) {
+      target = this.body.find('tr[data-rcfm-id="' + match[1] + '"]');
+    } else {
+      var lowered = value.toLocaleLowerCase();
+      target = this.body.children('tr[data-rcfm-id]').filter(function() {
+        return String($(this).attr('data-rcfm-name')).trim().toLocaleLowerCase() === lowered;
+      });
+      if (!target.length) {
+        error.text(this.form.data('rcfm-target-not-found')).prop('hidden', false);
+        return;
+      }
+      if (target.length > 1) {
+        error.text(this.form.data('rcfm-target-ambiguous')).prop('hidden', false);
+        return;
+      }
+    }
     if (!target.length || selected.filter(target).length) {
       error.text(this.form.data('rcfm-target-error')).prop('hidden', false);
       return;
@@ -212,6 +229,13 @@
     return !arraysEqual(this.baseline, this.currentOrder());
   };
 
+  CustomFieldManager.prototype.refreshSelection = function() {
+    var count = this.body.find('.rcfm-select:checked').length;
+    this.form.find('.rcfm-selection-count').text(
+      this.form.data('rcfm-selected-count').replace('__COUNT__', count)
+    );
+  };
+
   CustomFieldManager.prototype.refresh = function() {
     var current = this.currentOrder();
     var changedCount = current.reduce(function(count, id, index) {
@@ -225,6 +249,7 @@
     this.form.find('.rcfm-redo').prop('disabled', !this.redoStack.length || this.saving);
     var status = dirty ? this.form.data('rcfm-changed-count').replace('__COUNT__', changedCount) : this.form.data('rcfm-no-changes');
     this.form.find('.rcfm-status').text(status);
+    this.refreshSelection();
     if (!this.conflict) {
       this.form.find('.rcfm-force').val('0');
       this.form.find('.rcfm-confirmed-digest').val('');
@@ -238,7 +263,7 @@
     }
     var value = item.name || ('#' + item.id);
     if (item.position !== undefined && item.position !== null) {
-      value += ' @' + item.position;
+      value += ' (' + this.form.data('rcfm-state-position').replace('__POSITION__', item.position) + ')';
     }
     return value;
   };

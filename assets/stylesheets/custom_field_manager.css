@@ -26,6 +26,12 @@
   color: var(--fg-color-muted, #666);
 }
 
+.rcfm-selection-count {
+  color: var(--fg-color-muted, #666);
+  font-weight: bold;
+  margin-left: auto;
+}
+
 .rcfm-selection {
   text-align: center;
   width: 2em;
@@ -95,11 +101,17 @@
   text-decoration: line-through;
 }
 
-.rcfm-protected .rcfm-enumeration-name::after {
-  content: "\1f512";
-  font-size: 0.8em;
+.rcfm-protection-indicator {
+  cursor: help;
+  display: inline-block;
+  font-size: 0.85em;
   margin-left: 0.4em;
   text-decoration: none;
+}
+
+.rcfm-protected-help {
+  color: var(--fg-color-muted, #666);
+  margin: 0.25em 0 0.75em;
 }
 
 .rcfm-conflict[hidden],

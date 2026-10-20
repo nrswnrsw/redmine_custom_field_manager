@@ -22,13 +22,13 @@ The screenshots below use Redmine 7.0 with the English locale. Labels may differ
 
 ### Staged custom-field ordering
 
-Select several fields and move them before or after a named destination, or drag individual rows. The status line and **Save** button make it clear that the new order has not yet reached the database.
+Select several fields and move them before or after a named destination, or drag individual rows. A unique destination can be entered by name alone; the displayed ID is only needed to distinguish duplicate names. The selection counter, status line, and **Save** button make it clear what is selected and that the new order has not yet reached the database.
 
 ![Staged custom-field ordering](docs/images/custom-field-ordering.png)
 
 ### Key/value list manager
 
-The list editor supports inline renaming, activation, deactivation, deletion, drag and drop, multi-selection, bulk addition, and CSV export/import. The summary reports every pending change before the atomic save.
+The list editor supports inline renaming, activation, deactivation, deletion, drag and drop, multi-selection, bulk addition, and CSV export/import. Locked values show why they cannot be deleted. The summary reports every pending change before the atomic save.
 
 ![Staged Key/value list editing](docs/images/enumeration-manager.png)
 
@@ -95,6 +95,8 @@ Expand **CSV export/import** in the Key/value list editor.
 - **Update and add** updates same-instance IDs and creates rows without a local ID.
 - **Full synchronization** also handles local values missing from the CSV. Used values can only be deactivated; unused values can be deleted or deactivated.
 
+Use **Download an empty CSV template** to start a new file with the correct columns and metadata for the current field. Save or discard any on-screen changes before exporting or previewing an import; CSV operations use the saved database state.
+
 Every import requires a difference preview before apply. For a CSV from another Redmine instance, foreign IDs are never treated as local IDs. The administrator must confirm candidate mappings or choose to create new values; confirmed mappings can be reused by later imports.
 
 ### Resolve concurrent edits
@@ -103,7 +105,7 @@ If another administrator saves the same target first, your next save opens a con
 
 ### Review and restore history
 
-Use **Change history** on either enhanced administration screen. A restore first displays a difference preview and then restores the entire target, not selected individual changes. The restore itself is recorded. If the target changed after preview, or restoring would require an unsafe deletion, the complete restore is rejected.
+Use **Change history** on either enhanced administration screen. Targets, operations, and before/after states are shown with human-readable labels; raw JSON is kept in a collapsed technical section. A restore first displays a difference preview, including active/inactive state, and then restores the entire target, not selected individual changes. The restore itself is recorded. If the target changed after preview, or restoring would require an unsafe deletion, the complete restore is rejected.
 
 Configure retention under **Administration → Plugins → Redmine Custom Field Manager → Configure**. Empty retention fields mean unlimited storage.
 

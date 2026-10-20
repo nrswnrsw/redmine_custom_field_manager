@@ -9,21 +9,24 @@ module Rcfm
     before_action :find_history, :only => [:show, :restore_preview, :restore]
 
     def index
-      @history_count = RedmineCustomFieldManager::History.count
+      scope = RedmineCustomFieldManager::History.all
+      scope = scope.where(:scope_key => params[:scope_key]) if params[:scope_key].present?
+      @history_count = scope.count
       @history_pages = Paginator.new(@history_count, per_page_option, params[:page])
-      @histories = RedmineCustomFieldManager::History
-                   .select(:id, :scope_key, :target_type, :target_id, :operation, :user_id, :has_snapshot, :created_at)
+      @histories = scope.select(:id, :scope_key, :target_type, :target_id, :operation, :user_id, :has_snapshot, :created_at)
                    .includes(:user)
                    .order(:id => :desc)
                    .limit(@history_pages.per_page)
                    .offset(@history_pages.offset)
+      load_history_target_names(@histories)
     end
 
     def show
+      load_history_target_names([@history])
       @changes = @history.parsed_changes
       @snapshot = @history.reconstructed_snapshot
-    rescue JSON::ParserError, RedmineCustomFieldManager::InvalidChangeError => e
-      flash.now[:error] = e.message
+    rescue JSON::ParserError, RedmineCustomFieldManager::InvalidChangeError
+      flash.now[:error] = l(:rcfm_error_invalid_change)
       @changes = {}
       @snapshot = []
     end
@@ -32,27 +35,28 @@ module Rcfm
       RedmineCustomFieldManager::HistoryMaintenance.delete_ids!(params.require(:history_ids))
       flash[:notice] = l(:rcfm_history_deleted)
       redirect_to rcfm_histories_path
-    rescue RedmineCustomFieldManager::InvalidChangeError, ActionController::ParameterMissing => e
-      flash[:error] = e.message
+    rescue RedmineCustomFieldManager::InvalidChangeError, ActionController::ParameterMissing
+      flash[:error] = l(:rcfm_error_invalid_change)
       redirect_to rcfm_histories_path
     end
 
     def cleanup
       cutoff = Time.zone.parse(params.require(:before).to_s)
-      raise RedmineCustomFieldManager::InvalidChangeError, 'cleanup date is invalid' unless cutoff
+      raise RedmineCustomFieldManager::InvalidChangeError unless cutoff
 
       RedmineCustomFieldManager::HistoryMaintenance.delete_before!(cutoff)
       flash[:notice] = l(:rcfm_history_deleted)
       redirect_to rcfm_histories_path
-    rescue ArgumentError, RedmineCustomFieldManager::InvalidChangeError, ActionController::ParameterMissing => e
-      flash[:error] = e.message
+    rescue ArgumentError, RedmineCustomFieldManager::InvalidChangeError, ActionController::ParameterMissing
+      flash[:error] = l(:rcfm_error_invalid_change)
       redirect_to rcfm_histories_path
     end
 
     def restore_preview
+      load_history_target_names([@history])
       @preview = restorer.preview
-    rescue RedmineCustomFieldManager::InvalidChangeError => e
-      flash[:error] = e.message
+    rescue RedmineCustomFieldManager::InvalidChangeError
+      flash[:error] = l(:rcfm_error_invalid_change)
       redirect_to rcfm_history_path(@history)
     end
 
@@ -69,8 +73,8 @@ module Rcfm
     rescue RedmineCustomFieldManager::ProtectedDeletionError => e
       flash[:error] = "#{l(:rcfm_error_used_enumerations)} #{e.protected_items.pluck('name').join(', ')}"
       redirect_to rcfm_history_path(@history)
-    rescue RedmineCustomFieldManager::InvalidChangeError, ActionController::ParameterMissing => e
-      flash[:error] = e.message
+    rescue RedmineCustomFieldManager::InvalidChangeError, ActionController::ParameterMissing
+      flash[:error] = l(:rcfm_error_invalid_change)
       redirect_to rcfm_history_path(@history)
     end
 
@@ -84,6 +88,13 @@ module Rcfm
 
     def restorer
       RedmineCustomFieldManager::HistoryRestorer.new(:history => @history, :user => User.current)
+    end
+
+    def load_history_target_names(histories)
+      ids = histories.filter_map do |history|
+        history.target_id if history.target_type == 'custom_field_enumerations'
+      end
+      @history_target_names = CustomField.where(:id => ids).pluck(:id, :name).to_h
     end
   end
 end

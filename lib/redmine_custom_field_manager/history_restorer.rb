@@ -61,7 +61,7 @@ module RedmineCustomFieldManager
       current_ids = current.map {|item| item.fetch('id')}
       blockers = []
       if desired_ids.sort != current_ids.sort
-        blockers << 'custom field IDs differ from the selected history and cannot be recreated safely'
+        blockers << {'code' => 'custom_field_ids_changed'}
       end
       build_preview(
         :desired => desired,
@@ -79,9 +79,7 @@ module RedmineCustomFieldManager
       current_by_id = current_records.index_by(&:id)
       desired_ids = desired.map {|item| item.fetch('id')}
       missing_ids = desired_ids - current_by_id.keys
-      blockers = missing_ids.map do |id|
-        "enumeration ##{id} no longer exists and cannot be recreated safely"
-      end
+      blockers = missing_ids.map {|id| {'code' => 'enumeration_missing', 'id' => id}}
       items = desired.map do |item|
         {
           'client_id' => item.fetch('id').to_s,
@@ -94,7 +92,7 @@ module RedmineCustomFieldManager
       (current_by_id.keys - desired_ids).each do |id|
         record = current_by_id.fetch(id)
         reasons = EnumerationUsage.new(record).reasons
-        blockers << "enumeration ##{id} is in use (#{reasons.join(', ')})" if reasons.any?
+        blockers << {'code' => 'enumeration_in_use', 'id' => id, 'reasons' => reasons} if reasons.any?
         items << {
           'client_id' => id.to_s,
           'id' => id,

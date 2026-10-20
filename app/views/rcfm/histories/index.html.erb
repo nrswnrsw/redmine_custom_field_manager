@@ -25,8 +25,8 @@
           <td><%= check_box_tag 'history_ids[]', history.id, false, :aria => {:label => l(:rcfm_select_history, :id => history.id)} %></td>
           <td><%= format_time(history.created_at) %></td>
           <td><%= link_to_user(history.user) if history.user %></td>
-          <td><%= history.scope_key %></td>
-          <td><%= history.operation %></td>
+          <td><%= rcfm_history_target(history) %></td>
+          <td><%= rcfm_history_operation(history.operation) %></td>
           <td><%= checked_image history.has_snapshot? %></td>
           <td><%= link_to l(:button_view), rcfm_history_path(history), :class => 'icon icon-magnifier' %></td>
         </tr>

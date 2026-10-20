@@ -31,6 +31,8 @@ class Rcfm::HistoriesControllerTest < Redmine::ControllerTest
     assert_response :success
     assert_select '.rcfm-history-list'
     assert_select "a[href='#{rcfm_history_path(@history)}']"
+    assert_select '.rcfm-history-list', :text => /RCFM history controller/
+    assert_select '.rcfm-history-list', :text => /List update/
   end
 
   def test_index_paginates_history_metadata
@@ -53,14 +55,20 @@ class Rcfm::HistoriesControllerTest < Redmine::ControllerTest
 
     assert_response :success
     assert_select '.rcfm-json-detail', :count => 2
+    assert_select '.rcfm-history-changes tbody tr', :minimum => 1
+    assert_select '.rcfm-history-state tbody tr', :minimum => 1
+    assert_select '.rcfm-history-technical'
   end
 
   def test_restore_preview_is_rendered_before_apply
+    CustomField.find(@history.target_id).enumerations.first.update!(:active => false)
+
     post :restore_preview, :params => {:id => @history.id}
 
     assert_response :success
     assert_select "form[action='#{rcfm_restore_history_path(@history)}']"
     assert_select 'input[name="plan_digest"]'
+    assert_select 'table.list', :text => /Active/
   end
 
   def test_history_actions_require_an_administrator

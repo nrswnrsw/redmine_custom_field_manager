@@ -20,8 +20,9 @@ module RedmineCustomFieldManager
       position
     ].freeze
 
-    def initialize(custom_field)
+    def initialize(custom_field, template: false)
       @custom_field = custom_field
+      @template = template
     end
 
     def generate
@@ -36,7 +37,7 @@ module RedmineCustomFieldManager
           @custom_field.type, field_name, boolean_cell(field_name_escaped),
           nil, nil, '0', nil, nil
         ]
-        @custom_field.enumerations.reorder(:position, :id).each do |enumeration|
+        export_records.each do |enumeration|
           name, name_escaped = safe_spreadsheet_cell(enumeration.name)
           output << [
             'enumeration', SCHEMA_VERSION, instance_id, @custom_field.id,
@@ -51,6 +52,12 @@ module RedmineCustomFieldManager
     end
 
     private
+
+    def export_records
+      return [] if @template
+
+      @custom_field.enumerations.reorder(:position, :id)
+    end
 
     def ensure_enumeration_field!
       return if @custom_field.field_format == 'enumeration'

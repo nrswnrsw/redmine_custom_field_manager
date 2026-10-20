@@ -9,14 +9,15 @@ module Rcfm
     before_action :find_custom_field
 
     def export
+      template = params[:template].to_s == '1'
       send_data(
-        RedmineCustomFieldManager::CsvExporter.new(@custom_field).generate,
-        :filename => "custom_field_#{@custom_field.id}_enumerations.csv",
+        RedmineCustomFieldManager::CsvExporter.new(@custom_field, template: template).generate,
+        :filename => "custom_field_#{@custom_field.id}_enumerations#{'_template' if template}.csv",
         :type => 'text/csv; charset=utf-8',
         :disposition => 'attachment'
       )
-    rescue RedmineCustomFieldManager::InvalidChangeError => e
-      render :plain => e.message, :status => :unprocessable_content
+    rescue RedmineCustomFieldManager::InvalidChangeError
+      render :plain => l(:rcfm_error_invalid_change), :status => :unprocessable_content
     end
 
     def import_preview
@@ -106,11 +107,11 @@ module Rcfm
         :message => l(:rcfm_error_used_enumerations),
         :protected_items => e.protected_items
       }, :status => :unprocessable_content
-    rescue RedmineCustomFieldManager::InvalidChangeError, ActionController::ParameterMissing, JSON::ParserError => e
+    rescue RedmineCustomFieldManager::InvalidChangeError, ActionController::ParameterMissing, JSON::ParserError
       render :json => {
         :ok => false,
         :error => 'invalid_change',
-        :message => e.message
+        :message => l(:rcfm_error_invalid_change)
       }, :status => :unprocessable_content
     end
 
@@ -160,11 +161,11 @@ module Rcfm
       raise RedmineCustomFieldManager::InvalidChangeError, "#{key} must be an object"
     end
 
-    def render_import_error(error)
+    def render_import_error(_error)
       render :json => {
         :ok => false,
         :error => 'invalid_import',
-        :message => error.message
+        :message => l(:rcfm_error_invalid_import)
       }, :status => :unprocessable_content
     end
   end

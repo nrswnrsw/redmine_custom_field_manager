@@ -10,7 +10,7 @@
   <div class="error">
     <p><%= l(:rcfm_restore_blocked) %></p>
     <ul>
-      <% @preview.blockers.each do |blocker| %><li><%= blocker %></li><% end %>
+      <% @preview.blockers.each do |blocker| %><li><%= rcfm_restore_blocker(blocker) %></li><% end %>
     </ul>
   </div>
 <% end %>
@@ -21,8 +21,8 @@
     <% @preview.diffs.each do |diff| %>
       <tr>
         <td><%= diff['id'] %></td>
-        <td><%= diff['before'] ? "#{diff['before']['name']} @#{diff['before']['position']}" : '—' %></td>
-        <td><%= diff['after'] ? "#{diff['after']['name']} @#{diff['after']['position']}" : l(:button_delete) %></td>
+        <td><%= rcfm_history_state(diff['before'], @history.target_type) %></td>
+        <td><%= diff['after'] ? rcfm_history_state(diff['after'], @history.target_type) : l(:button_delete) %></td>
       </tr>
     <% end %>
   </tbody>

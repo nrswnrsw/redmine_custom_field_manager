@@ -2,14 +2,24 @@
 
 module RedmineCustomFieldManager
   class EnumerationUsage
-    def self.used_ids(custom_field)
-      ids = custom_field.custom_values.distinct.pluck(:value).map(&:to_s)
-      ids.concat(Array.wrap(custom_field.default_value).map(&:to_s))
-      ids.filter_map do |value|
+    def self.referenced_ids(custom_field)
+      custom_field.custom_values.distinct.pluck(:value).filter_map do |value|
         Integer(value, 10)
       rescue ArgumentError, TypeError
         nil
       end.to_set
+    end
+
+    def self.default_ids(custom_field)
+      Array.wrap(custom_field.default_value).filter_map do |value|
+        Integer(value, 10)
+      rescue ArgumentError, TypeError
+        nil
+      end.to_set
+    end
+
+    def self.used_ids(custom_field)
+      referenced_ids(custom_field) | default_ids(custom_field)
     end
 
     def initialize(enumeration)

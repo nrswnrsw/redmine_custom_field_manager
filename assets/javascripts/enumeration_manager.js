@@ -65,6 +65,7 @@
       var id = String(row.data('rcfm-client-id'));
       manager.selected[id] = this.checked;
       row.toggleClass('rcfm-selected', this.checked);
+      manager.refreshSelection();
     });
 
     this.form.on('change', '.rcfm-active', function() {
@@ -323,8 +324,15 @@
 
   EnumerationManager.prototype.selectedIds = function() {
     return Object.keys(this.selected).filter(function(id) {
-      return this.selected[id];
+      var item = this.findItem(id);
+      return this.selected[id] && item && !item.deleted;
     }, this);
+  };
+
+  EnumerationManager.prototype.refreshSelection = function() {
+    this.form.find('.rcfm-selection-count').text(
+      this.form.data('rcfm-selected-count').replace('__COUNT__', this.selectedIds().length)
+    );
   };
 
   EnumerationManager.prototype.setSelectedActive = function(active) {
@@ -361,6 +369,7 @@
         var item = this.findItem(id);
         if (item) {
           item.deleted = true;
+          this.selected[id] = false;
         }
       }, this);
     }.bind(this), true);
@@ -368,16 +377,33 @@
 
   EnumerationManager.prototype.moveSelected = function() {
     var ids = this.selectedIds();
-    var value = this.form.find('.rcfm-target').val();
+    var value = this.form.find('.rcfm-target').val().trim();
     var match = value.match(/\(#([^\)]+)\)\s*$/);
-    if (!ids.length || !match) {
+    if (!ids.length) {
       this.showError(this.form.data('rcfm-selection-error'));
       return;
     }
 
-    var target = this.items.find(function(item) {
-      return (String(item.id) === match[1] || String(item.client_id) === match[1]) && !item.deleted;
-    });
+    var candidates;
+    if (match) {
+      candidates = this.items.filter(function(item) {
+        return (String(item.id) === match[1] || String(item.client_id) === match[1]) && !item.deleted;
+      });
+    } else {
+      var lowered = value.toLocaleLowerCase();
+      candidates = this.items.filter(function(item) {
+        return !item.deleted && String(item.name).trim().toLocaleLowerCase() === lowered;
+      });
+      if (!candidates.length) {
+        this.showError(this.form.data('rcfm-target-not-found'));
+        return;
+      }
+      if (candidates.length > 1) {
+        this.showError(this.form.data('rcfm-target-ambiguous'));
+        return;
+      }
+    }
+    var target = candidates[0];
     if (!target || ids.indexOf(String(target.client_id)) >= 0) {
       this.showError(this.form.data('rcfm-target-error'));
       return;
@@ -448,7 +474,8 @@
 
       var selection = $('<input type="checkbox" class="rcfm-select">')
         .prop('checked', !!manager.selected[String(item.client_id)])
-        .prop('disabled', !!item.deleted);
+        .prop('disabled', !!item.deleted)
+        .attr('aria-label', manager.form.data('rcfm-select-label').replace('__NAME__', item.name));
       row.append($('<td class="rcfm-selection">').append(selection));
 
       var nameCell = $('<td class="name">');
@@ -460,11 +487,20 @@
       if (item.id) {
         nameCell.append($('<span class="rcfm-record-id">').text('#' + item.id));
       }
+      if (item.protected) {
+        nameCell.append(
+          $('<span class="rcfm-protection-indicator">')
+            .text('🔒')
+            .attr('title', item.protected_reason)
+            .attr('aria-label', manager.form.data('rcfm-protected-indicator') + ': ' + item.protected_reason)
+        );
+      }
       row.append(nameCell);
 
       var active = $('<input type="checkbox" class="rcfm-active">')
         .prop('checked', !!item.active)
-        .prop('disabled', !!item.deleted);
+        .prop('disabled', !!item.deleted)
+        .attr('aria-label', manager.form.data('rcfm-active-label').replace('__NAME__', item.name));
       row.append($('<td>').append(active));
 
       var buttons = $('<td class="buttons">');
@@ -473,7 +509,10 @@
           $('<button type="button" class="rcfm-restore-item">').text(manager.form.data('rcfm-restore-label'))
         );
       } else {
-        buttons.append($('<span class="icon-only icon-sort-handle sort-handle rcfm-sort-handle">'));
+        buttons.append(
+          $('<span class="icon-only icon-sort-handle sort-handle rcfm-sort-handle">')
+            .attr('title', manager.form.data('rcfm-move-label'))
+        );
         buttons.append(
           $('<button type="button" class="icon icon-edit rcfm-edit">').text(manager.form.data('rcfm-edit-label'))
         );
@@ -481,6 +520,7 @@
           $('<button type="button" class="icon icon-del rcfm-delete">')
             .text(manager.form.data('rcfm-delete-label'))
             .prop('disabled', !!item.protected)
+            .attr('title', item.protected ? item.protected_reason : manager.form.data('rcfm-delete-label'))
         );
       }
       row.append(buttons);
@@ -539,6 +579,7 @@
         .replace('__MOVED__', counts.moved);
     }
     this.form.find('.rcfm-status').text(summary);
+    this.refreshSelection();
     this.form.find('.rcfm-items').val(JSON.stringify(this.items));
     this.form.find('.rcfm-save, .rcfm-reset').prop('disabled', !dirty || this.saving);
     this.form.find('.rcfm-undo').prop('disabled', !this.undoStack.length || this.saving);
@@ -603,11 +644,11 @@
     }
     var value = item.name || ('#' + item.id);
     if (item.deleted) {
-      value += ' [deleted]';
+      value += ' [' + this.form.data('rcfm-state-deleted') + ']';
     } else {
-      value += item.active === false ? ' [inactive]' : '';
+      value += item.active === false ? ' [' + this.form.data('rcfm-state-inactive') + ']' : '';
       if (item.position !== undefined && item.position !== null) {
-        value += ' @' + item.position;
+        value += ' (' + this.form.data('rcfm-state-position').replace('__POSITION__', item.position) + ')';
       }
     }
     return value;
@@ -698,8 +739,11 @@
 
   EnumerationManager.prototype.previewCsvImport = function() {
     var manager = this;
-    if (this.saving || this.isDirty()) {
-      this.showError(this.form.data('rcfm-import-preview-stale'));
+    if (this.isDirty()) {
+      this.showError(this.form.data('rcfm-import-unsaved'));
+      return;
+    }
+    if (this.saving) {
       return;
     }
     this.form.find('.rcfm-error').prop('hidden', true).text('');
@@ -709,7 +753,9 @@
       manager.csvPreview = payload;
       manager.renderCsvPreview(payload);
     }).catch(function(error) {
-      manager.showError(error.payload && error.payload.message ? error.payload.message : error.message || manager.form.data('rcfm-import-read-error'));
+      manager.showError(
+        error.payload && error.payload.message ? error.payload.message : manager.form.data('rcfm-import-read-error')
+      );
     });
   };
 

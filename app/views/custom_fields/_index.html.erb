@@ -10,6 +10,9 @@
         :rcfm_manager => 'custom-fields',
         :rcfm_selection_error => l(:rcfm_selection_error),
         :rcfm_target_error => l(:rcfm_target_error),
+        :rcfm_target_not_found => l(:rcfm_target_not_found),
+        :rcfm_target_ambiguous => l(:rcfm_target_ambiguous),
+        :rcfm_selected_count => l(:rcfm_selected_count, :count => '__COUNT__'),
         :rcfm_no_changes => l(:rcfm_no_changes),
         :rcfm_changed_count => l(:rcfm_changed_count, :count => '__COUNT__'),
         :rcfm_save_error => l(:rcfm_save_error),
@@ -19,7 +22,8 @@
         :rcfm_conflict_base => l(:rcfm_conflict_base),
         :rcfm_conflict_mine => l(:rcfm_conflict_mine),
         :rcfm_conflict_server => l(:rcfm_conflict_server),
-        :rcfm_conflict_merge => l(:rcfm_conflict_merge)
+        :rcfm_conflict_merge => l(:rcfm_conflict_merge),
+        :rcfm_state_position => l(:rcfm_state_position, :position => '__POSITION__')
       }
     ) %>
   <%= hidden_field_tag :field_type, tab[:name] %>
@@ -39,6 +43,7 @@
       <%= button_tag l(:rcfm_undo), :type => 'button', :class => 'rcfm-undo', :disabled => true %>
       <%= button_tag l(:rcfm_redo), :type => 'button', :class => 'rcfm-redo', :disabled => true %>
       <%= button_tag l(:button_cancel), :type => 'button', :class => 'rcfm-reset', :disabled => true %>
+      <span class="rcfm-selection-count" aria-live="polite"><%= l(:rcfm_selected_count, :count => 0) %></span>
     </div>
 
     <div class="rcfm-toolbar-row rcfm-bulk-move">

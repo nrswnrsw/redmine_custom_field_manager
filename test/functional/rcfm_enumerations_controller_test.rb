@@ -91,6 +91,16 @@ class Rcfm::EnumerationsControllerTest < Redmine::ControllerTest
     assert_equal [@first.id.to_s, @second.id.to_s], parsed.rows.map(&:source_id)
   end
 
+  def test_export_returns_an_empty_template_with_field_metadata
+    get :export, :params => {:custom_field_id => @field.id, :template => '1'}
+
+    assert_response :success
+    assert_includes response.headers['Content-Disposition'], '_template.csv'
+    parsed = RedmineCustomFieldManager::CsvParser.new(response.body).parse
+    assert_equal @field.id.to_s, parsed.metadata['source_field_id']
+    assert_empty parsed.rows
+  end
+
   def test_import_preview_returns_differences_without_writing
     post :import_preview, :params => {
       :custom_field_id => @field.id,

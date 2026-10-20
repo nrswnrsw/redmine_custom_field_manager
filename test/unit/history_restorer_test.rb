@@ -43,7 +43,7 @@ class RedmineCustomFieldManagerHistoryRestorerTest < ActiveSupport::TestCase
       :user => User.find(1)
     ).preview
 
-    assert preview.blockers.any? {|message| message.include?(extra.id.to_s)}
+    assert preview.blockers.any? {|blocker| blocker['id'] == extra.id}
     assert_raises RedmineCustomFieldManager::InvalidChangeError do
       RedmineCustomFieldManager::HistoryRestorer.new(
         :history => selected_history,
@@ -62,7 +62,7 @@ class RedmineCustomFieldManagerHistoryRestorerTest < ActiveSupport::TestCase
       :user => User.find(1)
     ).preview
 
-    assert preview.blockers.any? {|message| message.include?(@first.id.to_s)}
+    assert preview.blockers.any? {|blocker| blocker['id'] == @first.id}
   end
 
   def test_restore_rejects_a_stale_preview

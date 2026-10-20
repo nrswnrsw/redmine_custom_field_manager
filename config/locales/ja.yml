@@ -7,6 +7,7 @@ ja:
   rcfm_bulk_add_help: 1行に1件ずつ入力してください。「保存」を押すまでサーバーへ反映されません。
   rcfm_changed_count: "%{count}件の移動が未保存です"
   rcfm_clear_selection: 選択解除
+  rcfm_selected_count: "%{count}件選択中"
   rcfm_confirm_discard: 未保存の変更を破棄し、サーバーの現在状態を読み込みますか？
   rcfm_confirm_force: サーバーの現在状態を自分の変更で強制上書きしますか？データ保護制約は迂回できません。
   rcfm_conflict_base: 編集開始時
@@ -26,11 +27,15 @@ ja:
   rcfm_error_enumeration_conflict: 他の管理者がこのリストを変更しました。未保存の変更は保持されています。サーバーの現在状態を確認して操作を選択してください。
   rcfm_error_name_blank: 項目名を空にはできません。
   rcfm_error_name_too_long: 項目名は60文字以内で入力してください。
+  rcfm_error_invalid_change: 入力内容が正しくないため保存できませんでした。画面を再読み込みして、内容を確認してください。
+  rcfm_error_invalid_import: CSVの内容が正しくありません。ファイル形式、ID、名称、有効状態、並び順を確認してください。
   rcfm_error_used_enumerations: 保存直前の確認で使用中になった項目があるため、変更全体を保存しませんでした。
   rcfm_force_overwrite: 自分の変更で強制上書き
   rcfm_merge_and_save: 統合案を確認して保存
   rcfm_move_target: 移動先
-  rcfm_move_target_placeholder: フィールド名を入力
+  rcfm_move_target_placeholder: 移動先の名前を入力
+  rcfm_target_not_found: 入力した名前の移動先が見つかりません。候補から選択してください。
+  rcfm_target_ambiguous: 同じ名前の移動先が複数あります。候補に表示されるID付きの名前を選択してください。
   rcfm_no_changes: 未保存の変更はありません
   rcfm_restore_item: 復元
   rcfm_save_error: 変更を保存できませんでした。
@@ -50,6 +55,9 @@ ja:
   rcfm_csv_diff_name: 項目
   rcfm_csv_disable: 無効化
   rcfm_csv_export: 現在の一覧をCSV出力
+  rcfm_csv_template: 空のCSVテンプレートをダウンロード
+  rcfm_csv_requires_clean_state: CSV操作の前に、画面上の変更を保存するか取り消してください。未保存の変更はCSVに含まれません。
+  rcfm_csv_unsaved_error: 未保存の変更があります。先に保存するか取り消してから、CSVをプレビューしてください。
   rcfm_csv_file: CSVファイル
   rcfm_csv_import: CSVエクスポート・インポート
   rcfm_csv_import_success: CSVインポートを保存しました。
@@ -71,6 +79,14 @@ ja:
   rcfm_diff_delete: 削除
   rcfm_diff_move: 並び替え
   rcfm_diff_rename: 名称変更
+  rcfm_protected_default: 既定値に設定されているため削除できません
+  rcfm_protected_in_use: 保存済みデータで使用されているため削除できません
+  rcfm_protected_in_use_and_default: 保存済みデータで使用され、既定値にも設定されているため削除できません
+  rcfm_protected_help: 鍵マークの項目は使用中または既定値のため削除できません。マウスを重ねると理由を確認できます。
+  rcfm_protected_indicator: 削除不可
+  rcfm_state_deleted: 削除
+  rcfm_state_inactive: 無効
+  rcfm_state_position: "位置%{position}"
   rcfm_confirm_history_cleanup: 指定日時より古い履歴を削除しますか？残す履歴は単独で復元可能な状態に再構成します。
   rcfm_confirm_history_delete: 選択した履歴を削除しますか？現在のカスタムフィールド設定は変わりません。
   rcfm_confirm_restore_apply: 対象全体をこの状態へ復元しますか？復元操作も履歴に記録されます。
@@ -81,6 +97,23 @@ ja:
   rcfm_history_deleted: 履歴を削除しました。現在の設定は変更していません。
   rcfm_history_help: 詳細とスナップショットは履歴を開いたときだけ読み込みます。保持設定の既定は無期限です。
   rcfm_history_operation: 操作
+  rcfm_history_operation_csv_import: CSVインポート
+  rcfm_history_operation_force: 強制上書き
+  rcfm_history_operation_merge: 競合の統合
+  rcfm_history_operation_reorder: 並び替え
+  rcfm_history_operation_restore: 復元
+  rcfm_history_operation_update: 一覧の更新
+  rcfm_history_custom_fields_target: "%{type}のカスタムフィールド順"
+  rcfm_history_enumeration_target: "%{name}（キー・バリューリスト #%{id}）"
+  rcfm_history_deleted_target: "削除済みのキー・バリューリスト #%{id}"
+  rcfm_history_change: 変更内容
+  rcfm_history_before: 変更前
+  rcfm_history_after: 変更後
+  rcfm_history_added: 追加
+  rcfm_history_deleted_change: 削除
+  rcfm_history_updated: 更新
+  rcfm_history_no_value: なし
+  rcfm_history_technical_details: 技術情報（JSON）
   rcfm_history_snapshot: スナップショット
   rcfm_history_state: 再構成した対象全体の状態
   rcfm_history_target: 対象
@@ -93,6 +126,9 @@ ja:
   rcfm_restore_preview: 復元プレビュー
   rcfm_restore_preview_help: "履歴#%{id}の状態へ対象全体を復元する差分です。"
   rcfm_restore_result: 復元後
+  rcfm_restore_blocker_custom_field_ids: 現在のカスタムフィールド構成がこの履歴と異なるため、安全に復元できません。
+  rcfm_restore_blocker_missing_enumeration: "履歴にある項目 #%{id} は現在存在しないため、安全に再作成できません。"
+  rcfm_restore_blocker_used_enumeration: "現在の項目 #%{id} は使用中のため削除できません。"
   rcfm_retention_blank_unlimited: 空欄の場合は無期限で保存します。
   rcfm_retention_days: 保存期間（日）
   rcfm_select_history: "履歴#%{id}を選択"

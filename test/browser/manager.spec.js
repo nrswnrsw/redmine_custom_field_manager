@@ -56,9 +56,9 @@ test.describe.serial('custom field manager browser behavior', function() {
     await rows.nth(0).locator('.rcfm-name-input').press('Enter');
 
     await rows.nth(0).locator('.rcfm-select').check();
+    await expect(page.locator('.rcfm-selection-count')).toHaveText('1 selected');
     const targetName = await rows.nth(2).locator('.rcfm-enumeration-name').textContent();
-    const targetId = (await rows.nth(2).locator('.rcfm-record-id').textContent()).replace('#', '');
-    await page.locator('.rcfm-target').fill(targetName + ' (#' + targetId + ')');
+    await page.locator('.rcfm-target').fill(targetName);
     await page.locator('input[name="rcfm_enumeration_move_side"][value="after"]').check();
     await page.locator('.rcfm-move-selected').click();
 
@@ -66,6 +66,11 @@ test.describe.serial('custom field manager browser behavior', function() {
     await page.locator('.rcfm-bulk-add-input').fill('Browser added 1\nBrowser added 2');
     await page.locator('.rcfm-add-lines').click();
     await expect(rows).toHaveCount(5);
+
+    await page.locator('.rcfm-csv-import summary').click();
+    await expect(page.locator('.rcfm-csv-template')).toHaveAttribute('href', /template=1/);
+    await page.locator('.rcfm-csv-preview-button').click();
+    await expect(page.locator('.rcfm-error')).toContainText('There are unsaved changes');
     await saveAndReload(page);
 
     await expect(page.locator('.rcfm-enumeration-name')).toContainText([
@@ -125,8 +130,8 @@ test.describe.serial('custom field manager browser behavior', function() {
     const source = manager.locator('tr[data-rcfm-id="' + fieldId + '"]');
     const target = manager.locator('tr[data-rcfm-id]').filter({hasText: 'RCFM browser target'});
     await source.locator('.rcfm-select').check();
-    const targetId = await target.getAttribute('data-rcfm-id');
-    await manager.locator('.rcfm-target').fill('RCFM browser target (#' + targetId + ')');
+    await expect(manager.locator('.rcfm-selection-count')).toHaveText('1 selected');
+    await manager.locator('.rcfm-target').fill('RCFM browser target');
     await manager.locator('input[type="radio"][value="after"]').check();
     await manager.locator('.rcfm-move-selected').click();
     await expect(manager.locator('.rcfm-save')).toBeEnabled();

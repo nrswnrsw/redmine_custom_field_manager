@@ -36,11 +36,11 @@ module Rcfm
         :message => l(:rcfm_error_conflict),
         :current_digest => e.current_digest
       }.merge(analysis), :status => :conflict
-    rescue RedmineCustomFieldManager::InvalidChangeError, ActionController::ParameterMissing, JSON::ParserError => e
+    rescue RedmineCustomFieldManager::InvalidChangeError, ActionController::ParameterMissing, JSON::ParserError
       render :json => {
         :ok => false,
         :error => 'invalid_change',
-        :message => e.message
+        :message => l(:rcfm_error_invalid_change)
       }, :status => :unprocessable_content
     end
 

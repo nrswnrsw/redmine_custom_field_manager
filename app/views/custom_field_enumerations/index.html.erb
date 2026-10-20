@@ -4,22 +4,33 @@
 <% end %>
 
 <% values = @custom_field.enumerations.reorder(:position, :id).to_a %>
-<% used_ids = RedmineCustomFieldManager::EnumerationUsage.used_ids(@custom_field) %>
+<% referenced_ids = RedmineCustomFieldManager::EnumerationUsage.referenced_ids(@custom_field) %>
+<% default_ids = RedmineCustomFieldManager::EnumerationUsage.default_ids(@custom_field) %>
 <% initial_items = values.map do |value|
+     protected_reason = if referenced_ids.include?(value.id) && default_ids.include?(value.id)
+                          l(:rcfm_protected_in_use_and_default)
+                        elsif referenced_ids.include?(value.id)
+                          l(:rcfm_protected_in_use)
+                        elsif default_ids.include?(value.id)
+                          l(:rcfm_protected_default)
+                        end
      {
        'client_id' => value.id.to_s,
        'id' => value.id,
        'name' => value.name,
        'active' => value.active?,
        'deleted' => false,
-       'protected' => used_ids.include?(value.id)
+       'protected' => protected_reason.present?,
+       'protected_reason' => protected_reason
      }
    end %>
 
 <%= custom_field_title @custom_field %>
 
 <div class="contextual">
-  <%= link_to l(:rcfm_history_title), rcfm_histories_path, :class => 'icon icon-history' %>
+  <%= link_to l(:rcfm_history_title),
+              rcfm_histories_path(:scope_key => "custom_field_enumerations:#{@custom_field.id}"),
+              :class => 'icon icon-history' %>
 </div>
 
 <p class="rcfm-introduction"><%= l(:rcfm_enumerations_help) %></p>
@@ -41,6 +52,9 @@
         ),
         :rcfm_selection_error => l(:rcfm_selection_error),
         :rcfm_target_error => l(:rcfm_target_error),
+        :rcfm_target_not_found => l(:rcfm_target_not_found),
+        :rcfm_target_ambiguous => l(:rcfm_target_ambiguous),
+        :rcfm_selected_count => l(:rcfm_selected_count, :count => '__COUNT__'),
         :rcfm_save_error => l(:rcfm_save_error),
         :rcfm_name_blank => l(:rcfm_error_name_blank),
         :rcfm_name_too_long => l(:rcfm_error_name_too_long),
@@ -55,6 +69,13 @@
         :rcfm_edit_label => l(:button_edit),
         :rcfm_delete_label => l(:button_delete),
         :rcfm_restore_label => l(:rcfm_restore_item),
+        :rcfm_select_label => l(:rcfm_select_field, :name => '__NAME__'),
+        :rcfm_active_label => l(:rcfm_active_field, :name => '__NAME__'),
+        :rcfm_move_label => l(:button_move),
+        :rcfm_protected_indicator => l(:rcfm_protected_indicator),
+        :rcfm_state_deleted => l(:rcfm_state_deleted),
+        :rcfm_state_inactive => l(:rcfm_state_inactive),
+        :rcfm_state_position => l(:rcfm_state_position, :position => '__POSITION__'),
         :rcfm_import_preview_url => rcfm_preview_custom_field_enumerations_import_path(@custom_field),
         :rcfm_import_apply_url => rcfm_import_custom_field_enumerations_path(@custom_field),
         :rcfm_import_read_error => l(:rcfm_csv_read_error),
@@ -63,6 +84,7 @@
         :rcfm_import_apply_confirm => l(:rcfm_csv_apply_confirm),
         :rcfm_import_success => l(:rcfm_csv_import_success),
         :rcfm_import_preview_stale => l(:rcfm_csv_preview_stale),
+        :rcfm_import_unsaved => l(:rcfm_csv_unsaved_error),
         :rcfm_import_preview_heading => l(:rcfm_csv_preview_heading),
         :rcfm_import_mapping_heading => l(:rcfm_csv_mapping),
         :rcfm_import_missing_heading => l(:rcfm_csv_missing),
@@ -96,6 +118,7 @@
       <%= button_tag l(:rcfm_undo), :type => 'button', :class => 'rcfm-undo', :disabled => true %>
       <%= button_tag l(:rcfm_redo), :type => 'button', :class => 'rcfm-redo', :disabled => true %>
       <%= button_tag l(:button_cancel), :type => 'button', :class => 'rcfm-reset', :disabled => true %>
+      <span class="rcfm-selection-count" aria-live="polite"><%= l(:rcfm_selected_count, :count => 0) %></span>
     </div>
 
     <div class="rcfm-toolbar-row">
@@ -132,10 +155,15 @@
 
     <details class="rcfm-csv-import">
       <summary><%= l(:rcfm_csv_import) %></summary>
+      <p class="info"><%= l(:rcfm_csv_requires_clean_state) %></p>
       <p>
         <%= link_to l(:rcfm_csv_export),
                     rcfm_export_custom_field_enumerations_path(@custom_field),
                     :class => 'icon icon-download rcfm-csv-export' %>
+        &nbsp;
+        <%= link_to l(:rcfm_csv_template),
+                    rcfm_export_custom_field_enumerations_path(@custom_field, :template => 1),
+                    :class => 'icon icon-download rcfm-csv-template' %>
       </p>
       <p><label><%= l(:rcfm_csv_file) %> <input type="file" class="rcfm-csv-file" accept=".csv,text/csv"></label></p>
       <p>
@@ -155,6 +183,8 @@
     <div class="rcfm-status" aria-live="polite"><%= l(:rcfm_no_changes) %></div>
     <div class="rcfm-error error" hidden></div>
   </div>
+
+  <p class="rcfm-protected-help"><%= l(:rcfm_protected_help) %></p>
 
   <div class="rcfm-conflict box error" hidden>
     <h3><%= l(:rcfm_conflict_title) %></h3>
@@ -185,6 +215,11 @@
           <td class="name">
             <span class="rcfm-enumeration-name"><%= item['name'] %></span>
             <span class="rcfm-record-id">#<%= item['id'] %></span>
+            <% if item['protected'] %>
+              <span class="rcfm-protection-indicator"
+                    title="<%= h item['protected_reason'] %>"
+                    aria-label="<%= h "#{l(:rcfm_protected_indicator)}: #{item['protected_reason']}" %>">🔒</span>
+            <% end %>
           </td>
           <td><input type="checkbox" class="rcfm-active" <%= 'checked' if item['active'] %> aria-label="<%= h l(:rcfm_active_field, :name => item['name']) %>"></td>
           <td class="buttons">

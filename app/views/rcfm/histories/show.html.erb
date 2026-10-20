@@ -7,15 +7,52 @@
 <div class="box tabular">
   <p><label><%= l(:field_created_on) %></label><%= format_time(@history.created_at) %></p>
   <p><label><%= l(:field_user) %></label><%= link_to_user(@history.user) if @history.user %></p>
-  <p><label><%= l(:rcfm_history_target) %></label><%= @history.scope_key %></p>
-  <p><label><%= l(:rcfm_history_operation) %></label><%= @history.operation %></p>
+  <p><label><%= l(:rcfm_history_target) %></label><%= rcfm_history_target(@history) %></p>
+  <p><label><%= l(:rcfm_history_operation) %></label><%= rcfm_history_operation(@history.operation) %></p>
 </div>
 
 <h3><%= l(:rcfm_history_changes) %></h3>
-<pre class="rcfm-json-detail"><%= JSON.pretty_generate(@changes) %></pre>
+<table class="list rcfm-history-changes">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th><%= l(:rcfm_history_change) %></th>
+      <th><%= l(:rcfm_history_before) %></th>
+      <th><%= l(:rcfm_history_after) %></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% Array(@changes['diff']).each do |change| %>
+      <tr>
+        <td><%= change['id'] %></td>
+        <td><%= rcfm_history_change(change) %></td>
+        <td><%= rcfm_history_state(change['before'], @history.target_type) %></td>
+        <td><%= rcfm_history_state(change['after'], @history.target_type) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
 
 <h3><%= l(:rcfm_history_state) %></h3>
-<pre class="rcfm-json-detail"><%= JSON.pretty_generate(@snapshot) %></pre>
+<table class="list rcfm-history-state">
+  <thead><tr><th>ID</th><th><%= l(:field_name) %></th><% if @history.target_type == 'custom_field_enumerations' %><th><%= l(:field_active) %></th><% end %><th><%= l(:label_position) %></th></tr></thead>
+  <tbody>
+    <% @snapshot.each do |item| %>
+      <tr>
+        <td><%= item['id'] %></td>
+        <td><%= item['name'] %></td>
+        <% if @history.target_type == 'custom_field_enumerations' %><td><%= checked_image(item['active']) %></td><% end %>
+        <td><%= item['position'] %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<details class="rcfm-history-technical">
+  <summary><%= l(:rcfm_history_technical_details) %></summary>
+  <pre class="rcfm-json-detail"><%= JSON.pretty_generate(@changes) %></pre>
+  <pre class="rcfm-json-detail"><%= JSON.pretty_generate(@snapshot) %></pre>
+</details>
 
 <%= form_tag rcfm_preview_history_restore_path(@history), :method => :post do %>
   <%= submit_tag l(:rcfm_restore_preview), :data => {:confirm => l(:rcfm_confirm_restore_preview)} %>
