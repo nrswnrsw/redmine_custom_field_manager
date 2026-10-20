@@ -300,6 +300,7 @@
 
   CustomFieldManager.prototype.refreshSelection = function() {
     var count = this.body.find('.rcfm-select:checked').length;
+    this.form.toggleClass('rcfm-has-selection', count > 0);
     this.form.find('.rcfm-selection-count').text(
       this.form.data('rcfm-selected-count').replace('__COUNT__', count)
     );
@@ -325,6 +326,7 @@
     }.bind(this), 0);
     var dirty = changedCount > 0;
 
+    this.form.toggleClass('rcfm-dirty', dirty);
     this.form.find('.rcfm-ordered-ids').val(JSON.stringify(current));
     this.form.find('.rcfm-save, .rcfm-reset').prop('disabled', !dirty || this.saving);
     this.form.find('.rcfm-undo').prop('disabled', !this.undoStack.length || this.saving);

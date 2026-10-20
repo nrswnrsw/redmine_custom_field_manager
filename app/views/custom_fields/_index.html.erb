@@ -40,39 +40,53 @@
   <%= hidden_field_tag :resolution, 'normal', :class => 'rcfm-resolution' %>
 
   <div class="rcfm-toolbar box">
-    <div class="rcfm-toolbar-row">
-      <%= button_tag l(:rcfm_select_all), :type => 'button', :class => 'rcfm-select-all' %>
-      <%= button_tag l(:rcfm_clear_selection), :type => 'button', :class => 'rcfm-clear-selection' %>
-      <%= button_tag l(:rcfm_undo), :type => 'button', :class => 'rcfm-undo', :disabled => true %>
-      <%= button_tag l(:rcfm_redo), :type => 'button', :class => 'rcfm-redo', :disabled => true %>
-      <%= button_tag l(:button_cancel), :type => 'button', :class => 'rcfm-reset', :disabled => true %>
-      <span class="rcfm-selection-count" aria-live="polite"><%= l(:rcfm_selected_count, :count => 0) %></span>
-    </div>
-
-    <div class="rcfm-toolbar-row rcfm-bulk-move">
-      <label>
-        <%= l(:rcfm_move_target) %>
-        <input type="text"
-               class="rcfm-target"
-               list="<%= manager_id %>-targets"
-               autocomplete="off"
-               placeholder="<%= l(:rcfm_move_target_placeholder) %>">
-      </label>
-      <datalist id="<%= manager_id %>-targets" class="rcfm-target-list">
-        <% fields.each_with_index do |field, index| %>
-          <option value="<%= h "#{l(:rcfm_target_candidate, :position => index + 1, :name => field.name)} (##{field.id})" %>"></option>
-        <% end %>
-      </datalist>
-      <label><input type="radio" name="rcfm_move_side_<%= manager_id %>" value="before" checked> <%= l(:rcfm_before) %></label>
-      <label><input type="radio" name="rcfm_move_side_<%= manager_id %>" value="after"> <%= l(:rcfm_after) %></label>
-      <%= button_tag l(:button_move), :type => 'button', :class => 'rcfm-move-selected' %>
-      <div class="rcfm-target-candidates" hidden aria-live="polite">
-        <p class="rcfm-target-candidates-message"></p>
-        <div class="rcfm-target-candidate-list"></div>
+    <div class="rcfm-selection-bar">
+      <div class="rcfm-selection-summary">
+        <span class="rcfm-group-label"><%= l(:rcfm_selection_group) %></span>
+        <span class="rcfm-selection-count" aria-live="polite"><%= l(:rcfm_selected_count, :count => 0) %></span>
+      </div>
+      <div class="rcfm-selection-controls">
+        <%= button_tag sprite_icon('checked', l(:rcfm_select_all)),
+                       :type => 'button',
+                       :class => 'rcfm-select-all rcfm-button-quiet' %>
+        <%= button_tag sprite_icon('cancel', l(:rcfm_clear_selection)),
+                       :type => 'button',
+                       :class => 'rcfm-clear-selection rcfm-button-quiet' %>
       </div>
     </div>
 
-    <div class="rcfm-status" aria-live="polite"><%= l(:rcfm_no_changes) %></div>
+    <div class="rcfm-operation-grid rcfm-operation-grid--single">
+      <section class="rcfm-operation-panel rcfm-operation-panel--move rcfm-bulk-move" aria-labelledby="<%= manager_id %>-move-actions">
+        <h3 id="<%= manager_id %>-move-actions"><%= l(:rcfm_move_selected_group) %></h3>
+        <div class="rcfm-move-controls">
+          <label class="rcfm-target-field">
+            <span><%= l(:rcfm_move_target) %></span>
+            <input type="text"
+                   class="rcfm-target"
+                   list="<%= manager_id %>-targets"
+                   autocomplete="off"
+                   placeholder="<%= l(:rcfm_move_target_placeholder) %>">
+          </label>
+          <datalist id="<%= manager_id %>-targets" class="rcfm-target-list">
+            <% fields.each_with_index do |field, index| %>
+              <option value="<%= h "#{l(:rcfm_target_candidate, :position => index + 1, :name => field.name)} (##{field.id})" %>"></option>
+            <% end %>
+          </datalist>
+          <div class="rcfm-move-side" role="group" aria-label="<%= l(:rcfm_move_position) %>">
+            <label><input type="radio" name="rcfm_move_side_<%= manager_id %>" value="before" checked> <%= l(:rcfm_before) %></label>
+            <label><input type="radio" name="rcfm_move_side_<%= manager_id %>" value="after"> <%= l(:rcfm_after) %></label>
+          </div>
+          <%= button_tag sprite_icon('move', l(:button_move)),
+                         :type => 'button',
+                         :class => 'rcfm-move-selected rcfm-button-action' %>
+          <div class="rcfm-target-candidates" hidden aria-live="polite">
+            <p class="rcfm-target-candidates-message"></p>
+            <div class="rcfm-target-candidate-list"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
     <div class="rcfm-error error" hidden></div>
   </div>
 
@@ -130,7 +144,32 @@
     </tbody>
   </table>
 
-  <p class="rcfm-actions">
-    <%= submit_tag l(:button_save), :class => 'rcfm-save', :disabled => true %>
-  </p>
+  <div class="rcfm-commit-bar">
+    <div class="rcfm-change-summary">
+      <span class="rcfm-change-indicator" aria-hidden="true"></span>
+      <div class="rcfm-status" aria-live="polite"><%= l(:rcfm_no_changes) %></div>
+    </div>
+    <div class="rcfm-commit-controls">
+      <div class="rcfm-history-actions" aria-label="<%= l(:rcfm_edit_history_controls) %>">
+        <%= button_tag sprite_icon('reply', l(:rcfm_undo)),
+                       :type => 'button',
+                       :class => 'rcfm-undo rcfm-button-quiet',
+                       :disabled => true %>
+        <%= button_tag sprite_icon('reply', l(:rcfm_redo)),
+                       :type => 'button',
+                       :class => 'rcfm-redo rcfm-button-quiet',
+                       :disabled => true %>
+      </div>
+      <div class="rcfm-final-actions">
+        <%= button_tag sprite_icon('cancel', l(:rcfm_discard_changes)),
+                       :type => 'button',
+                       :class => 'rcfm-reset rcfm-button-quiet',
+                       :disabled => true %>
+        <%= button_tag sprite_icon('save', l(:rcfm_save_changes)),
+                       :type => 'submit',
+                       :class => 'rcfm-save rcfm-button-primary',
+                       :disabled => true %>
+      </div>
+    </div>
+  </div>
 </form>

@@ -36,6 +36,51 @@ test.describe.serial('custom field manager browser behavior', function() {
     await login(page);
   });
 
+  test('groups controls by purpose and keeps commit actions in a predictable position', async function({page}) {
+    await page.goto('/custom_fields/' + fieldId + '/enumerations', {waitUntil: 'networkidle'});
+
+    const selectionBar = page.locator('.rcfm-selection-bar');
+    const statePanel = page.locator('.rcfm-operation-panel--state');
+    const movePanel = page.locator('.rcfm-operation-panel--move');
+    const commitBar = page.locator('.rcfm-commit-bar');
+    await expect(selectionBar).toBeVisible();
+    await expect(statePanel).toBeVisible();
+    await expect(movePanel).toBeVisible();
+    await expect(commitBar).toBeVisible();
+    await expect(commitBar.locator('.rcfm-save')).toHaveText('Save changes');
+    await expect(commitBar.locator('.rcfm-reset')).toHaveText('Discard changes');
+
+    const selectionBox = await selectionBar.boundingBox();
+    const stateBox = await statePanel.boundingBox();
+    const moveBox = await movePanel.boundingBox();
+    const deleteBox = await statePanel.locator('.rcfm-delete-selected').boundingBox();
+    const deactivateBox = await statePanel.locator('.rcfm-deactivate-selected').boundingBox();
+    const saveBox = await commitBar.locator('.rcfm-save').boundingBox();
+    const resetBox = await commitBar.locator('.rcfm-reset').boundingBox();
+    expect(selectionBox.y).toBeLessThan(stateBox.y);
+    expect(stateBox.x).toBeLessThan(moveBox.x);
+    expect(deactivateBox.x).toBeLessThan(deleteBox.x);
+    expect(resetBox.x).toBeLessThan(saveBox.x);
+
+    await page.locator('.rcfm-enumerations tbody tr').nth(0).locator('.rcfm-active').uncheck();
+    await expect(page.locator('.rcfm-manager')).toHaveClass(/rcfm-dirty/);
+    const saveBackground = await commitBar.locator('.rcfm-save').evaluate(function(element) {
+      return window.getComputedStyle(element).backgroundColor;
+    });
+    const resetBackground = await commitBar.locator('.rcfm-reset').evaluate(function(element) {
+      return window.getComputedStyle(element).backgroundColor;
+    });
+    expect(saveBackground).not.toBe(resetBackground);
+    await commitBar.locator('.rcfm-reset').click();
+
+    await page.setViewportSize({width: 720, height: 900});
+    const narrowStateBox = await statePanel.boundingBox();
+    const narrowMoveBox = await movePanel.boundingBox();
+    expect(Math.abs(narrowStateBox.x - narrowMoveBox.x)).toBeLessThan(2);
+    expect(narrowStateBox.y).toBeLessThan(narrowMoveBox.y);
+    await expect(commitBar).toHaveCSS('position', 'static');
+  });
+
   test('supports staged edit, undo, redo, move, add, save, and CSV preview', async function({page}, testInfo) {
     await page.goto('/custom_fields/' + fieldId + '/enumerations', {waitUntil: 'networkidle'});
     const rows = page.locator('.rcfm-enumerations tbody tr');

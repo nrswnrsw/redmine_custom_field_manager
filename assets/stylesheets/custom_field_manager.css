@@ -3,6 +3,9 @@
 }
 
 .rcfm-toolbar {
+  background: var(--oc-gray-0, #f7f7f7);
+  overflow: hidden;
+  padding: 0;
   margin-bottom: 1em;
 }
 
@@ -18,8 +21,184 @@
   margin-bottom: 0;
 }
 
+.rcfm-selection-bar {
+  align-items: center;
+  background: var(--oc-gray-1, #f1f1f1);
+  border-bottom: 1px solid var(--oc-gray-3, #ddd);
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75em 1em;
+}
+
+.rcfm-selection-summary,
+.rcfm-selection-controls,
+.rcfm-state-actions,
+.rcfm-commit-controls,
+.rcfm-history-actions,
+.rcfm-final-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.5em;
+}
+
+.rcfm-group-label {
+  color: var(--oc-gray-7, #555);
+  font-weight: bold;
+}
+
+.rcfm-selection-count {
+  background: var(--oc-gray-2, #e9e9e9);
+  border: 1px solid var(--oc-gray-4, #ccc);
+  border-radius: 999px;
+  color: var(--oc-gray-7, #555);
+  font-size: 0.9em;
+  font-weight: bold;
+  padding: 0.15em 0.7em;
+}
+
+.rcfm-has-selection .rcfm-selection-count {
+  background: var(--oc-blue-1, #e6f2fb);
+  border-color: var(--oc-blue-3, #9fc8e8);
+  color: var(--oc-blue-9, #18537e);
+}
+
+.rcfm-operation-grid {
+  display: grid;
+  gap: 1em;
+  grid-template-columns: minmax(18em, 0.8fr) minmax(34em, 1.4fr);
+  padding: 1em;
+}
+
+.rcfm-operation-grid--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rcfm-operation-panel {
+  background: var(--oc-white, #fff);
+  border: 1px solid var(--oc-gray-3, #d7d7d7);
+  border-radius: 4px;
+  min-width: 0;
+  padding: 0.85em;
+}
+
+.rcfm-operation-panel h3 {
+  background: none;
+  border: 0;
+  color: var(--oc-gray-8, #444);
+  font-size: 1em;
+  margin: 0 0 0.75em;
+  padding: 0;
+}
+
+.rcfm-operation-panel--move {
+  border-inline-start: 4px solid var(--oc-blue-5, #3a78a3);
+}
+
+.rcfm-destructive-actions {
+  border-inline-start: 1px solid var(--oc-gray-3, #ddd);
+  margin-inline-start: auto;
+  padding-inline-start: 0.75em;
+}
+
+.rcfm-move-controls {
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65em;
+}
+
+.rcfm-target-field {
+  flex: 1 1 22em;
+}
+
+.rcfm-target-field > span {
+  display: block;
+  font-size: 0.9em;
+  font-weight: bold;
+  margin-bottom: 0.25em;
+}
+
 .rcfm-bulk-move .rcfm-target {
-  min-width: 24em;
+  min-width: 0;
+  width: 100%;
+}
+
+.rcfm-move-side {
+  align-items: center;
+  background: var(--oc-gray-1, #f2f2f2);
+  border: 1px solid var(--oc-gray-3, #d6d6d6);
+  border-radius: 3px;
+  display: flex;
+  min-height: 30px;
+  padding: 0 0.35em;
+}
+
+.rcfm-move-side label {
+  cursor: pointer;
+  padding: 0 0.35em;
+  white-space: nowrap;
+}
+
+.rcfm-toolbar button .icon-svg,
+.rcfm-commit-bar button .icon-svg {
+  margin-inline-end: 0.3em;
+  vertical-align: text-bottom;
+}
+
+.rcfm-redo .icon-svg {
+  transform: scaleX(-1);
+}
+
+.rcfm-button-quiet {
+  background: transparent;
+}
+
+.rcfm-button-action {
+  border-color: var(--oc-blue-5, #3a78a3);
+  color: var(--oc-blue-9, #18537e);
+  font-weight: bold;
+}
+
+.rcfm-button-danger {
+  background: var(--oc-red-0, #fff5f5);
+  border-color: var(--oc-red-4, #e28b8b);
+  color: var(--oc-red-9, #9b1c1c);
+}
+
+.rcfm-button-primary:not(:disabled) {
+  background: var(--oc-blue-7, #24658f);
+  border-color: var(--oc-blue-8, #1f587d);
+  color: var(--oc-white, #fff);
+  font-weight: bold;
+}
+
+.rcfm-button-primary:not(:disabled):hover,
+.rcfm-button-primary:not(:disabled):focus {
+  background: var(--oc-blue-8, #1f587d);
+}
+
+.rcfm-secondary-tools {
+  border-top: 1px solid var(--oc-gray-3, #ddd);
+  display: grid;
+  gap: 0 1em;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 0.8em 1em 0;
+}
+
+.rcfm-secondary-tools details {
+  background: var(--oc-white, #fff);
+  border: 1px solid var(--oc-gray-3, #ddd);
+  border-radius: 3px;
+  padding: 0.55em 0.7em;
+}
+
+.rcfm-secondary-tools summary {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.rcfm-toolbar > .rcfm-error {
+  margin: 0.8em 1em 1em;
 }
 
 .rcfm-target-candidates {
@@ -51,10 +230,59 @@
   color: var(--fg-color-muted, #666);
 }
 
-.rcfm-selection-count {
-  color: var(--fg-color-muted, #666);
+.rcfm-commit-bar {
+  align-items: center;
+  background: var(--oc-white, #fff);
+  background: color-mix(in srgb, var(--oc-white, #fff) 96%, transparent);
+  border: 1px solid var(--oc-gray-3, #d2d2d2);
+  border-radius: 4px;
+  bottom: 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  gap: 1em;
+  justify-content: space-between;
+  margin-top: 1em;
+  padding: 0.7em 0.85em;
+  position: sticky;
+  z-index: 20;
+}
+
+.rcfm-change-summary {
+  align-items: center;
+  display: flex;
+  gap: 0.55em;
+  min-width: 0;
+}
+
+.rcfm-change-indicator {
+  background: var(--oc-gray-5, #999);
+  border-radius: 50%;
+  flex: 0 0 auto;
+  height: 0.65em;
+  width: 0.65em;
+}
+
+.rcfm-dirty .rcfm-change-indicator {
+  background: var(--oc-orange-6, #d97706);
+  box-shadow: 0 0 0 3px var(--oc-orange-1, #ffefd5);
+}
+
+.rcfm-dirty .rcfm-status {
+  color: var(--oc-gray-9, #333);
   font-weight: bold;
-  margin-left: auto;
+}
+
+.rcfm-history-actions {
+  border-inline-end: 1px solid var(--oc-gray-3, #ddd);
+  padding-inline-end: 0.75em;
+}
+
+.rcfm-commit-bar button {
+  min-height: 2.25em;
+}
+
+.rcfm-back-link {
+  margin-top: 0.75em;
 }
 
 .rcfm-selection {
@@ -87,16 +315,12 @@
   border: 1px dashed var(--border-color, #bbb);
 }
 
-.rcfm-actions {
-  margin-top: 1em;
-}
-
 .rcfm-bulk-add {
-  margin-bottom: 0.75em;
+  margin-bottom: 0.8em;
 }
 
 .rcfm-csv-import {
-  margin-bottom: 0.75em;
+  margin-bottom: 0.8em;
 }
 
 .rcfm-csv-preview {
@@ -150,8 +374,71 @@
 }
 
 @media screen and (max-width: 899px) {
+  .rcfm-selection-bar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.65em;
+  }
+
+  .rcfm-selection-controls {
+    width: 100%;
+  }
+
+  .rcfm-operation-grid,
+  .rcfm-secondary-tools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rcfm-state-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .rcfm-destructive-actions {
+    border-inline-start: 0;
+    border-top: 1px solid var(--oc-gray-3, #ddd);
+    margin: 0.25em 0 0;
+    padding: 0.65em 0 0;
+  }
+
+  .rcfm-destructive-actions button {
+    width: 100%;
+  }
+
+  .rcfm-target-field {
+    flex-basis: 100%;
+  }
+
+  .rcfm-move-side {
+    flex: 1 1 auto;
+  }
+
+  .rcfm-commit-bar {
+    align-items: stretch;
+    flex-direction: column;
+    position: static;
+  }
+
+  .rcfm-commit-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .rcfm-history-actions {
+    border-bottom: 1px solid var(--oc-gray-3, #ddd);
+    border-inline-end: 0;
+    padding: 0 0 0.65em;
+  }
+
+  .rcfm-final-actions {
+    justify-content: flex-end;
+  }
+
+  .rcfm-final-actions .rcfm-save {
+    flex: 1 1 auto;
+  }
+
   .rcfm-bulk-move .rcfm-target {
-    min-width: 14em;
     width: 100%;
   }
 }

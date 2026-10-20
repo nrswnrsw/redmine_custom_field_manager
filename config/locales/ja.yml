@@ -19,7 +19,9 @@ ja:
   rcfm_custom_fields_help: 並び順の変更は「保存」を押すまでサーバーへ反映されません。
   rcfm_deactivate_selected: 選択項目を無効化
   rcfm_delete_selected: 選択項目を削除
+  rcfm_discard_changes: 変更を取り消す
   rcfm_discard_and_reload: 破棄して再読み込み
+  rcfm_edit_history_controls: 編集履歴
   rcfm_enumeration_changes_summary: "未保存: 追加%{added}件、更新%{updated}件、削除%{deleted}件、移動%{moved}件"
   rcfm_enumerations_help: 名称、並び順、有効状態、追加、削除を編集できます。変更は「保存」で一括して確定します。
   rcfm_error_conflict: 他の管理者がカスタムフィールドを変更しました。未保存の並び順は保持されています。サーバーの現在状態を確認してから保存してください。
@@ -34,6 +36,8 @@ ja:
   rcfm_merge_and_save: 統合案を確認して保存
   rcfm_move_target: 移動先
   rcfm_move_target_placeholder: 移動先の名前を入力
+  rcfm_move_position: 移動位置
+  rcfm_move_selected_group: 選択項目を移動
   rcfm_target_not_found: 入力した名前の移動先が見つかりません。候補から選択してください。
   rcfm_target_ambiguous: 同じ名前の移動先が複数あります。現在の一覧位置を見て移動先を選んでください。
   rcfm_target_candidate: "%{name} — 現在の%{position}番目"
@@ -44,10 +48,13 @@ ja:
   rcfm_select: 選択
   rcfm_select_all: すべて選択
   rcfm_select_field: "%{name}を選択"
+  rcfm_selection_group: 項目の選択
   rcfm_selection_error: 1件以上の項目を選択してください。
+  rcfm_selected_item_actions: 選択項目の操作
   rcfm_server_state_summary: "サーバーの現在のリストは%{count}件です。"
   rcfm_target_error: 選択中の項目自身は移動先に指定できません。
   rcfm_target_required: 移動先の名前を入力してください。
+  rcfm_save_changes: 変更を保存
   rcfm_undo: 元に戻す
   rcfm_redo: やり直す
   rcfm_csv_apply: この内容でインポート

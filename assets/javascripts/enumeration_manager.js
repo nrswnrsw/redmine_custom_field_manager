@@ -352,8 +352,10 @@
   };
 
   EnumerationManager.prototype.refreshSelection = function() {
+    var count = this.selectedIds().length;
+    this.form.toggleClass('rcfm-has-selection', count > 0);
     this.form.find('.rcfm-selection-count').text(
-      this.form.data('rcfm-selected-count').replace('__COUNT__', this.selectedIds().length)
+      this.form.data('rcfm-selected-count').replace('__COUNT__', count)
     );
   };
 
@@ -668,6 +670,7 @@
         .replace('__DELETED__', counts.deleted)
         .replace('__MOVED__', counts.moved);
     }
+    this.form.toggleClass('rcfm-dirty', dirty);
     this.form.find('.rcfm-status').text(summary);
     this.refreshSelection();
     this.form.find('.rcfm-items').val(JSON.stringify(this.items));
