@@ -37,15 +37,17 @@ ja:
   rcfm_target_not_found: 入力した名前の移動先が見つかりません。候補から選択してください。
   rcfm_target_ambiguous: 同じ名前の移動先が複数あります。現在の一覧位置を見て移動先を選んでください。
   rcfm_target_candidate: "%{name} — 現在の%{position}番目"
+  rcfm_target_candidate_selected: 選択中
   rcfm_no_changes: 未保存の変更はありません
   rcfm_restore_item: 復元
   rcfm_save_error: 変更を保存できませんでした。
   rcfm_select: 選択
   rcfm_select_all: すべて選択
   rcfm_select_field: "%{name}を選択"
-  rcfm_selection_error: 1件以上の項目と移動先を選択してください。
+  rcfm_selection_error: 1件以上の項目を選択してください。
   rcfm_server_state_summary: "サーバーの現在のリストは%{count}件です。"
   rcfm_target_error: 選択中の項目自身は移動先に指定できません。
+  rcfm_target_required: 移動先の名前を入力してください。
   rcfm_undo: 元に戻す
   rcfm_redo: やり直す
   rcfm_csv_apply: この内容でインポート

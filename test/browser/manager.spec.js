@@ -121,11 +121,52 @@ test.describe.serial('custom field manager browser behavior', function() {
       'Duplicate destination — current position 1'
     );
 
-    await candidates.locator('.rcfm-target-candidate').nth(0).click();
+    await rows.nth(0).locator('.rcfm-select').check();
+    await page.locator('.rcfm-move-selected').click();
+    await expect(candidates.locator('.rcfm-target-candidate').nth(0)).toBeDisabled();
+    await expect(candidates.locator('.rcfm-target-candidate').nth(0)).toContainText('(selected)');
+    await expect(candidates.locator('.rcfm-target-candidate').nth(1)).toBeEnabled();
+    await candidates.locator('.rcfm-target-candidate').nth(1).click();
     await expect(candidates).toBeHidden();
-    await expect(rows.nth(0)).toHaveAttribute('data-rcfm-client-id', sourceId);
+    await expect(rows.nth(1)).toHaveAttribute('data-rcfm-client-id', sourceId);
+
+    await page.locator('.rcfm-select-all').click();
+    await page.locator('.rcfm-move-selected').click();
+    await expect(candidates).toBeHidden();
+    await expect(page.locator('.rcfm-error')).toContainText(
+      'The destination cannot be one of the selected items.'
+    );
 
     await page.locator('.rcfm-reset').click();
+    await expect(page.locator('.rcfm-save')).toBeDisabled();
+    await expect(page.locator('.rcfm-error')).toBeHidden();
+  });
+
+  test('clears obsolete errors after the user corrects or undoes an action', async function({page}) {
+    await page.goto('/custom_fields/' + fieldId + '/enumerations', {waitUntil: 'networkidle'});
+    const rows = page.locator('.rcfm-enumerations tbody tr');
+    await page.locator('.rcfm-deactivate-selected').click();
+    await expect(page.locator('.rcfm-error')).toContainText('Select one or more items.');
+    await rows.nth(0).locator('.rcfm-select').check();
+    await expect(page.locator('.rcfm-error')).toBeHidden();
+    await page.locator('.rcfm-move-selected').click();
+    await expect(page.locator('.rcfm-error')).toContainText('Enter a destination name.');
+    await page.locator('.rcfm-target').fill('Browser value B');
+    await expect(page.locator('.rcfm-error')).toBeHidden();
+    await page.locator('.rcfm-clear-selection').click();
+
+    await page.locator('.rcfm-bulk-add summary').click();
+    await page.locator('.rcfm-add-lines').click();
+    await expect(page.locator('.rcfm-error')).toContainText('Value names cannot be blank.');
+
+    await page.locator('.rcfm-bulk-add-input').fill('Corrected value');
+    await page.locator('.rcfm-add-lines').click();
+    await expect(page.locator('.rcfm-error')).toBeHidden();
+    await expect(rows).toHaveCount(6);
+
+    await page.locator('.rcfm-undo').click();
+    await expect(page.locator('.rcfm-error')).toBeHidden();
+    await expect(rows).toHaveCount(5);
     await expect(page.locator('.rcfm-save')).toBeDisabled();
   });
 
@@ -164,7 +205,11 @@ test.describe.serial('custom field manager browser behavior', function() {
     const manager = page.locator('.rcfm-manager').filter({has: page.locator('input[name="field_type"][value="GroupCustomField"]')});
     const source = manager.locator('tr[data-rcfm-id="' + fieldId + '"]');
     const target = manager.locator('tr[data-rcfm-id]').filter({hasText: 'RCFM browser target'});
+    await manager.locator('.rcfm-target').fill('RCFM browser target');
+    await manager.locator('.rcfm-move-selected').click();
+    await expect(manager.locator('.rcfm-error')).toContainText('Select one or more items');
     await source.locator('.rcfm-select').check();
+    await expect(manager.locator('.rcfm-error')).toBeHidden();
     await expect(manager.locator('.rcfm-selection-count')).toHaveText('1 selected');
     await manager.locator('.rcfm-target').fill('RCFM browser target');
     await manager.locator('input[type="radio"][value="after"]').check();

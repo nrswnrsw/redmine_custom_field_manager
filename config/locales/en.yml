@@ -37,15 +37,17 @@ en:
   rcfm_target_not_found: No destination has that name. Select one of the suggestions.
   rcfm_target_ambiguous: More than one destination has that name. Choose the destination by its current list position.
   rcfm_target_candidate: "%{name} — current position %{position}"
+  rcfm_target_candidate_selected: selected
   rcfm_no_changes: No unsaved changes
   rcfm_restore_item: Restore
   rcfm_save_error: The changes could not be saved.
   rcfm_select: Select
   rcfm_select_all: Select all
   rcfm_select_field: "Select %{name}"
-  rcfm_selection_error: Select one or more fields and a destination.
+  rcfm_selection_error: Select one or more items.
   rcfm_server_state_summary: "The current server list contains %{count} values."
-  rcfm_target_error: The destination cannot be one of the selected fields.
+  rcfm_target_error: The destination cannot be one of the selected items.
+  rcfm_target_required: Enter a destination name.
   rcfm_undo: Undo
   rcfm_redo: Redo
   rcfm_csv_apply: Apply this import

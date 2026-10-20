@@ -41,6 +41,12 @@
   font-weight: normal;
 }
 
+.rcfm-target-candidate-state {
+  color: var(--fg-color-muted, #777);
+  font-weight: normal;
+  margin-left: 0.4em;
+}
+
 .rcfm-status {
   color: var(--fg-color-muted, #666);
 }

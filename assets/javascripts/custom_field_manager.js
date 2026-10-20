@@ -60,6 +60,7 @@
     this.undoStack.push(previousOrder);
     this.redoStack = [];
     this.conflict = null;
+    this.clearError();
     this.form.find('.rcfm-conflict').prop('hidden', true);
     this.refreshTargetList();
     this.refresh();
@@ -103,11 +104,13 @@
     this.form.on('change', '.rcfm-select', function() {
       $(this).closest('tr').toggleClass('rcfm-selected', this.checked);
       manager.hideTargetCandidates();
+      manager.clearError();
       manager.refreshSelection();
     });
 
     this.form.on('input', '.rcfm-target', function() {
       manager.hideTargetCandidates();
+      manager.clearError();
     });
 
     this.form.on('click', '.rcfm-select-all', function() {
@@ -132,6 +135,7 @@
       }
       manager.redoStack.push(manager.currentOrder());
       manager.conflict = null;
+      manager.clearError();
       manager.restore(manager.undoStack.pop());
     });
 
@@ -141,6 +145,7 @@
       }
       manager.undoStack.push(manager.currentOrder());
       manager.conflict = null;
+      manager.clearError();
       manager.restore(manager.redoStack.pop());
     });
 
@@ -151,6 +156,7 @@
       manager.undoStack.push(manager.currentOrder());
       manager.redoStack = [];
       manager.conflict = null;
+      manager.clearError();
       manager.restore(manager.baseline);
     });
 
@@ -196,6 +202,10 @@
       .find('.rcfm-target-candidate-list').empty();
   };
 
+  CustomFieldManager.prototype.clearError = function() {
+    this.form.find('.rcfm-error').prop('hidden', true).text('');
+  };
+
   CustomFieldManager.prototype.showTargetCandidates = function(targets, selected) {
     var manager = this;
     var panel = this.form.find('.rcfm-target-candidates');
@@ -216,11 +226,15 @@
         .append($('<span>').text(label))
         .append($('<span class="rcfm-record-id">').text('#' + id));
       if (button.prop('disabled')) {
+        button.append(
+          $('<span class="rcfm-target-candidate-state">')
+            .text('(' + manager.form.data('rcfm-target-candidate-selected') + ')')
+        );
         button.attr('title', manager.form.data('rcfm-target-error'));
       }
       list.append(button);
     });
-    this.form.find('.rcfm-error').prop('hidden', true).text('');
+    this.clearError();
     panel.prop('hidden', false);
   };
 
@@ -231,9 +245,13 @@
     var error = this.form.find('.rcfm-error');
 
     this.hideTargetCandidates();
-    error.prop('hidden', true).text('');
+    this.clearError();
     if (!selected.length) {
       error.text(this.form.data('rcfm-selection-error')).prop('hidden', false);
+      return;
+    }
+    if (!value) {
+      error.text(this.form.data('rcfm-target-required')).prop('hidden', false);
       return;
     }
 
@@ -252,6 +270,10 @@
         return;
       }
       if (target.length > 1) {
+        if (!target.filter(function() { return selected.filter(this).length === 0; }).length) {
+          error.text(this.form.data('rcfm-target-error')).prop('hidden', false);
+          return;
+        }
         this.showTargetCandidates(target, selected);
         return;
       }

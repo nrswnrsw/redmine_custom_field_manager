@@ -50,6 +50,7 @@
     this.undoStack.push(before);
     this.redoStack = [];
     this.conflict = null;
+    this.clearError();
     this.form.find('.rcfm-conflict').prop('hidden', true);
     if (render) {
       this.render();
@@ -66,11 +67,17 @@
       manager.selected[id] = this.checked;
       row.toggleClass('rcfm-selected', this.checked);
       manager.hideTargetCandidates();
+      manager.clearError();
       manager.refreshSelection();
     });
 
     this.form.on('input', '.rcfm-target', function() {
       manager.hideTargetCandidates();
+      manager.clearError();
+    });
+
+    this.form.on('input', '.rcfm-name-input, .rcfm-bulk-add-input', function() {
+      manager.clearError();
     });
 
     this.form.on('change', '.rcfm-active', function() {
@@ -92,6 +99,7 @@
       } else if (event.key === 'Escape') {
         event.preventDefault();
         manager.editingId = null;
+        manager.clearError();
         manager.render();
       }
     });
@@ -177,6 +185,7 @@
       manager.redoStack.push(clone(manager.items));
       manager.items = manager.undoStack.pop();
       manager.conflict = null;
+      manager.clearError();
       manager.form.find('.rcfm-conflict').prop('hidden', true);
       manager.render();
       manager.refresh();
@@ -189,6 +198,7 @@
       manager.undoStack.push(clone(manager.items));
       manager.items = manager.redoStack.pop();
       manager.conflict = null;
+      manager.clearError();
       manager.form.find('.rcfm-conflict').prop('hidden', true);
       manager.render();
       manager.refresh();
@@ -200,6 +210,7 @@
       manager.items = clone(manager.baseline);
       manager.selected = {};
       manager.conflict = null;
+      manager.clearError();
       manager.render();
       manager.refresh();
     });
@@ -300,6 +311,7 @@
   };
 
   EnumerationManager.prototype.startEditing = function(clientId) {
+    this.clearError();
     this.editingId = clientId;
     this.render();
     this.body.find('tr[data-rcfm-client-id="' + clientId + '"] .rcfm-name-input').trigger('focus').trigger('select');
@@ -363,6 +375,7 @@
       this.showError(this.form.data('rcfm-selection-error'));
       return;
     }
+    this.clearError();
     this.commit(function() {
       ids.forEach(function(id) {
         var item = this.findItem(id);
@@ -402,6 +415,10 @@
       .find('.rcfm-target-candidate-list').empty();
   };
 
+  EnumerationManager.prototype.clearError = function() {
+    this.form.find('.rcfm-error').prop('hidden', true).text('');
+  };
+
   EnumerationManager.prototype.showTargetCandidates = function(candidates, selectedIds) {
     var manager = this;
     var panel = this.form.find('.rcfm-target-candidates');
@@ -422,11 +439,15 @@
         button.append($('<span class="rcfm-record-id">').text('#' + item.id));
       }
       if (button.prop('disabled')) {
+        button.append(
+          $('<span class="rcfm-target-candidate-state">')
+            .text('(' + manager.form.data('rcfm-target-candidate-selected') + ')')
+        );
         button.attr('title', manager.form.data('rcfm-target-error'));
       }
       list.append(button);
     });
-    this.form.find('.rcfm-error').prop('hidden', true).text('');
+    this.clearError();
     panel.prop('hidden', false);
   };
 
@@ -435,8 +456,13 @@
     var value = this.form.find('.rcfm-target').val().trim();
     var match = value.match(/\(#([^\)]+)\)\s*$/);
     this.hideTargetCandidates();
+    this.clearError();
     if (!ids.length) {
       this.showError(this.form.data('rcfm-selection-error'));
+      return;
+    }
+    if (!value) {
+      this.showError(this.form.data('rcfm-target-required'));
       return;
     }
 
@@ -459,6 +485,12 @@
         return;
       }
       if (candidates.length > 1) {
+        if (!candidates.some(function(item) {
+          return ids.indexOf(String(item.client_id)) < 0;
+        })) {
+          this.showError(this.form.data('rcfm-target-error'));
+          return;
+        }
         this.showTargetCandidates(candidates, ids);
         return;
       }
@@ -804,7 +836,7 @@
     if (this.saving) {
       return;
     }
-    this.form.find('.rcfm-error').prop('hidden', true).text('');
+    this.clearError();
     this.readCsvFile().then(function() {
       return manager.jsonRequest(manager.form.data('rcfm-import-preview-url'), manager.csvPayload());
     }).then(function(payload) {
@@ -914,7 +946,7 @@
     }
 
     this.saving = true;
-    this.form.find('.rcfm-error').prop('hidden', true).text('');
+    this.clearError();
     this.form.find('.rcfm-force').val(force ? '1' : '0');
     this.form.find('.rcfm-confirmed-digest').val(force ? this.conflict.current_digest : '');
     this.form.find('.rcfm-resolution').val(resolution || (force ? 'force' : 'normal'));
