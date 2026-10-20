@@ -15,10 +15,17 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select 'button.rcfm-undo', :text => 'Undo'
     assert_select 'button.rcfm-redo', :text => 'Redo'
     assert_select '.rcfm-selection-bar button.rcfm-select-all'
-    assert_select '.rcfm-operation-panel--move button.rcfm-move-selected'
+    assert_select 'details.rcfm-operation-panel--move:not([open]) button.rcfm-move-selected'
+    assert_select '.rcfm-operation-panel--move summary', :text => /Move multiple items/
+    assert_select '.rcfm-bulk-move-help', :text => /Select the items to move/
     assert_select '.rcfm-commit-bar button.rcfm-save.rcfm-button-primary', :text => 'Save changes'
-    assert_select '.rcfm-commit-bar button.rcfm-reset', :text => 'Discard changes'
+    assert_select '.rcfm-commit-bar button.rcfm-reset', :text => 'Discard all unsaved changes'
     assert_select '.rcfm-selection-count', :text => '0 selected'
+    assert_select '.rcfm-selection-summary', :text => /Items to move/
+    assert_select 'th', :text => /Individual actions/
+    assert_select 'input.rcfm-select[aria-label*="for moving"]'
+    assert_select 'a.rcfm-delete-custom-field[data-confirm*="Other checked fields will not be deleted"]'
+    assert_select 'a.rcfm-delete-custom-field[data-confirm*="cannot be restored from change history"]'
     assert_select 'input.rcfm-target[placeholder="Enter a destination name"]'
     assert_select 'form.rcfm-manager[data-rcfm-target-required="Enter a destination name."]'
     assert_select 'form.rcfm-manager[data-rcfm-target-candidate*="current position"]'
@@ -46,9 +53,10 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select '.rcfm-selection-bar button.rcfm-select-all'
     assert_select '.rcfm-operation-panel--state button.rcfm-activate-selected'
     assert_select '.rcfm-operation-panel--state button.rcfm-delete-selected.rcfm-button-danger'
-    assert_select '.rcfm-operation-panel--move button.rcfm-move-selected'
+    assert_select 'details.rcfm-operation-panel--move:not([open]) button.rcfm-move-selected'
+    assert_select '.rcfm-operation-panel--move summary', :text => /Move multiple items/
     assert_select '.rcfm-commit-bar button.rcfm-save.rcfm-button-primary', :text => 'Save changes'
-    assert_select '.rcfm-commit-bar button.rcfm-reset', :text => 'Discard changes'
+    assert_select '.rcfm-commit-bar button.rcfm-reset', :text => 'Discard all unsaved changes'
     assert_select '.rcfm-selection-count', :text => '0 selected'
     assert_select 'input.rcfm-target[placeholder="Enter a destination name"]'
     assert_select 'form.rcfm-enumeration-manager[data-rcfm-target-required="Enter a destination name."]'

@@ -14,6 +14,10 @@ module RedmineCustomFieldManager
     end
 
     def preview
+      if @history.operation == 'delete'
+        raise InvalidChangeError, 'custom field deletion histories are audit-only'
+      end
+
       desired = HistoryReconstructor.new(@history).snapshot
       if @history.target_type == 'custom_fields'
         custom_field_preview(desired)

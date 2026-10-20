@@ -112,6 +112,20 @@ class RedmineCustomFieldManagerHistoryRestorerTest < ActiveSupport::TestCase
     assert_equal 'reorder_restore', RedmineCustomFieldManager::History.last.operation
   end
 
+  def test_custom_field_deletion_history_is_audit_only
+    field = IssueCustomField.create!(:name => 'Audit-only deletion', :field_format => 'string')
+    field.destroy!
+    history = RedmineCustomFieldManager::History.last
+
+    error = assert_raises RedmineCustomFieldManager::InvalidChangeError do
+      RedmineCustomFieldManager::HistoryRestorer.new(
+        :history => history,
+        :user => User.find(1)
+      ).preview
+    end
+    assert_match 'audit-only', error.message
+  end
+
   private
 
   def update_enumerations(first_name, second_active)

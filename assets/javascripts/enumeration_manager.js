@@ -5,6 +5,35 @@
     return JSON.parse(JSON.stringify(value));
   }
 
+  function minimumMovedCount(baselineOrder, currentOrder) {
+    var baselinePositions = {};
+    baselineOrder.forEach(function(id, index) {
+      baselinePositions[String(id)] = index;
+    });
+    var commonCount = 0;
+    var tails = [];
+    currentOrder.forEach(function(id) {
+      var key = String(id);
+      if (!Object.prototype.hasOwnProperty.call(baselinePositions, key)) {
+        return;
+      }
+      commonCount += 1;
+      var position = baselinePositions[key];
+      var low = 0;
+      var high = tails.length;
+      while (low < high) {
+        var middle = Math.floor((low + high) / 2);
+        if (tails[middle] < position) {
+          low = middle + 1;
+        } else {
+          high = middle;
+        }
+      }
+      tails[low] = position;
+    });
+    return commonCount - tails.length;
+  }
+
   function EnumerationManager(form) {
     if (window.performance && window.performance.mark) {
       window.performance.mark('rcfm-enumerations-init-start');
@@ -353,9 +382,11 @@
 
   EnumerationManager.prototype.refreshSelection = function() {
     var count = this.selectedIds().length;
+    var selectedText = this.form.data('rcfm-selected-count').replace('__COUNT__', count);
     this.form.toggleClass('rcfm-has-selection', count > 0);
-    this.form.find('.rcfm-selection-count').text(
-      this.form.data('rcfm-selected-count').replace('__COUNT__', count)
+    this.form.find('.rcfm-selection-count, .rcfm-bulk-move-count').text(selectedText);
+    this.form.find('.rcfm-move-selected-label').text(
+      this.form.data('rcfm-move-selected-count').replace('__COUNT__', count)
     );
   };
 
@@ -630,11 +661,11 @@
 
   EnumerationManager.prototype.changeCounts = function() {
     var baselineById = {};
-    this.baseline.forEach(function(item, index) {
-      baselineById[String(item.client_id)] = {item: item, index: index};
+    this.baseline.forEach(function(item) {
+      baselineById[String(item.client_id)] = item;
     });
     var counts = {added: 0, updated: 0, deleted: 0, moved: 0};
-    this.items.forEach(function(item, index) {
+    this.items.forEach(function(item) {
       var original = baselineById[String(item.client_id)];
       if (!original) {
         if (!item.deleted) {
@@ -642,16 +673,24 @@
         }
         return;
       }
-      if (item.deleted && !original.item.deleted) {
+      if (item.deleted && !original.deleted) {
         counts.deleted += 1;
       }
-      if (!item.deleted && (item.name !== original.item.name || item.active !== original.item.active)) {
+      if (!item.deleted && (item.name !== original.name || item.active !== original.active)) {
         counts.updated += 1;
       }
-      if (!item.deleted && index !== original.index) {
-        counts.moved += 1;
-      }
     });
+    var baselineOrder = this.baseline.filter(function(item) {
+      return !item.deleted;
+    }).map(function(item) {
+      return item.client_id;
+    });
+    var currentOrder = this.items.filter(function(item) {
+      return !item.deleted;
+    }).map(function(item) {
+      return item.client_id;
+    });
+    counts.moved = minimumMovedCount(baselineOrder, currentOrder);
     return counts;
   };
 

@@ -5,7 +5,7 @@ ja:
   rcfm_before: 前へ
   rcfm_bulk_add: 一括追加
   rcfm_bulk_add_help: 1行に1件ずつ入力してください。「保存」を押すまでサーバーへ反映されません。
-  rcfm_changed_count: "%{count}件の移動が未保存です"
+  rcfm_changed_count: "未保存: %{count}件を移動"
   rcfm_clear_selection: 選択解除
   rcfm_selected_count: "%{count}件選択中"
   rcfm_confirm_discard: 未保存の変更を破棄し、サーバーの現在状態を読み込みますか？
@@ -19,7 +19,8 @@ ja:
   rcfm_custom_fields_help: 並び順の変更は「保存」を押すまでサーバーへ反映されません。
   rcfm_deactivate_selected: 選択項目を無効化
   rcfm_delete_selected: 選択項目を削除
-  rcfm_discard_changes: 変更を取り消す
+  rcfm_discard_changes: 未保存の変更をすべて破棄
+  rcfm_discard_changes_help: この画面の未保存変更をすべて破棄します。
   rcfm_discard_and_reload: 破棄して再読み込み
   rcfm_edit_history_controls: 編集履歴
   rcfm_enumeration_changes_summary: "未保存: 追加%{added}件、更新%{updated}件、削除%{deleted}件、移動%{moved}件"
@@ -37,7 +38,10 @@ ja:
   rcfm_move_target: 移動先
   rcfm_move_target_placeholder: 移動先の名前を入力
   rcfm_move_position: 移動位置
-  rcfm_move_selected_group: 選択項目を移動
+  rcfm_move_selected_group: まとめて移動
+  rcfm_bulk_move_help: 一覧で移動したい項目をチェックし、移動先の項目名と、その前後どちらへ置くかを指定してください。
+  rcfm_move_selected_count: "選択した%{count}件を移動"
+  rcfm_move_selection_group: まとめて移動する項目
   rcfm_target_not_found: 入力した名前の移動先が見つかりません。候補から選択してください。
   rcfm_target_ambiguous: 同じ名前の移動先が複数あります。現在の一覧位置を見て移動先を選んでください。
   rcfm_target_candidate: "%{name} — 現在の%{position}番目"
@@ -48,6 +52,7 @@ ja:
   rcfm_select: 選択
   rcfm_select_all: すべて選択
   rcfm_select_field: "%{name}を選択"
+  rcfm_select_field_for_move: "%{name}をまとめて移動の対象にする"
   rcfm_selection_group: 項目の選択
   rcfm_selection_error: 1件以上の項目を選択してください。
   rcfm_selected_item_actions: 選択項目の操作
@@ -55,8 +60,13 @@ ja:
   rcfm_target_error: 選択中の項目自身は移動先に指定できません。
   rcfm_target_required: 移動先の名前を入力してください。
   rcfm_save_changes: 変更を保存
-  rcfm_undo: 元に戻す
-  rcfm_redo: やり直す
+  rcfm_undo: 1つ戻す
+  rcfm_undo_help: 直前の未保存操作を1つ戻します。
+  rcfm_redo: 1つやり直す
+  rcfm_redo_help: 戻した未保存操作を1つやり直します。
+  rcfm_individual_actions: 個別操作
+  rcfm_delete_custom_field: このフィールドを削除
+  rcfm_confirm_custom_field_delete: "カスタムフィールド「%{name}」（#%{id}）を削除しますか？\n\nチェック中の他のフィールドは削除されません。このフィールドの保存済み入力値と選択肢も削除されます。「変更を保存」を待たず直ちに実行され、変更履歴からは復元できません。"
   rcfm_csv_apply: この内容でインポート
   rcfm_csv_apply_confirm: プレビューに表示された変更をすべて適用しますか？
   rcfm_csv_confirm_mapping: 対応先を確認するか、新規項目として作成してください。
@@ -108,12 +118,14 @@ ja:
   rcfm_history_help: 詳細とスナップショットは履歴を開いたときだけ読み込みます。保持設定の既定は無期限です。
   rcfm_history_operation: 操作
   rcfm_history_operation_csv_import: CSVインポート
+  rcfm_history_operation_delete: カスタムフィールドの削除
   rcfm_history_operation_force: 強制上書き
   rcfm_history_operation_merge: 競合の統合
   rcfm_history_operation_reorder: 並び替え
   rcfm_history_operation_restore: 復元
   rcfm_history_operation_update: 一覧の更新
   rcfm_history_custom_fields_target: "%{type}のカスタムフィールド順"
+  rcfm_history_deleted_custom_field_target: "%{type}：削除済みカスタムフィールド #%{id}"
   rcfm_history_enumeration_target: "%{name}（キー・バリューリスト #%{id}）"
   rcfm_history_deleted_target: "削除済みのキー・バリューリスト #%{id}"
   rcfm_history_change: 変更内容
@@ -129,6 +141,8 @@ ja:
   rcfm_history_target: 対象
   rcfm_history_title: 変更履歴
   rcfm_history_restored: 対象全体を復元し、復元操作を履歴へ記録しました。
+  rcfm_history_delete_audit_only: この履歴はカスタムフィールド削除の監査記録です。削除されたフィールド、保存済み入力値、選択肢はこの履歴から復元できません。
+  rcfm_history_delete_impact: "削除された保存済み入力値: %{values}件、削除された選択肢: %{enumerations}件"
   rcfm_max_generations: 対象ごとの最大世代数
   rcfm_restore_apply: 対象全体を復元
   rcfm_restore_blocked: 安全に復元できないため中断しました。変更はありません。

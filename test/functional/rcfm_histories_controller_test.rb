@@ -71,6 +71,20 @@ class Rcfm::HistoriesControllerTest < Redmine::ControllerTest
     assert_select 'table.list', :text => /Active/
   end
 
+  def test_custom_field_deletion_history_is_shown_as_non_restorable_audit
+    field = IssueCustomField.create!(:name => 'RCFM deleted audit', :field_format => 'string')
+    field.destroy!
+    history = RedmineCustomFieldManager::History.last
+
+    get :show, :params => {:id => history.id}
+
+    assert_response :success
+    assert_select '.rcfm-history-audit-only', :text => /cannot be restored/
+    assert_select '.rcfm-history-changes', :text => /RCFM deleted audit/
+    assert_select "form[action='#{rcfm_preview_history_restore_path(history)}']", :count => 0
+    assert_select '.box.tabular', :text => /Custom field deletion/
+  end
+
   def test_history_actions_require_an_administrator
     @request.session[:user_id] = 2
 

@@ -5,7 +5,7 @@ en:
   rcfm_before: Before
   rcfm_bulk_add: Add multiple values
   rcfm_bulk_add_help: Enter one value per line. Nothing is saved until you press Save.
-  rcfm_changed_count: "%{count} item(s) moved — not saved"
+  rcfm_changed_count: "Unsaved: %{count} item(s) moved"
   rcfm_clear_selection: Clear selection
   rcfm_selected_count: "%{count} selected"
   rcfm_confirm_discard: Discard your unsaved changes and load the current server state?
@@ -19,7 +19,8 @@ en:
   rcfm_custom_fields_help: Changes to the order stay in this browser until you press Save.
   rcfm_deactivate_selected: Deactivate selected
   rcfm_delete_selected: Delete selected
-  rcfm_discard_changes: Discard changes
+  rcfm_discard_changes: Discard all unsaved changes
+  rcfm_discard_changes_help: Discard every unsaved change on this page.
   rcfm_discard_and_reload: Discard and reload
   rcfm_edit_history_controls: Edit history
   rcfm_enumeration_changes_summary: "Unsaved: %{added} added, %{updated} updated, %{deleted} deleted, %{moved} moved"
@@ -37,7 +38,10 @@ en:
   rcfm_move_target: Destination
   rcfm_move_target_placeholder: Enter a destination name
   rcfm_move_position: Destination side
-  rcfm_move_selected_group: Move selected items
+  rcfm_move_selected_group: Move multiple items
+  rcfm_bulk_move_help: Select the items to move in the list, then enter the destination name and choose whether to place them before or after it.
+  rcfm_move_selected_count: "Move %{count} selected"
+  rcfm_move_selection_group: Items to move
   rcfm_target_not_found: No destination has that name. Select one of the suggestions.
   rcfm_target_ambiguous: More than one destination has that name. Choose the destination by its current list position.
   rcfm_target_candidate: "%{name} — current position %{position}"
@@ -48,6 +52,7 @@ en:
   rcfm_select: Select
   rcfm_select_all: Select all
   rcfm_select_field: "Select %{name}"
+  rcfm_select_field_for_move: "Select %{name} for moving"
   rcfm_selection_group: Selection
   rcfm_selection_error: Select one or more items.
   rcfm_selected_item_actions: Selected item actions
@@ -56,7 +61,12 @@ en:
   rcfm_target_required: Enter a destination name.
   rcfm_save_changes: Save changes
   rcfm_undo: Undo
+  rcfm_undo_help: Undo the most recent unsaved action.
   rcfm_redo: Redo
+  rcfm_redo_help: Redo one previously undone unsaved action.
+  rcfm_individual_actions: Individual actions
+  rcfm_delete_custom_field: Delete this field
+  rcfm_confirm_custom_field_delete: "Delete custom field ‘%{name}’ (#%{id})?\n\nOther checked fields will not be deleted. Saved values and list choices belonging to this field will also be deleted. This happens immediately without waiting for ‘Save changes’ and cannot be restored from change history."
   rcfm_csv_apply: Apply this import
   rcfm_csv_apply_confirm: Apply every change shown in this preview?
   rcfm_csv_confirm_mapping: Select a confirmed destination or create a new value.
@@ -108,12 +118,14 @@ en:
   rcfm_history_help: Details and snapshots are loaded only when a history is opened. Retention defaults to unlimited.
   rcfm_history_operation: Operation
   rcfm_history_operation_csv_import: CSV import
+  rcfm_history_operation_delete: Custom field deletion
   rcfm_history_operation_force: Force overwrite
   rcfm_history_operation_merge: Conflict merge
   rcfm_history_operation_reorder: Reorder
   rcfm_history_operation_restore: Restore
   rcfm_history_operation_update: List update
   rcfm_history_custom_fields_target: "%{type} custom-field order"
+  rcfm_history_deleted_custom_field_target: "%{type}: deleted custom field #%{id}"
   rcfm_history_enumeration_target: "%{name} (Key/value list #%{id})"
   rcfm_history_deleted_target: "Deleted Key/value list #%{id}"
   rcfm_history_change: Change
@@ -129,6 +141,8 @@ en:
   rcfm_history_target: Target
   rcfm_history_title: Change history
   rcfm_history_restored: The entire target was restored and the restore was recorded.
+  rcfm_history_delete_audit_only: This is an audit record of a custom-field deletion. The deleted field, its saved values, and its choices cannot be restored from this history.
+  rcfm_history_delete_impact: "Deleted saved values: %{values}; deleted choices: %{enumerations}"
   rcfm_max_generations: Maximum generations per target
   rcfm_restore_apply: Restore entire target
   rcfm_restore_blocked: This restore cannot be applied safely. Nothing has been changed.

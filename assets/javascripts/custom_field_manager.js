@@ -7,6 +7,35 @@
     });
   }
 
+  function minimumMovedCount(baselineOrder, currentOrder) {
+    var baselinePositions = {};
+    baselineOrder.forEach(function(id, index) {
+      baselinePositions[String(id)] = index;
+    });
+    var tails = [];
+    currentOrder.forEach(function(id) {
+      var key = String(id);
+      if (!Object.prototype.hasOwnProperty.call(baselinePositions, key)) {
+        return;
+      }
+      var position = baselinePositions[key];
+      var low = 0;
+      var high = tails.length;
+      while (low < high) {
+        var middle = Math.floor((low + high) / 2);
+        if (tails[middle] < position) {
+          low = middle + 1;
+        } else {
+          high = middle;
+        }
+      }
+      tails[low] = position;
+    });
+    return currentOrder.filter(function(id) {
+      return Object.prototype.hasOwnProperty.call(baselinePositions, String(id));
+    }).length - tails.length;
+  }
+
   function CustomFieldManager(form) {
     if (window.performance && window.performance.mark) {
       window.performance.mark('rcfm-custom-fields-init-start');
@@ -300,9 +329,11 @@
 
   CustomFieldManager.prototype.refreshSelection = function() {
     var count = this.body.find('.rcfm-select:checked').length;
+    var selectedText = this.form.data('rcfm-selected-count').replace('__COUNT__', count);
     this.form.toggleClass('rcfm-has-selection', count > 0);
-    this.form.find('.rcfm-selection-count').text(
-      this.form.data('rcfm-selected-count').replace('__COUNT__', count)
+    this.form.find('.rcfm-selection-count, .rcfm-bulk-move-count').text(selectedText);
+    this.form.find('.rcfm-move-selected-label').text(
+      this.form.data('rcfm-move-selected-count').replace('__COUNT__', count)
     );
   };
 
@@ -321,10 +352,8 @@
 
   CustomFieldManager.prototype.refresh = function() {
     var current = this.currentOrder();
-    var changedCount = current.reduce(function(count, id, index) {
-      return count + (this.baseline[index] === id ? 0 : 1);
-    }.bind(this), 0);
-    var dirty = changedCount > 0;
+    var changedCount = minimumMovedCount(this.baseline, current);
+    var dirty = !arraysEqual(this.baseline, current);
 
     this.form.toggleClass('rcfm-dirty', dirty);
     this.form.find('.rcfm-ordered-ids').val(JSON.stringify(current));

@@ -7,7 +7,11 @@ module Rcfm
         field_type = history.scope_key.delete_prefix('custom_fields:')
         tab = CustomFieldsHelper::CUSTOM_FIELDS_TABS.find {|item| item[:name] == field_type}
         type_name = tab ? l(tab[:label]) : l(:label_custom_field_plural)
-        l(:rcfm_history_custom_fields_target, :type => type_name)
+        if history.operation == 'delete' && history.target_id
+          l(:rcfm_history_deleted_custom_field_target, :type => type_name, :id => history.target_id)
+        else
+          l(:rcfm_history_custom_fields_target, :type => type_name)
+        end
       else
         name = @history_target_names && @history_target_names[history.target_id]
         if name
@@ -21,6 +25,7 @@ module Rcfm
     def rcfm_history_operation(operation)
       key = case operation.to_s
             when 'csv_import' then :rcfm_history_operation_csv_import
+            when 'delete' then :rcfm_history_operation_delete
             when /restore/ then :rcfm_history_operation_restore
             when /merge/ then :rcfm_history_operation_merge
             when /force/ then :rcfm_history_operation_force

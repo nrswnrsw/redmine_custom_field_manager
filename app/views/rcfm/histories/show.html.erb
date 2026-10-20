@@ -11,6 +11,17 @@
   <p><label><%= l(:rcfm_history_operation) %></label><%= rcfm_history_operation(@history.operation) %></p>
 </div>
 
+<% if @history.operation == 'delete' %>
+  <div class="warning rcfm-history-audit-only">
+    <p><%= l(:rcfm_history_delete_audit_only) %></p>
+    <p><%= l(
+      :rcfm_history_delete_impact,
+      :values => @changes['custom_values_count'] || 0,
+      :enumerations => @changes['enumeration_count'] || 0
+    ) %></p>
+  </div>
+<% end %>
+
 <h3><%= l(:rcfm_history_changes) %></h3>
 <table class="list rcfm-history-changes">
   <thead>
@@ -54,6 +65,8 @@
   <pre class="rcfm-json-detail"><%= JSON.pretty_generate(@snapshot) %></pre>
 </details>
 
-<%= form_tag rcfm_preview_history_restore_path(@history), :method => :post do %>
-  <%= submit_tag l(:rcfm_restore_preview), :data => {:confirm => l(:rcfm_confirm_restore_preview)} %>
+<% unless @history.operation == 'delete' %>
+  <%= form_tag rcfm_preview_history_restore_path(@history), :method => :post do %>
+    <%= submit_tag l(:rcfm_restore_preview), :data => {:confirm => l(:rcfm_confirm_restore_preview)} %>
+  <% end %>
 <% end %>

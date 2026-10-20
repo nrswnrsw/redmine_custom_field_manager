@@ -11,18 +11,20 @@ Version `0.1.0` is currently a development release. This English README is the c
 The plugin enhances **Administration → Custom fields** instead of adding a separate management area.
 
 - The custom-field list is fully visible and can be reordered with drag and drop or multi-selection.
-- All edits stay in the browser until **Save** is pressed. Undo, redo, reset, and an unsaved-change warning are available.
-- Existing create, edit, copy, and delete actions remain available.
+- Reordering and Key/value-list edits stay in the browser until **Save** is pressed. One-step undo/redo, discard-all, and an unsaved-change warning are available.
+- Existing create, edit, copy, and delete actions remain available. Deleting a custom field is still an immediate, single-row Redmine action and is clearly separated from the move selection.
 - A Key/value list can be renamed, activated or deactivated, reordered, added to in bulk, and safely deleted from a single staged editor.
 - Key/value lists can be exported to CSV and imported in append, update, or full-synchronization mode, with a preview before anything is written.
 - Concurrent edits are detected. The plugin displays the editing baseline, your changes, and the current server state instead of silently overwriting another administrator's work.
-- Every successful save records a change history. Administrators can preview and restore an entire field-order scope or Key/value list.
+- Every successful save records a change history. Administrators can preview and restore an entire field-order scope or Key/value list. Custom-field deletions are also recorded for audit, but cannot be restored by the plugin.
 
-The screenshots below use Redmine 7.0 with the English locale. Labels may differ with the Redmine version or selected language.
+The screenshots below use Redmine 7.0 with the Japanese locale. Labels may differ with the Redmine version or selected language.
 
 ### Staged custom-field ordering
 
-Select several fields and move them before or after a named destination, or drag individual rows. A unique destination can be entered by name alone. If names are duplicated, the page presents clickable choices labeled with their current list positions; users never need to know or enter an internal ID. IDs remain visible only as supplementary information. The selection counter, status line, and **Save** button make it clear what is selected and that the new order has not yet reached the database.
+Drag individual rows, or open the collapsed **Move multiple items** panel to select several fields and move them before or after a named destination. A unique destination can be entered by name alone. If names are duplicated, the page presents clickable choices labeled with their current list positions; users never need to know or enter an internal ID. IDs remain visible only as supplementary information. Checkboxes are used only for bulk moves; per-row actions are shown separately. The pending counter reports the smallest set of moved rows that explains the new order, so moving the last of 100 fields to the top is shown as one move rather than 100 changed positions.
+
+**Delete this field** always deletes only that row, immediately. Its confirmation names the field, explains that other checked rows are unaffected, and warns that the field, its options, and stored values will be deleted and cannot be restored by this plugin.
 
 ![Staged custom-field ordering](docs/images/custom-field-ordering.png)
 
@@ -34,7 +36,7 @@ The list editor supports inline renaming, activation, deactivation, deletion, dr
 
 ### Change history and restore
 
-Open **Change history** from either enhanced screen to inspect recorded saves, preview a whole-target restore, or remove old history. Retention is unlimited by default and can be limited by age or generation count in the plugin settings.
+Open **Change history** from either enhanced screen to inspect recorded saves, preview a whole-target restore, or remove old history. Custom-field deletion entries show the affected field and impact counts for audit, without offering an unsafe restore action. Retention is unlimited by default and can be limited by age or generation count in the plugin settings.
 
 ![Change history](docs/images/change-history.png)
 
@@ -74,9 +76,9 @@ For an update, replace the plugin files while Redmine is stopped, run the same m
 ### Reorder custom fields
 
 1. Open **Administration → Custom fields** and select a field-type tab.
-2. Drag a row, or select multiple rows and enter a destination field name.
-3. Choose **Before** or **After**, then move the selection. If several destinations have the same name, click the choice identified by its current list position.
-4. Review the pending state. Use **Undo**, **Redo**, or **Cancel** if needed.
+2. Drag a row, or open **Move multiple items** and select the rows to move.
+3. Enter a destination field name, choose **Before** or **After**, and move the selection. If several destinations have the same name, click the choice identified by its current list position.
+4. Review the pending state. Use **Undo one step**, **Redo one step**, or **Discard all unsaved changes** if needed.
 5. Press **Save** to commit the complete order for that field type.
 
 All fields remain ordinary text in the page, so browser find (`Ctrl+F` / `⌘+F`) continues to work even for large lists.

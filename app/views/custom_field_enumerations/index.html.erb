@@ -58,6 +58,7 @@
         :rcfm_target_candidate => l(:rcfm_target_candidate, :position => '__POSITION__', :name => '__NAME__'),
         :rcfm_target_candidate_selected => l(:rcfm_target_candidate_selected),
         :rcfm_selected_count => l(:rcfm_selected_count, :count => '__COUNT__'),
+        :rcfm_move_selected_count => l(:rcfm_move_selected_count, :count => '__COUNT__'),
         :rcfm_save_error => l(:rcfm_save_error),
         :rcfm_name_blank => l(:rcfm_error_name_blank),
         :rcfm_name_too_long => l(:rcfm_error_name_too_long),
@@ -148,35 +149,44 @@
         </div>
       </section>
 
-      <section class="rcfm-operation-panel rcfm-operation-panel--move rcfm-bulk-move" aria-labelledby="rcfm-enumeration-move-actions">
-        <h3 id="rcfm-enumeration-move-actions"><%= l(:rcfm_move_selected_group) %></h3>
-        <div class="rcfm-move-controls">
-          <label class="rcfm-target-field">
-            <span><%= l(:rcfm_move_target) %></span>
-            <input type="text"
-                   class="rcfm-target"
-                   list="rcfm-enumeration-targets"
-                   autocomplete="off"
-                   placeholder="<%= l(:rcfm_move_target_placeholder) %>">
-          </label>
-          <datalist id="rcfm-enumeration-targets" class="rcfm-target-list">
-            <% values.each_with_index do |value, index| %>
-              <option value="<%= h "#{l(:rcfm_target_candidate, :position => index + 1, :name => value.name)} (##{value.id})" %>"></option>
-            <% end %>
-          </datalist>
-          <div class="rcfm-move-side" role="group" aria-label="<%= l(:rcfm_move_position) %>">
-            <label><input type="radio" name="rcfm_enumeration_move_side" value="before" checked> <%= l(:rcfm_before) %></label>
-            <label><input type="radio" name="rcfm_enumeration_move_side" value="after"> <%= l(:rcfm_after) %></label>
-          </div>
-          <%= button_tag sprite_icon('move', l(:button_move)),
-                         :type => 'button',
-                         :class => 'rcfm-move-selected rcfm-button-action' %>
-          <div class="rcfm-target-candidates" hidden aria-live="polite">
-            <p class="rcfm-target-candidates-message"></p>
-            <div class="rcfm-target-candidate-list"></div>
+      <details class="rcfm-operation-panel rcfm-operation-panel--move rcfm-bulk-move">
+        <summary>
+          <span><%= l(:rcfm_move_selected_group) %></span>
+          <span class="rcfm-bulk-move-count"><%= l(:rcfm_selected_count, :count => 0) %></span>
+        </summary>
+        <div class="rcfm-operation-panel-body">
+          <p class="rcfm-bulk-move-help"><%= l(:rcfm_bulk_move_help) %></p>
+          <div class="rcfm-move-controls">
+            <label class="rcfm-target-field">
+              <span><%= l(:rcfm_move_target) %></span>
+              <input type="text"
+                     class="rcfm-target"
+                     list="rcfm-enumeration-targets"
+                     autocomplete="off"
+                     placeholder="<%= l(:rcfm_move_target_placeholder) %>">
+            </label>
+            <datalist id="rcfm-enumeration-targets" class="rcfm-target-list">
+              <% values.each_with_index do |value, index| %>
+                <option value="<%= h "#{l(:rcfm_target_candidate, :position => index + 1, :name => value.name)} (##{value.id})" %>"></option>
+              <% end %>
+            </datalist>
+            <div class="rcfm-move-side" role="group" aria-label="<%= l(:rcfm_move_position) %>">
+              <label><input type="radio" name="rcfm_enumeration_move_side" value="before" checked> <%= l(:rcfm_before) %></label>
+              <label><input type="radio" name="rcfm_enumeration_move_side" value="after"> <%= l(:rcfm_after) %></label>
+            </div>
+            <%= button_tag safe_join([
+                  sprite_icon('move', ''),
+                  tag.span(l(:rcfm_move_selected_count, :count => 0), :class => 'rcfm-move-selected-label')
+                ]),
+                           :type => 'button',
+                           :class => 'rcfm-move-selected rcfm-button-action' %>
+            <div class="rcfm-target-candidates" hidden aria-live="polite">
+              <p class="rcfm-target-candidates-message"></p>
+              <div class="rcfm-target-candidate-list"></div>
+            </div>
           </div>
         </div>
-      </section>
+      </details>
     </div>
 
     <div class="rcfm-secondary-tools">
@@ -280,16 +290,19 @@
         <%= button_tag l(:rcfm_undo),
                        :type => 'button',
                        :class => 'rcfm-undo rcfm-button-quiet',
+                       :title => l(:rcfm_undo_help),
                        :disabled => true %>
         <%= button_tag l(:rcfm_redo),
                        :type => 'button',
                        :class => 'rcfm-redo rcfm-button-quiet',
+                       :title => l(:rcfm_redo_help),
                        :disabled => true %>
       </div>
       <div class="rcfm-final-actions">
         <%= button_tag sprite_icon('cancel', l(:rcfm_discard_changes)),
                        :type => 'button',
                        :class => 'rcfm-reset rcfm-button-quiet',
+                       :title => l(:rcfm_discard_changes_help),
                        :disabled => true %>
         <%= button_tag sprite_icon('save', l(:rcfm_save_changes)),
                        :type => 'submit',
