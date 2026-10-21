@@ -30,7 +30,7 @@ Drag individual rows, or select one or more rows and open the collapsed **Move t
 
 ### Key/value list manager
 
-The editor shows the value list first. Directly below it, a normal **New value** field adds one value at a time to the staged changes. Selected-item operations follow the primary list and are collapsed by default. Bulk addition and CSV are kept as compact, collapsed utilities for occasional use. Inline renaming, activation, deactivation, deletion, drag and drop, and multi-selection remain available. Locked values show why they cannot be deleted. The summary reports every pending change before the atomic save.
+The editor shows the value list first. Directly below it, a normal **New choice** field adds one value at a time to the staged changes. Selected-item operations follow the primary list and are collapsed by default. Bulk addition and CSV are kept as compact, collapsed utilities for occasional use. Inline renaming, activation, deactivation, deletion, drag and drop, and multi-selection remain available. Locked values show why they cannot be deleted. The summary reports every pending change before the atomic save.
 
 ![Staged Key/value list editing](docs/images/enumeration-manager.png)
 
@@ -85,7 +85,7 @@ All fields remain ordinary text in the page, so browser find (`Ctrl+F` / `⌘+F`
 
 ### Edit a Key/value list
 
-Open the values of a custom field whose format is **Key/value list** from the standard custom-field screen. The list appears first; use **New value** immediately below it for ordinary one-at-a-time additions. Changes to names, active state, order, additions, and deletions remain staged until **Save** is pressed. Bulk addition and CSV are available as compact utilities below the selected-item operations.
+Open the values of a custom field whose format is **Key/value list** from the standard custom-field screen. The list appears first; use **New choice** immediately below it for ordinary one-at-a-time additions. Changes to names, active state, order, additions, and deletions remain staged until **Save** is pressed. Bulk addition and CSV are available as compact utilities below the selected-item operations.
 
 Values already in use cannot be deleted. Deactivate them instead. Usage is checked again immediately before saving; if the state has changed, the entire operation is stopped and nothing is partially written.
 

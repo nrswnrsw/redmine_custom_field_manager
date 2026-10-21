@@ -24,7 +24,7 @@ en:
   rcfm_discard_and_reload: Discard and reload
   rcfm_edit_history_controls: Edit history
   rcfm_enumeration_changes_summary: "Unsaved: %{added} added, %{updated} updated, %{deleted} deleted, %{moved} moved"
-  rcfm_enumerations_help: Edit, reorder, activate, deactivate, add, or delete values. All changes are saved atomically when you press Save.
+  rcfm_enumerations_help: After you add or edit a choice, a Save changes button appears at the bottom of the page. Press it to make your changes final.
   rcfm_error_conflict: Another administrator changed these custom fields. Your unsaved order has been kept; review the current server state before saving again.
   rcfm_error_delete_protected: This value is in use or is the default and cannot be deleted. Deactivate it instead.
   rcfm_error_enumeration_conflict: Another administrator changed this list. Your unsaved changes have been kept. Review the server state before choosing an action.
@@ -55,6 +55,7 @@ en:
   rcfm_selection_error: Select one or more items.
   rcfm_selected_item_actions: Selected item actions
   rcfm_state_delete_actions: Status and deletion
+  rcfm_add_one_label: New choice
   rcfm_add_one_placeholder: Enter a value name
   rcfm_other_tools: Occasional tools
   rcfm_server_state_summary: "The current server list contains %{count} values."

@@ -332,6 +332,18 @@
   z-index: 20;
 }
 
+.rcfm-enumeration-manager:not(.rcfm-dirty):not(.rcfm-has-history) .rcfm-commit-bar {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  padding-inline: 0;
+  position: static;
+}
+
+.rcfm-enumeration-manager:not(.rcfm-dirty):not(.rcfm-has-history) .rcfm-commit-controls {
+  display: none;
+}
+
 .rcfm-change-summary {
   align-items: center;
   display: flex;
@@ -374,6 +386,11 @@
 .rcfm-selection {
   text-align: center;
   width: 2em;
+}
+
+.rcfm-enumerations th.rcfm-selection {
+  white-space: nowrap;
+  width: 3.5em;
 }
 
 .rcfm-record-id {
@@ -446,29 +463,61 @@
 
 .rcfm-protected-help {
   color: var(--fg-color-muted, #666);
-  margin: 0.25em 0 0.75em;
+  font-size: 0.92em;
+  margin: 0.35em 0 0.75em;
 }
 
 .rcfm-single-add {
-  align-items: center;
-  background: var(--oc-gray-0, #f7f7f7);
-  border: 1px solid var(--oc-gray-3, #d7d7d7);
-  border-radius: 4px;
+  align-items: start;
+  border-bottom: 1px solid var(--oc-gray-3, #d7d7d7);
   display: flex;
   gap: 0.65em;
-  margin-top: 0.75em;
-  padding: 0.65em 0.75em;
+  margin: 0 0 0.85em;
+  padding: 0 0 0.85em;
 }
 
 .rcfm-single-add label {
   flex: 0 0 auto;
   font-weight: bold;
+  padding-top: 0.35em;
 }
 
-.rcfm-single-add input {
+.rcfm-field-control {
   flex: 1 1 24em;
   max-width: 36em;
   min-width: 0;
+}
+
+.rcfm-input-action {
+  align-items: center;
+  display: flex;
+  gap: 0.5em;
+}
+
+.rcfm-input-action input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.rcfm-field-error {
+  color: var(--oc-red-9, #9b1c1c);
+  display: block;
+  font-weight: bold;
+  margin: 0.35em 0 0;
+}
+
+.rcfm-field-error[hidden] {
+  display: none;
+}
+
+.rcfm-name-input ~ .rcfm-field-error {
+  margin-top: 0.25em;
+}
+
+.rcfm-add-one-input[aria-invalid="true"],
+.rcfm-bulk-add-input[aria-invalid="true"],
+.rcfm-name-input[aria-invalid="true"] {
+  border-color: var(--oc-red-7, #b42318);
 }
 
 .rcfm-single-add button .icon-svg,
@@ -478,10 +527,15 @@
 }
 
 .rcfm-enumeration-selection-tools {
+  background: transparent;
+  border-block: 1px solid var(--oc-gray-3, #d7d7d7);
+  border-inline: 0;
+  border-radius: 0;
   margin-top: 0.85em;
 }
 
 .rcfm-enumeration-selection-tools > .rcfm-selection-bar {
+  background: transparent;
   border-bottom: 0;
   cursor: pointer;
   justify-content: flex-start;
@@ -504,6 +558,10 @@
 
 .rcfm-enumeration-selection-tools[open] > .rcfm-selection-bar {
   border-bottom: 1px solid var(--oc-gray-3, #ddd);
+}
+
+.rcfm-enumeration-selection-tools[open] {
+  background: var(--oc-gray-0, #f7f7f7);
 }
 
 .rcfm-enumeration-selection-tools[open] > .rcfm-selection-bar::before {
@@ -549,7 +607,7 @@
 }
 
 .rcfm-enumeration-manager > .rcfm-error {
-  margin: 0.75em 0;
+  margin: 0 0 0.75em;
 }
 
 .rcfm-conflict[hidden],
@@ -647,6 +705,11 @@
 
   .rcfm-single-add label {
     flex-basis: 100%;
+    padding-top: 0;
+  }
+
+  .rcfm-single-add .rcfm-field-control {
+    max-width: none;
   }
 
   .rcfm-enumeration-utilities details[open] {

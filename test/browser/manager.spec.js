@@ -47,8 +47,13 @@ test.describe.serial('custom field manager browser behavior', function() {
     const movePanel = page.locator('.rcfm-operation-panel--move');
     const utilities = page.locator('.rcfm-enumeration-utilities');
     const commitBar = page.locator('.rcfm-commit-bar');
+    await expect(page.locator('.rcfm-introduction')).toHaveText(
+      'After you add or edit a choice, a Save changes button appears at the bottom of the page. Press it to make your changes final.'
+    );
     await expect(list).toBeVisible();
+    await expect(list.locator('thead th').nth(0)).toHaveText('Select');
     await expect(singleAdd).toBeVisible();
+    await expect(singleAdd.locator('label')).toHaveText('New choice');
     await expect(selectionBar).toBeVisible();
     await expect(selectionTools).not.toHaveAttribute('open', '');
     await expect(statePanel).toBeHidden();
@@ -63,6 +68,7 @@ test.describe.serial('custom field manager browser behavior', function() {
     await expect(utilities.locator('details').nth(0)).not.toHaveAttribute('open', '');
     await expect(utilities.locator('details').nth(1)).not.toHaveAttribute('open', '');
     await expect(commitBar).toBeVisible();
+    await expect(commitBar.locator('.rcfm-commit-controls')).toBeHidden();
     await expect(commitBar.locator('.rcfm-save')).toHaveText('Save changes');
     await expect(commitBar.locator('.rcfm-reset')).toHaveText('Discard all unsaved changes');
     await expect(commitBar.locator('.rcfm-undo')).toHaveAttribute('title', 'Undo the most recent unsaved action.');
@@ -74,8 +80,6 @@ test.describe.serial('custom field manager browser behavior', function() {
     const moveBox = await movePanel.boundingBox();
     const deleteBox = await statePanel.locator('.rcfm-delete-selected').boundingBox();
     const deactivateBox = await statePanel.locator('.rcfm-deactivate-selected').boundingBox();
-    const saveBox = await commitBar.locator('.rcfm-save').boundingBox();
-    const resetBox = await commitBar.locator('.rcfm-reset').boundingBox();
     const utilitiesBox = await utilities.boundingBox();
     expect(listBox.y).toBeLessThan(singleAddBox.y);
     expect(singleAddBox.y).toBeLessThan(selectionBox.y);
@@ -83,10 +87,13 @@ test.describe.serial('custom field manager browser behavior', function() {
     expect(stateBox.x).toBeLessThan(moveBox.x);
     expect(stateBox.y).toBeLessThan(utilitiesBox.y);
     expect(deactivateBox.y).toBeLessThan(deleteBox.y);
-    expect(resetBox.x).toBeLessThan(saveBox.x);
 
     await page.locator('.rcfm-enumerations tbody tr').nth(0).locator('.rcfm-active').uncheck();
     await expect(page.locator('.rcfm-manager')).toHaveClass(/rcfm-dirty/);
+    await expect(commitBar.locator('.rcfm-commit-controls')).toBeVisible();
+    const saveBox = await commitBar.locator('.rcfm-save').boundingBox();
+    const resetBox = await commitBar.locator('.rcfm-reset').boundingBox();
+    expect(resetBox.x).toBeLessThan(saveBox.x);
     const saveBackground = await commitBar.locator('.rcfm-save').evaluate(function(element) {
       return window.getComputedStyle(element).backgroundColor;
     });
@@ -161,6 +168,7 @@ test.describe.serial('custom field manager browser behavior', function() {
     await rows.nth(0).locator('.rcfm-edit').click();
     await rows.nth(0).locator('.rcfm-name-input').fill('Browser renamed');
     await rows.nth(0).locator('.rcfm-name-input').press('Enter');
+    await expect(rows.nth(0).locator('.rcfm-edit')).toBeFocused();
 
     await rows.nth(0).locator('.rcfm-select').check();
     await expect(page.locator('.rcfm-selection-count')).toHaveText('1 selected');
@@ -256,6 +264,31 @@ test.describe.serial('custom field manager browser behavior', function() {
   test('clears obsolete errors after the user corrects or undoes an action', async function({page}) {
     await page.goto('/custom_fields/' + fieldId + '/enumerations', {waitUntil: 'networkidle'});
     const rows = page.locator('.rcfm-enumerations tbody tr');
+    const singleAddInput = page.locator('.rcfm-add-one-input');
+    await page.locator('.rcfm-add-one').click();
+    await expect(page.locator('#rcfm-add-one-error')).toContainText('Value names cannot be blank.');
+    await expect(singleAddInput).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.locator('.rcfm-error')).toBeHidden();
+    const singleAddBox = await singleAddInput.boundingBox();
+    const singleAddErrorBox = await page.locator('#rcfm-add-one-error').boundingBox();
+    expect(singleAddErrorBox.y).toBeGreaterThanOrEqual(singleAddBox.y + singleAddBox.height);
+    await singleAddInput.fill('Corrected single value');
+    await expect(page.locator('#rcfm-add-one-error')).toBeHidden();
+    await expect(singleAddInput).not.toHaveAttribute('aria-invalid', 'true');
+
+    const originalName = await rows.nth(0).locator('.rcfm-enumeration-name').textContent();
+    await rows.nth(0).locator('.rcfm-edit').click();
+    const inlineNameInput = rows.nth(0).locator('.rcfm-name-input');
+    await inlineNameInput.fill('');
+    await inlineNameInput.press('Enter');
+    await expect(rows.nth(0).locator('.rcfm-field-error')).toContainText('Value names cannot be blank.');
+    await expect(inlineNameInput).toHaveAttribute('aria-invalid', 'true');
+    await inlineNameInput.fill('Cancelled inline edit');
+    await inlineNameInput.press('Escape');
+    await expect(rows.nth(0).locator('.rcfm-enumeration-name')).toHaveText(originalName);
+    await expect(rows.nth(0).locator('.rcfm-edit')).toBeFocused();
+    await expect(page.locator('.rcfm-save')).toBeDisabled();
+
     await page.locator('.rcfm-enumeration-selection-tools > summary').click();
     await page.locator('.rcfm-bulk-move summary').click();
     await page.locator('.rcfm-deactivate-selected').click();
@@ -270,11 +303,13 @@ test.describe.serial('custom field manager browser behavior', function() {
 
     await page.locator('.rcfm-bulk-add summary').click();
     await page.locator('.rcfm-add-lines').click();
-    await expect(page.locator('.rcfm-error')).toContainText('Value names cannot be blank.');
+    await expect(page.locator('#rcfm-bulk-add-error')).toContainText('Value names cannot be blank.');
+    await expect(page.locator('.rcfm-bulk-add-input')).toHaveAttribute('aria-invalid', 'true');
 
     await page.locator('.rcfm-bulk-add-input').fill('Corrected value');
     await page.locator('.rcfm-add-lines').click();
-    await expect(page.locator('.rcfm-error')).toBeHidden();
+    await expect(page.locator('#rcfm-bulk-add-error')).toBeHidden();
+    await expect(page.locator('.rcfm-bulk-add-input')).not.toHaveAttribute('aria-invalid', 'true');
     await expect(rows).toHaveCount(7);
 
     await page.locator('.rcfm-undo').click();

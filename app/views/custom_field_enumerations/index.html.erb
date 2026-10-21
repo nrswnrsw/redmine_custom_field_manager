@@ -128,13 +128,15 @@
     </div>
   </div>
 
+  <div class="rcfm-error error" role="alert" tabindex="-1" hidden></div>
+
   <table class="list rcfm-enumerations rcfm-sortable">
     <thead>
       <tr>
-        <th class="rcfm-selection"><span class="hidden-for-sighted"><%= l(:rcfm_select) %></span></th>
+        <th class="rcfm-selection"><%= l(:rcfm_select) %></th>
         <th><%= l(:field_name) %></th>
         <th><%= l(:field_active) %></th>
-        <th></th>
+        <th><span class="hidden-for-sighted"><%= l(:rcfm_individual_actions) %></span></th>
       </tr>
     </thead>
     <tbody>
@@ -147,7 +149,7 @@
             <% if item['protected'] %>
               <span class="rcfm-protection-indicator"
                     title="<%= h item['protected_reason'] %>"
-                    aria-label="<%= h "#{l(:rcfm_protected_indicator)}: #{item['protected_reason']}" %>">🔒</span>
+                    aria-label="<%= h "#{l(:rcfm_protected_indicator)}: #{item['protected_reason']}" %>"><%= sprite_icon('lock', '') %></span>
             <% end %>
           </td>
           <td><input type="checkbox" class="rcfm-active" <%= 'checked' if item['active'] %> aria-label="<%= h l(:rcfm_active_field, :name => item['name']) %>"></td>
@@ -165,21 +167,27 @@
     </tbody>
   </table>
 
-  <div class="rcfm-single-add">
-    <label for="rcfm-add-one-input"><%= l(:label_enumeration_new) %></label>
-    <input id="rcfm-add-one-input"
-           type="text"
-           class="rcfm-add-one-input"
-           maxlength="60"
-           placeholder="<%= l(:rcfm_add_one_placeholder) %>">
-    <%= button_tag sprite_icon('add', l(:button_add)),
-                   :type => 'button',
-                   :class => 'rcfm-add-one rcfm-button-action' %>
-  </div>
-
   <p class="rcfm-protected-help"><%= l(:rcfm_protected_help) %></p>
 
-  <details class="rcfm-toolbar rcfm-enumeration-selection-tools box">
+  <div class="rcfm-single-add">
+    <label for="rcfm-add-one-input"><%= l(:rcfm_add_one_label) %></label>
+    <div class="rcfm-field-control">
+      <div class="rcfm-input-action">
+        <input id="rcfm-add-one-input"
+               type="text"
+               class="rcfm-add-one-input"
+               maxlength="60"
+               aria-describedby="rcfm-add-one-error"
+               placeholder="<%= l(:rcfm_add_one_placeholder) %>">
+        <%= button_tag sprite_icon('add', l(:button_add)),
+                       :type => 'button',
+                       :class => 'rcfm-add-one rcfm-button-action' %>
+      </div>
+      <p id="rcfm-add-one-error" class="rcfm-field-error" role="alert" hidden></p>
+    </div>
+  </div>
+
+  <details class="rcfm-toolbar rcfm-enumeration-selection-tools">
     <summary class="rcfm-selection-bar">
       <span class="rcfm-selection-summary">
         <span class="rcfm-group-label"><%= l(:rcfm_selected_item_actions) %></span>
@@ -261,7 +269,11 @@
     <details class="rcfm-bulk-add">
       <summary><%= l(:rcfm_bulk_add) %></summary>
       <p><%= l(:rcfm_bulk_add_help) %></p>
-      <textarea class="rcfm-bulk-add-input" rows="6"></textarea>
+      <textarea class="rcfm-bulk-add-input"
+                rows="6"
+                aria-label="<%= l(:rcfm_bulk_add) %>"
+                aria-describedby="rcfm-bulk-add-error"></textarea>
+      <p id="rcfm-bulk-add-error" class="rcfm-field-error" role="alert" hidden></p>
       <p><%= button_tag sprite_icon('add', l(:button_add)), :type => 'button', :class => 'rcfm-add-lines' %></p>
     </details>
 
@@ -292,8 +304,6 @@
       <div class="rcfm-csv-preview" hidden></div>
     </details>
   </div>
-
-  <div class="rcfm-error error" hidden></div>
 
   <div class="rcfm-commit-bar">
     <div class="rcfm-change-summary">

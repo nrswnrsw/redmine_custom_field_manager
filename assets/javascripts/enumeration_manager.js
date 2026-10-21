@@ -40,6 +40,7 @@
     }
     this.form = $(form);
     this.body = this.form.find('tbody');
+    this.protectionIcon = this.form.find('.rcfm-protection-indicator .icon-svg').first().clone();
     this.items = JSON.parse(this.form.find('.rcfm-items').val());
     this.baseline = clone(this.items);
     this.undoStack = [];
@@ -129,18 +130,25 @@
     });
 
     this.form.on('keydown', '.rcfm-name-input', function(event) {
+      var id = String($(this).closest('tr').data('rcfm-client-id'));
       if (event.key === 'Enter') {
         event.preventDefault();
-        manager.finishEditing(this);
+        if (manager.finishEditing(this)) {
+          manager.body.find('tr[data-rcfm-client-id="' + id + '"] .rcfm-edit').trigger('focus');
+        }
       } else if (event.key === 'Escape') {
         event.preventDefault();
         manager.editingId = null;
         manager.clearError();
         manager.render();
+        manager.body.find('tr[data-rcfm-client-id="' + id + '"] .rcfm-edit').trigger('focus');
       }
     });
 
     this.form.on('blur', '.rcfm-name-input', function() {
+      if (manager.editingId === null) {
+        return;
+      }
       manager.finishEditing(this);
     });
 
@@ -360,25 +368,28 @@
   EnumerationManager.prototype.finishEditing = function(input) {
     var id = String($(input).closest('tr').data('rcfm-client-id'));
     var value = $(input).val().trim();
-    if (!this.validName(value)) {
-      return;
-    }
-    this.editingId = null;
-    this.commit(function() {
-      this.findItem(id).name = value;
-    }.bind(this), true);
-    if (String(this.findItem(id).name) === value) {
-      this.render();
-    }
-  };
-
-  EnumerationManager.prototype.validName = function(name) {
-    if (!name) {
-      this.showError(this.form.data('rcfm-name-blank'));
+    if (!this.validNames([value], input)) {
       return false;
     }
-    if (Array.from(name).length > 60) {
-      this.showError(this.form.data('rcfm-name-too-long'));
+    var changed = String(this.findItem(id).name) !== value;
+    this.editingId = null;
+    if (changed) {
+      this.commit(function() {
+        this.findItem(id).name = value;
+      }.bind(this), true);
+    } else {
+      this.render();
+    }
+    return true;
+  };
+
+  EnumerationManager.prototype.validNames = function(names, input) {
+    if (!names.length || names.some(function(name) { return !name; })) {
+      this.showFieldError(input, this.form.data('rcfm-name-blank'));
+      return false;
+    }
+    if (names.some(function(name) { return Array.from(name).length > 60; })) {
+      this.showFieldError(input, this.form.data('rcfm-name-too-long'));
       return false;
     }
     return true;
@@ -461,6 +472,22 @@
 
   EnumerationManager.prototype.clearError = function() {
     this.form.find('.rcfm-error').prop('hidden', true).text('');
+    this.form.find('.rcfm-field-error').prop('hidden', true).text('');
+    this.form.find('[aria-invalid="true"]').removeAttr('aria-invalid');
+  };
+
+  EnumerationManager.prototype.showFieldError = function(input, message) {
+    var field = $(input);
+    var errorId = field.attr('aria-describedby');
+    var error = errorId ? this.form.find('#' + errorId) : $();
+    if (!error.length) {
+      this.showError(message);
+      return;
+    }
+    this.clearError();
+    field.attr('aria-invalid', 'true');
+    error.text(message).prop('hidden', false);
+    field.trigger('focus');
   };
 
   EnumerationManager.prototype.showTargetCandidates = function(candidates, selectedIds) {
@@ -569,13 +596,8 @@
     this.refreshTargetList();
   };
 
-  EnumerationManager.prototype.addNames = function(names) {
-    if (!names.length) {
-      this.showError(this.form.data('rcfm-name-blank'));
-      return false;
-    }
-    if (names.some(function(name) { return Array.from(name).length > 60; })) {
-      this.showError(this.form.data('rcfm-name-too-long'));
+  EnumerationManager.prototype.addNames = function(names, input) {
+    if (!this.validNames(names, input)) {
       return false;
     }
     this.commit(function() {
@@ -597,7 +619,7 @@
   EnumerationManager.prototype.addOne = function() {
     var input = this.form.find('.rcfm-add-one-input');
     var name = input.val().trim();
-    if (this.addNames(name ? [name] : [])) {
+    if (this.addNames(name ? [name] : [], input)) {
       input.val('').trigger('focus');
     }
   };
@@ -607,7 +629,7 @@
     var names = input.val().split(/\r?\n/).map(function(name) {
       return name.trim();
     }).filter(Boolean);
-    if (this.addNames(names)) {
+    if (this.addNames(names, input)) {
       input.val('');
     }
   };
@@ -631,8 +653,16 @@
       row.append($('<td class="rcfm-selection">').append(selection));
 
       var nameCell = $('<td class="name">');
+      var nameError = null;
       if (manager.editingId === String(item.client_id) && !item.deleted) {
-        nameCell.append($('<input type="text" class="rcfm-name-input">').val(item.name).attr('maxlength', 60));
+        var errorId = 'rcfm-name-error-' + String(item.client_id).replace(/[^a-zA-Z0-9_-]/g, '-');
+        nameCell.append(
+          $('<input type="text" class="rcfm-name-input">')
+            .val(item.name)
+            .attr('maxlength', 60)
+            .attr('aria-describedby', errorId)
+        );
+        nameError = $('<span class="rcfm-field-error">').attr({id: errorId, role: 'alert', hidden: true});
       } else {
         nameCell.append($('<span class="rcfm-enumeration-name">').text(item.name));
       }
@@ -640,12 +670,14 @@
         nameCell.append($('<span class="rcfm-record-id">').text('#' + item.id));
       }
       if (item.protected) {
-        nameCell.append(
-          $('<span class="rcfm-protection-indicator">')
-            .text('🔒')
-            .attr('title', item.protected_reason)
-            .attr('aria-label', manager.form.data('rcfm-protected-indicator') + ': ' + item.protected_reason)
-        );
+        var protectionIndicator = $('<span class="rcfm-protection-indicator">')
+          .attr('title', item.protected_reason)
+          .attr('aria-label', manager.form.data('rcfm-protected-indicator') + ': ' + item.protected_reason);
+        protectionIndicator.append(manager.protectionIcon.clone());
+        nameCell.append(protectionIndicator);
+      }
+      if (nameError) {
+        nameCell.append(nameError);
       }
       row.append(nameCell);
 
@@ -735,6 +767,7 @@
         .replace('__MOVED__', counts.moved);
     }
     this.form.toggleClass('rcfm-dirty', dirty);
+    this.form.toggleClass('rcfm-has-history', !!(this.undoStack.length || this.redoStack.length));
     this.form.find('.rcfm-status').text(summary);
     this.refreshSelection();
     this.form.find('.rcfm-items').val(JSON.stringify(this.items));
@@ -749,7 +782,12 @@
   };
 
   EnumerationManager.prototype.showError = function(message) {
-    this.form.find('.rcfm-error').text(message).prop('hidden', false);
+    this.clearError();
+    var error = this.form.find('.rcfm-error').text(message).prop('hidden', false);
+    error.trigger('focus');
+    if (error[0]) {
+      error[0].scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    }
   };
 
   EnumerationManager.prototype.showConflict = function(payload) {

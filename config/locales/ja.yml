@@ -24,7 +24,7 @@ ja:
   rcfm_discard_and_reload: 破棄して再読み込み
   rcfm_edit_history_controls: 編集履歴
   rcfm_enumeration_changes_summary: "未保存: 追加%{added}件、更新%{updated}件、削除%{deleted}件、移動%{moved}件"
-  rcfm_enumerations_help: 名称、並び順、有効状態、追加、削除を編集できます。変更は「保存」で一括して確定します。
+  rcfm_enumerations_help: 選択肢を追加・編集すると、画面下部に「変更を保存」が表示されます。押すと変更が確定します。
   rcfm_error_conflict: 他の管理者がカスタムフィールドを変更しました。未保存の並び順は保持されています。サーバーの現在状態を確認してから保存してください。
   rcfm_error_delete_protected: 使用中または既定値の項目は削除できません。代わりに無効化してください。
   rcfm_error_enumeration_conflict: 他の管理者がこのリストを変更しました。未保存の変更は保持されています。サーバーの現在状態を確認して操作を選択してください。
@@ -55,6 +55,7 @@ ja:
   rcfm_selection_error: 1件以上の項目を選択してください。
   rcfm_selected_item_actions: 選択項目の操作
   rcfm_state_delete_actions: 有効状態と削除
+  rcfm_add_one_label: 新しい選択肢
   rcfm_add_one_placeholder: 選択肢名を入力
   rcfm_other_tools: 補助ツール
   rcfm_server_state_summary: "サーバーの現在のリストは%{count}件です。"
