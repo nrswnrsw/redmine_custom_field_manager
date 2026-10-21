@@ -39,7 +39,8 @@ test.describe.serial('custom field manager browser behavior', function() {
   test('groups controls by purpose and keeps commit actions in a predictable position', async function({page}) {
     await page.goto('/custom_fields/' + fieldId + '/enumerations', {waitUntil: 'networkidle'});
 
-    const selectionBar = page.locator('.rcfm-selection-bar');
+    const selectionTools = page.locator('.rcfm-enumeration-selection-tools');
+    const selectionBar = selectionTools.locator('> summary.rcfm-selection-bar');
     const list = page.locator('.rcfm-enumerations');
     const singleAdd = page.locator('.rcfm-single-add');
     const statePanel = page.locator('.rcfm-operation-panel--state');
@@ -49,6 +50,11 @@ test.describe.serial('custom field manager browser behavior', function() {
     await expect(list).toBeVisible();
     await expect(singleAdd).toBeVisible();
     await expect(selectionBar).toBeVisible();
+    await expect(selectionTools).not.toHaveAttribute('open', '');
+    await expect(statePanel).toBeHidden();
+    await expect(movePanel).toBeHidden();
+    await selectionBar.click();
+    await expect(selectionTools).toHaveAttribute('open', '');
     await expect(statePanel).toBeVisible();
     await expect(movePanel).toBeVisible();
     await expect(movePanel).not.toHaveAttribute('open', '');
@@ -91,11 +97,16 @@ test.describe.serial('custom field manager browser behavior', function() {
     await commitBar.locator('.rcfm-reset').click();
 
     await page.setViewportSize({width: 1044, height: 834});
+    const mediumToolsBox = await selectionTools.boundingBox();
     const mediumStateBox = await statePanel.boundingBox();
+    const mediumMoveBox = await movePanel.boundingBox();
     const mediumDeleteBox = await statePanel.locator('.rcfm-delete-selected').boundingBox();
     expect(mediumDeleteBox.x).toBeGreaterThanOrEqual(mediumStateBox.x);
     expect(mediumDeleteBox.x + mediumDeleteBox.width).toBeLessThanOrEqual(
       mediumStateBox.x + mediumStateBox.width
+    );
+    expect(mediumMoveBox.x + mediumMoveBox.width).toBeLessThanOrEqual(
+      mediumToolsBox.x + mediumToolsBox.width
     );
     await expect(commitBar).toHaveCSS('flex-direction', 'column');
     await expect(commitBar.locator('.rcfm-save')).toHaveCSS('white-space', 'nowrap');
@@ -122,6 +133,7 @@ test.describe.serial('custom field manager browser behavior', function() {
     await page.goto('/custom_fields/' + fieldId + '/enumerations', {waitUntil: 'networkidle'});
     const rows = page.locator('.rcfm-enumerations tbody tr');
     await expect(rows).toHaveCount(3);
+    await page.locator('.rcfm-enumeration-selection-tools > summary').click();
     await page.locator('.rcfm-bulk-move summary').click();
 
     const firstActive = rows.nth(0).locator('.rcfm-active');
@@ -195,6 +207,7 @@ test.describe.serial('custom field manager browser behavior', function() {
     await page.goto('/custom_fields/' + fieldId + '/enumerations', {waitUntil: 'networkidle'});
     const rows = page.locator('.rcfm-enumerations tbody tr');
     await expect(rows).toHaveCount(6);
+    await page.locator('.rcfm-enumeration-selection-tools > summary').click();
     await page.locator('.rcfm-bulk-move summary').click();
 
     for (let index = 0; index < 2; index += 1) {
@@ -243,6 +256,7 @@ test.describe.serial('custom field manager browser behavior', function() {
   test('clears obsolete errors after the user corrects or undoes an action', async function({page}) {
     await page.goto('/custom_fields/' + fieldId + '/enumerations', {waitUntil: 'networkidle'});
     const rows = page.locator('.rcfm-enumerations tbody tr');
+    await page.locator('.rcfm-enumeration-selection-tools > summary').click();
     await page.locator('.rcfm-bulk-move summary').click();
     await page.locator('.rcfm-deactivate-selected').click();
     await expect(page.locator('.rcfm-error')).toContainText('Select one or more items.');

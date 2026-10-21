@@ -103,7 +103,7 @@ ja:
   rcfm_protected_default: 既定値に設定されているため削除できません
   rcfm_protected_in_use: 保存済みデータで使用されているため削除できません
   rcfm_protected_in_use_and_default: 保存済みデータで使用され、既定値にも設定されているため削除できません
-  rcfm_protected_help: 鍵マークの項目は使用中または既定値のため削除できません。マウスを重ねると理由を確認できます。
+  rcfm_protected_help: 鍵マークの項目は使用中または既定値のため削除できません。
   rcfm_protected_indicator: 削除不可
   rcfm_state_deleted: 削除
   rcfm_state_inactive: 無効

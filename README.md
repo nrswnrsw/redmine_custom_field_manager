@@ -30,7 +30,7 @@ Drag individual rows, or select one or more rows and open the collapsed **Move t
 
 ### Key/value list manager
 
-The editor shows the value list first. Directly below it, a normal **New value** field adds one value at a time to the staged changes. Selected-item operations follow the primary list, while bulk addition and CSV are kept as compact, collapsed utilities for occasional use. Inline renaming, activation, deactivation, deletion, drag and drop, and multi-selection remain available. Locked values show why they cannot be deleted. The summary reports every pending change before the atomic save.
+The editor shows the value list first. Directly below it, a normal **New value** field adds one value at a time to the staged changes. Selected-item operations follow the primary list and are collapsed by default. Bulk addition and CSV are kept as compact, collapsed utilities for occasional use. Inline renaming, activation, deactivation, deletion, drag and drop, and multi-selection remain available. Locked values show why they cannot be deleted. The summary reports every pending change before the atomic save.
 
 ![Staged Key/value list editing](docs/images/enumeration-manager.png)
 

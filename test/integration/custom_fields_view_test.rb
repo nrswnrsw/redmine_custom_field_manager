@@ -52,7 +52,8 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select 'input.rcfm-base-snapshot'
     assert_select 'button.rcfm-undo', :text => 'Undo'
     assert_select 'button.rcfm-redo', :text => 'Redo'
-    assert_select '.rcfm-selection-bar button.rcfm-select-all'
+    assert_select 'details.rcfm-enumeration-selection-tools:not([open])'
+    assert_select '.rcfm-enumeration-selection-tools button.rcfm-select-all'
     assert_select '.rcfm-operation-panel--state button.rcfm-activate-selected'
     assert_select '.rcfm-operation-panel--state button.rcfm-delete-selected.rcfm-button-danger'
     assert_select '.rcfm-operation-panel--state h3', :text => 'Status and deletion'
@@ -71,7 +72,7 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select 'a.rcfm-csv-template[href*="template=1"]'
     assert_select '.rcfm-csv-import .info', :text => /Save or discard/
     assert_select '.rcfm-protection-indicator[title*="default value"]'
-    assert_select '.rcfm-protected-help'
+    assert_select '.rcfm-protected-help', :text => 'Locked values are in use or are defaults and cannot be deleted.'
     assert_select 'input.rcfm-add-one-input[placeholder="Enter a value name"]'
     assert_select 'button.rcfm-add-one', :text => 'Add'
     assert_select '.rcfm-enumeration-utilities details:not([open])', :count => 2

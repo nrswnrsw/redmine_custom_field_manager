@@ -103,7 +103,7 @@ en:
   rcfm_protected_default: Cannot be deleted because this is a default value
   rcfm_protected_in_use: Cannot be deleted because saved data uses this value
   rcfm_protected_in_use_and_default: Cannot be deleted because saved data uses this value and it is also a default
-  rcfm_protected_help: Locked values are in use or are defaults and cannot be deleted. Hover over the lock to see why.
+  rcfm_protected_help: Locked values are in use or are defaults and cannot be deleted.
   rcfm_protected_indicator: Cannot delete
   rcfm_state_deleted: deleted
   rcfm_state_inactive: inactive

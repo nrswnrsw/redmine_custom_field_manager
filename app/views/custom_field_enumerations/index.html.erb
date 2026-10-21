@@ -179,12 +179,15 @@
 
   <p class="rcfm-protected-help"><%= l(:rcfm_protected_help) %></p>
 
-  <div class="rcfm-toolbar rcfm-enumeration-selection-tools box">
-    <div class="rcfm-selection-bar">
-      <div class="rcfm-selection-summary">
+  <details class="rcfm-toolbar rcfm-enumeration-selection-tools box">
+    <summary class="rcfm-selection-bar">
+      <span class="rcfm-selection-summary">
         <span class="rcfm-group-label"><%= l(:rcfm_selected_item_actions) %></span>
         <span class="rcfm-selection-count" aria-live="polite"><%= l(:rcfm_selected_count, :count => 0) %></span>
-      </div>
+      </span>
+    </summary>
+
+    <div class="rcfm-enumeration-selection-controls">
       <div class="rcfm-selection-controls">
         <%= button_tag sprite_icon('checked', l(:rcfm_select_all)),
                        :type => 'button',
@@ -252,7 +255,7 @@
         </div>
       </details>
     </div>
-  </div>
+  </details>
 
   <div class="rcfm-enumeration-utilities" aria-label="<%= l(:rcfm_other_tools) %>">
     <details class="rcfm-bulk-add">

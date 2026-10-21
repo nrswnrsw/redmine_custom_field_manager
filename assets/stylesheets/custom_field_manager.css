@@ -65,7 +65,7 @@
   align-items: start;
   display: grid;
   gap: 1em;
-  grid-template-columns: minmax(18em, 0.8fr) minmax(34em, 1.4fr);
+  grid-template-columns: minmax(18em, 0.8fr) minmax(0, 1.4fr);
   padding: 1em;
 }
 
@@ -479,6 +479,46 @@
 
 .rcfm-enumeration-selection-tools {
   margin-top: 0.85em;
+}
+
+.rcfm-enumeration-selection-tools > .rcfm-selection-bar {
+  border-bottom: 0;
+  cursor: pointer;
+  justify-content: flex-start;
+  list-style: none;
+}
+
+.rcfm-enumeration-selection-tools:not([open]) > :not(summary) {
+  display: none;
+}
+
+.rcfm-enumeration-selection-tools > .rcfm-selection-bar::-webkit-details-marker {
+  display: none;
+}
+
+.rcfm-enumeration-selection-tools > .rcfm-selection-bar::before {
+  color: var(--oc-gray-7, #555);
+  content: "▶";
+  font-size: 0.8em;
+}
+
+.rcfm-enumeration-selection-tools[open] > .rcfm-selection-bar {
+  border-bottom: 1px solid var(--oc-gray-3, #ddd);
+}
+
+.rcfm-enumeration-selection-tools[open] > .rcfm-selection-bar::before {
+  content: "▼";
+}
+
+.rcfm-enumeration-selection-controls {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1em 1em 0;
+}
+
+.rcfm-operation-panel--move > summary > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .rcfm-enumeration-utilities {
