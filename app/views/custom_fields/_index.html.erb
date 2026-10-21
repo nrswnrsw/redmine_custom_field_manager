@@ -56,13 +56,13 @@
   <table class="list custom_fields rcfm-sortable">
     <thead>
       <tr>
-        <th class="rcfm-selection"><span class="hidden-for-sighted"><%= l(:rcfm_move_selected_group) %></span></th>
+        <th class="rcfm-selection"><%= l(:rcfm_move_selection) %></th>
         <th><%= l(:field_name) %></th>
-        <th><%= l(:field_field_format) %></th>
-        <th><%= l(:field_is_required) %></th>
+        <th class="rcfm-field-format"><%= l(:field_field_format) %></th>
+        <th class="rcfm-field-required"><%= l(:field_is_required) %></th>
         <% if tab[:name] == 'IssueCustomField' %>
-          <th><%= l(:field_is_for_all) %></th>
-          <th><%= l(:label_used_by) %></th>
+          <th class="rcfm-field-for-all"><%= l(:field_is_for_all) %></th>
+          <th class="rcfm-field-used-by"><%= l(:label_used_by) %></th>
         <% end %>
         <th><span class="hidden-for-sighted"><%= l(:rcfm_individual_actions) %></span></th>
       </tr>
@@ -78,11 +78,11 @@
             <%= link_to custom_field.name, edit_custom_field_path(custom_field) %>
             <span class="rcfm-record-id">#<%= custom_field.id %></span>
           </td>
-          <td><%= l(custom_field.format.label) %></td>
-          <td><%= checked_image custom_field.is_required? %></td>
+          <td class="rcfm-field-format"><%= l(custom_field.format.label) %></td>
+          <td class="rcfm-field-required"><%= checked_image custom_field.is_required? %></td>
           <% if tab[:name] == 'IssueCustomField' %>
-            <td><%= checked_image custom_field.is_for_all? %></td>
-            <td><%= l(:label_x_projects, :count => @custom_fields_projects_count[custom_field.id] || 0) if custom_field.is_a?(IssueCustomField) && !custom_field.is_for_all? %></td>
+            <td class="rcfm-field-for-all"><%= checked_image custom_field.is_for_all? %></td>
+            <td class="rcfm-field-used-by"><%= l(:label_x_projects, :count => @custom_fields_projects_count[custom_field.id] || 0) if custom_field.is_a?(IssueCustomField) && !custom_field.is_for_all? %></td>
           <% end %>
           <td class="buttons">
             <%= tag.span sprite_icon('reorder', ''), :class => 'icon-only icon-sort-handle sort-handle rcfm-sort-handle', :title => l(:button_move) %>
@@ -130,6 +130,7 @@
                    class="rcfm-target"
                    list="<%= manager_id %>-targets"
                    autocomplete="off"
+                   aria-describedby="<%= manager_id %>-move-error"
                    placeholder="<%= l(:rcfm_move_target_placeholder) %>">
           </label>
           <datalist id="<%= manager_id %>-targets" class="rcfm-target-list">
@@ -152,12 +153,24 @@
             <div class="rcfm-target-candidate-list"></div>
           </div>
         </div>
+        <div id="<%= manager_id %>-move-error"
+             class="rcfm-move-error error"
+             role="alert"
+             tabindex="-1"
+             hidden></div>
       </div>
     </details>
-    <div class="rcfm-error error" hidden></div>
+    <div class="rcfm-error error" role="alert" tabindex="-1" hidden></div>
   </div>
 
-  <div class="rcfm-commit-bar">
+  <div class="rcfm-unsaved-notice" role="status" hidden>
+    <span><%= l(:rcfm_unsaved_changes_notice) %></span>
+    <%= button_tag l(:rcfm_review_changes),
+                   :type => 'button',
+                   :class => 'rcfm-review-changes rcfm-button-primary' %>
+  </div>
+
+  <div class="rcfm-commit-bar" tabindex="-1">
     <div class="rcfm-change-summary">
       <span class="rcfm-change-indicator" aria-hidden="true"></span>
       <div class="rcfm-status" aria-live="polite"><%= l(:rcfm_no_changes) %></div>

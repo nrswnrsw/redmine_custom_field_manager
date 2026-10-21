@@ -10,6 +10,10 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
 
     assert_response :success
     assert_select 'form.rcfm-manager[data-rcfm-manager="custom-fields"]'
+    assert_select '.rcfm-introduction',
+                  :text => 'Choose the field type from the tabs above. ' \
+                           'After you change the order, a Save changes button appears at the bottom of the page. ' \
+                           'Press it to make the new order final.'
     assert_select 'input.rcfm-ordered-ids'
     assert_select 'input.rcfm-base-snapshot'
     assert_select 'button.rcfm-undo', :text => 'Undo'
@@ -19,16 +23,22 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select '.rcfm-custom-field-bulk-tools button.rcfm-select-all'
     assert_select '.rcfm-operation-panel--move summary', :text => /Move to a destination/
     assert_select '.rcfm-bulk-move-help', :text => /Select the items to move/
+    assert_select '.rcfm-unsaved-notice[role="status"][hidden]', :text => /You have unsaved changes/
+    assert_select '.rcfm-unsaved-notice button.rcfm-review-changes', :text => 'Review changes'
     assert_select '.rcfm-commit-bar button.rcfm-save.rcfm-button-primary', :text => 'Save changes'
     assert_select '.rcfm-commit-bar button.rcfm-reset', :text => 'Discard all unsaved changes'
     assert_select '.rcfm-bulk-move-count', :text => '0 selected'
     assert_operator response.body.index('class="list custom_fields rcfm-sortable"'), :<,
                     response.body.index('class="rcfm-custom-field-bulk-tools"')
+    assert_select 'table.custom_fields thead th:first-child', :text => 'Move'
+    assert_select 'table.custom_fields thead th:first-child .hidden-for-sighted', :count => 0
     assert_select 'th', :text => /Individual actions/
     assert_select 'input.rcfm-select[aria-label*="for moving"]'
     assert_select 'a.rcfm-delete-custom-field[data-confirm*="Other checked fields will not be deleted"]'
     assert_select 'a.rcfm-delete-custom-field[data-confirm*="cannot be restored from change history"]'
-    assert_select 'input.rcfm-target[placeholder="Enter a destination name"]'
+    assert_select 'input.rcfm-target[placeholder="Enter a destination name"][aria-describedby]'
+    assert_select '.rcfm-move-error[role="alert"][tabindex="-1"][hidden]'
+    assert_select '.rcfm-error[role="alert"][tabindex="-1"][hidden]'
     assert_select 'form.rcfm-manager[data-rcfm-target-required="Enter a destination name."]'
     assert_select 'form.rcfm-manager[data-rcfm-target-candidate*="current position"]'
     assert_select 'form.rcfm-manager[data-rcfm-target-candidate-selected="selected"]'
@@ -66,6 +76,8 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select '.rcfm-operation-panel--state h3', :text => 'Status and deletion'
     assert_select 'details.rcfm-operation-panel--move:not([open]) button.rcfm-move-selected'
     assert_select '.rcfm-operation-panel--move summary', :text => /Move to a destination/
+    assert_select '.rcfm-unsaved-notice[role="status"][hidden]', :text => /You have unsaved changes/
+    assert_select '.rcfm-unsaved-notice button.rcfm-review-changes', :text => 'Review changes'
     assert_select '.rcfm-commit-bar button.rcfm-save.rcfm-button-primary', :text => 'Save changes'
     assert_select '.rcfm-commit-bar button.rcfm-reset', :text => 'Discard all unsaved changes'
     assert_select '.rcfm-selection-count', :text => '0 selected'
@@ -73,6 +85,8 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select 'form.rcfm-enumeration-manager[data-rcfm-target-required="Enter a destination name."]'
     assert_select 'form.rcfm-enumeration-manager[data-rcfm-target-candidate*="current position"]'
     assert_select 'form.rcfm-enumeration-manager[data-rcfm-target-candidate-selected="selected"]'
+    assert_select 'form.rcfm-enumeration-manager[data-rcfm-apply-edit-label="Apply edit"]'
+    assert_select 'form.rcfm-enumeration-manager[data-rcfm-cancel-edit-label="Cancel"]'
     assert_select '.rcfm-target-candidates[hidden]'
     assert_select '.rcfm-conflict .rcfm-conflict-merge'
     assert_select 'a.rcfm-csv-export'

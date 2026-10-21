@@ -47,6 +47,7 @@ test.describe.serial('custom field manager browser behavior', function() {
     const movePanel = page.locator('.rcfm-operation-panel--move');
     const utilities = page.locator('.rcfm-enumeration-utilities');
     const commitBar = page.locator('.rcfm-commit-bar');
+    const unsavedNotice = page.locator('.rcfm-unsaved-notice');
     await expect(page.locator('.rcfm-introduction')).toHaveText(
       'After you add or edit a choice, a Save changes button appears at the bottom of the page. Press it to make your changes final.'
     );
@@ -69,6 +70,7 @@ test.describe.serial('custom field manager browser behavior', function() {
     await expect(utilities.locator('details').nth(1)).not.toHaveAttribute('open', '');
     await expect(commitBar).toBeVisible();
     await expect(commitBar.locator('.rcfm-commit-controls')).toBeHidden();
+    await expect(unsavedNotice).toBeHidden();
     await expect(commitBar.locator('.rcfm-save')).toHaveText('Save changes');
     await expect(commitBar.locator('.rcfm-reset')).toHaveText('Discard all unsaved changes');
     await expect(commitBar.locator('.rcfm-undo')).toHaveAttribute('title', 'Undo the most recent unsaved action.');
@@ -88,9 +90,16 @@ test.describe.serial('custom field manager browser behavior', function() {
     expect(stateBox.y).toBeLessThan(utilitiesBox.y);
     expect(deactivateBox.y).toBeLessThan(deleteBox.y);
 
+    await page.setViewportSize({width: 1280, height: 360});
     await page.locator('.rcfm-enumerations tbody tr').nth(0).locator('.rcfm-active').uncheck();
     await expect(page.locator('.rcfm-manager')).toHaveClass(/rcfm-dirty/);
     await expect(commitBar.locator('.rcfm-commit-controls')).toBeVisible();
+    await expect(unsavedNotice).toBeVisible();
+    const noticeBox = await unsavedNotice.boundingBox();
+    expect(noticeBox.y).toBeGreaterThanOrEqual(0);
+    expect(noticeBox.y + noticeBox.height).toBeLessThanOrEqual(360);
+    await unsavedNotice.locator('.rcfm-review-changes').click();
+    await expect(commitBar.locator('.rcfm-save')).toBeFocused();
     const saveBox = await commitBar.locator('.rcfm-save').boundingBox();
     const resetBox = await commitBar.locator('.rcfm-reset').boundingBox();
     expect(resetBox.x).toBeLessThan(saveBox.x);
@@ -102,6 +111,9 @@ test.describe.serial('custom field manager browser behavior', function() {
     });
     expect(saveBackground).not.toBe(resetBackground);
     await commitBar.locator('.rcfm-reset').click();
+    await expect(unsavedNotice).toBeHidden();
+    await page.setViewportSize({width: 1280, height: 720});
+    await page.evaluate(function() { window.scrollTo(0, 0); });
 
     await page.setViewportSize({width: 1044, height: 834});
     const mediumToolsBox = await selectionTools.boundingBox();
@@ -167,7 +179,9 @@ test.describe.serial('custom field manager browser behavior', function() {
 
     await rows.nth(0).locator('.rcfm-edit').click();
     await rows.nth(0).locator('.rcfm-name-input').fill('Browser renamed');
-    await rows.nth(0).locator('.rcfm-name-input').press('Enter');
+    await expect(rows.nth(0).locator('.rcfm-apply-edit')).toHaveText('Apply edit');
+    await expect(rows.nth(0).locator('.rcfm-cancel-edit')).toHaveText('Cancel');
+    await rows.nth(0).locator('.rcfm-apply-edit').click();
     await expect(rows.nth(0).locator('.rcfm-edit')).toBeFocused();
 
     await rows.nth(0).locator('.rcfm-select').check();
@@ -211,6 +225,45 @@ test.describe.serial('custom field manager browser behavior', function() {
     await expect(page.locator('.rcfm-csv-apply-button')).toBeVisible();
   });
 
+  test('requires an explicit action to apply a name edit and leaves IME Enter alone', async function({page}) {
+    await page.goto('/custom_fields/' + fieldId + '/enumerations', {waitUntil: 'networkidle'});
+    const row = page.locator('.rcfm-enumerations tbody tr').nth(0);
+    const originalName = await row.locator('.rcfm-enumeration-name').textContent();
+
+    await row.locator('.rcfm-edit').click();
+    const input = row.locator('.rcfm-name-input');
+    await input.fill('かな');
+    await input.dispatchEvent('compositionstart', {data: 'かな'});
+    await input.dispatchEvent('keydown', {
+      key: 'Enter',
+      code: 'Enter',
+      keyCode: 229,
+      isComposing: true
+    });
+    await input.dispatchEvent('compositionend', {data: 'かな'});
+    await expect(input).toBeVisible();
+    await expect(input).toHaveValue('かな');
+    await expect(page.locator('.rcfm-save')).toBeDisabled();
+
+    await input.press('Enter');
+    await expect(input).toBeVisible();
+    await expect(page.locator('.rcfm-save')).toBeDisabled();
+    await page.locator('.rcfm-introduction').click();
+    await expect(input).toBeVisible();
+
+    await row.locator('.rcfm-apply-edit').click();
+    await expect(row.locator('.rcfm-enumeration-name')).toHaveText('かな');
+    await expect(page.locator('.rcfm-save')).toBeEnabled();
+    await page.locator('.rcfm-reset').click();
+    await expect(row.locator('.rcfm-enumeration-name')).toHaveText(originalName);
+
+    await row.locator('.rcfm-edit').click();
+    await row.locator('.rcfm-name-input').fill('取り消す名称');
+    await row.locator('.rcfm-cancel-edit').click();
+    await expect(row.locator('.rcfm-enumeration-name')).toHaveText(originalName);
+    await expect(page.locator('.rcfm-save')).toBeDisabled();
+  });
+
   test('chooses a duplicate-name destination by its current position', async function({page}) {
     await page.goto('/custom_fields/' + fieldId + '/enumerations', {waitUntil: 'networkidle'});
     const rows = page.locator('.rcfm-enumerations tbody tr');
@@ -221,7 +274,7 @@ test.describe.serial('custom field manager browser behavior', function() {
     for (let index = 0; index < 2; index += 1) {
       await rows.nth(index).locator('.rcfm-edit').click();
       await rows.nth(index).locator('.rcfm-name-input').fill('Duplicate destination');
-      await rows.nth(index).locator('.rcfm-name-input').press('Enter');
+      await rows.nth(index).locator('.rcfm-apply-edit').click();
     }
 
     const sourceId = await rows.nth(4).getAttribute('data-rcfm-client-id');
@@ -280,7 +333,7 @@ test.describe.serial('custom field manager browser behavior', function() {
     await rows.nth(0).locator('.rcfm-edit').click();
     const inlineNameInput = rows.nth(0).locator('.rcfm-name-input');
     await inlineNameInput.fill('');
-    await inlineNameInput.press('Enter');
+    await rows.nth(0).locator('.rcfm-apply-edit').click();
     await expect(rows.nth(0).locator('.rcfm-field-error')).toContainText('Value names cannot be blank.');
     await expect(inlineNameInput).toHaveAttribute('aria-invalid', 'true');
     await inlineNameInput.fill('Cancelled inline edit');
@@ -326,7 +379,7 @@ test.describe.serial('custom field manager browser behavior', function() {
     const firstPageRow = page.locator('.rcfm-enumerations tbody tr').nth(0);
     await firstPageRow.locator('.rcfm-edit').click();
     await firstPageRow.locator('.rcfm-name-input').fill('Changed by first administrator');
-    await firstPageRow.locator('.rcfm-name-input').press('Enter');
+    await firstPageRow.locator('.rcfm-apply-edit').click();
     await saveAndReload(page);
 
     const secondPageRow = otherPage.locator('.rcfm-enumerations tbody tr').nth(1);
@@ -353,7 +406,14 @@ test.describe.serial('custom field manager browser behavior', function() {
     const manager = page.locator('.rcfm-manager').filter({has: page.locator('input[name="field_type"][value="GroupCustomField"]')});
     const source = manager.locator('tr[data-rcfm-id="' + fieldId + '"]');
     const target = manager.locator('tr[data-rcfm-id]').filter({hasText: 'RCFM browser target'});
+    const commitControls = manager.locator('.rcfm-commit-controls');
+    const unsavedNotice = manager.locator('.rcfm-unsaved-notice');
+    const moveError = manager.locator('.rcfm-move-error');
+    const targetInput = manager.locator('.rcfm-target');
     await expect(manager.locator('.rcfm-selection-bar')).toHaveCount(0);
+    await expect(manager.locator('table.custom_fields thead th').first()).toHaveText('Move');
+    await expect(commitControls).toBeHidden();
+    await expect(unsavedNotice).toBeHidden();
     const tableBox = await manager.locator('table.custom_fields').boundingBox();
     const bulkMoveBox = await manager.locator('.rcfm-custom-field-bulk-tools').boundingBox();
     expect(tableBox).not.toBeNull();
@@ -364,23 +424,63 @@ test.describe.serial('custom field manager browser behavior', function() {
       'data-confirm',
       /Other checked fields will not be deleted/
     );
+
+    await page.setViewportSize({width: 375, height: 812});
+    await expect(manager.locator('table.custom_fields thead')).toBeHidden();
+    await expect(target.locator('td.rcfm-field-format')).toBeHidden();
+    await expect(target.locator('td.rcfm-field-required')).toBeHidden();
+    await expect(target.locator('td.name')).toBeVisible();
+    await expect(target.locator('.rcfm-delete-custom-field')).toBeVisible();
+    const narrowNameBox = await target.locator('td.name').boundingBox();
+    expect(narrowNameBox.width).toBeGreaterThan(200);
+    const narrowWidth = await page.evaluate(function() {
+      return {
+        viewport: document.documentElement.clientWidth,
+        page: document.documentElement.scrollWidth
+      };
+    });
+    expect(narrowWidth.page).toBeLessThanOrEqual(narrowWidth.viewport);
+    await page.setViewportSize({width: 1280, height: 720});
+
     await manager.locator('.rcfm-bulk-move summary').click();
-    await manager.locator('.rcfm-target').fill('RCFM browser target');
+    await targetInput.fill('RCFM browser target');
     await manager.locator('.rcfm-move-selected').click();
-    await expect(manager.locator('.rcfm-error')).toContainText('Select one or more items');
+    await expect(moveError).toContainText('Select one or more items');
+    await expect(moveError).toBeFocused();
     await source.locator('.rcfm-select').check();
-    await expect(manager.locator('.rcfm-error')).toBeHidden();
+    await expect(moveError).toBeHidden();
     await expect(manager.locator('.rcfm-bulk-move-count')).toHaveText('1 selected');
     await expect(manager.locator('.rcfm-move-selected-label')).toHaveText('Move 1 selected');
-    await manager.locator('.rcfm-target').fill('RCFM browser target');
+    await targetInput.fill('');
+    await manager.locator('.rcfm-move-selected').click();
+    await expect(moveError).toContainText('Enter a destination name.');
+    await expect(targetInput).toBeFocused();
+    await expect(targetInput).toHaveAttribute('aria-invalid', 'true');
+    await targetInput.fill('RCFM browser target');
+    await expect(moveError).toBeHidden();
+    await expect(targetInput).not.toHaveAttribute('aria-invalid', 'true');
     await manager.locator('input[type="radio"][value="after"]').check();
     await manager.locator('.rcfm-move-selected').click();
     await expect(manager.locator('.rcfm-status')).toHaveText('Unsaved: 1 item(s) moved');
     await expect(manager.locator('.rcfm-save')).toBeEnabled();
+    await expect(commitControls).toBeVisible();
+    await expect(unsavedNotice).toBeVisible();
+    await unsavedNotice.locator('.rcfm-review-changes').click();
+    await expect(manager.locator('.rcfm-save')).toBeFocused();
     await manager.locator('.rcfm-undo').click();
+    await expect(unsavedNotice).toBeHidden();
     await expect(manager.locator('.rcfm-save')).toBeDisabled();
     await manager.locator('.rcfm-redo').click();
+    await expect(unsavedNotice).toBeVisible();
     await expect(manager.locator('.rcfm-save')).toBeEnabled();
+
+    await page.locator('#tab-UserCustomField').click();
+    await expect(page).toHaveURL(/tab=UserCustomField/);
+    await page.locator('#tab-GroupCustomField').click();
+    await expect(page).toHaveURL(/tab=GroupCustomField/);
+    await expect(manager.locator('.rcfm-status')).toHaveText('Unsaved: 1 item(s) moved');
+    await expect(manager.locator('.rcfm-save')).toBeEnabled();
+
     await manager.locator('.rcfm-reset').click();
     await expect(manager.locator('.rcfm-save')).toBeDisabled();
 
@@ -400,6 +500,8 @@ test.describe.serial('custom field manager browser behavior', function() {
     await expect(page.locator('tr[data-rcfm-name="RCFM browser target"]')).toHaveCount(0);
 
     await page.getByRole('link', {name: 'Change history'}).click();
-    await expect(page.locator('table.list tbody tr').first()).toContainText('Custom field deletion');
+    await expect(
+      page.locator('table.list tbody tr').filter({hasText: 'Custom field deletion'}).first()
+    ).toBeVisible();
   });
 });

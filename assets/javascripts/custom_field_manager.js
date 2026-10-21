@@ -189,6 +189,12 @@
       manager.restore(manager.baseline);
     });
 
+    this.form.on('click', '.rcfm-review-changes', function() {
+      var save = manager.form.find('.rcfm-save')[0];
+      save.focus({preventScroll: true});
+      manager.form.find('.rcfm-commit-bar')[0].scrollIntoView({behavior: 'smooth', block: 'center'});
+    });
+
     this.form.on('submit', function(event) {
       event.preventDefault();
       manager.save('normal');
@@ -232,7 +238,23 @@
   };
 
   CustomFieldManager.prototype.clearError = function() {
-    this.form.find('.rcfm-error').prop('hidden', true).text('');
+    this.form.find('.rcfm-error, .rcfm-move-error').prop('hidden', true).text('');
+    this.form.find('.rcfm-target[aria-invalid="true"]').removeAttr('aria-invalid');
+  };
+
+  CustomFieldManager.prototype.showMoveError = function(message, input) {
+    this.clearError();
+    var error = this.form.find('.rcfm-move-error').text(message).prop('hidden', false);
+    if (input && input.length) {
+      input.attr('aria-invalid', 'true').trigger('focus');
+    } else {
+      error.trigger('focus');
+    }
+  };
+
+  CustomFieldManager.prototype.showError = function(message) {
+    this.clearError();
+    this.form.find('.rcfm-error').text(message).prop('hidden', false).trigger('focus');
   };
 
   CustomFieldManager.prototype.showTargetCandidates = function(targets, selected) {
@@ -269,18 +291,18 @@
 
   CustomFieldManager.prototype.moveSelected = function(targetId) {
     var selected = this.body.find('.rcfm-select:checked').closest('tr');
-    var value = this.form.find('.rcfm-target').val().trim();
+    var input = this.form.find('.rcfm-target');
+    var value = input.val().trim();
     var match = value.match(/\(#(\d+)\)\s*$/);
-    var error = this.form.find('.rcfm-error');
 
     this.hideTargetCandidates();
     this.clearError();
     if (!selected.length) {
-      error.text(this.form.data('rcfm-selection-error')).prop('hidden', false);
+      this.showMoveError(this.form.data('rcfm-selection-error'));
       return;
     }
     if (!value) {
-      error.text(this.form.data('rcfm-target-required')).prop('hidden', false);
+      this.showMoveError(this.form.data('rcfm-target-required'), input);
       return;
     }
 
@@ -295,12 +317,12 @@
         return String($(this).attr('data-rcfm-name')).trim().toLocaleLowerCase() === lowered;
       });
       if (!target.length) {
-        error.text(this.form.data('rcfm-target-not-found')).prop('hidden', false);
+        this.showMoveError(this.form.data('rcfm-target-not-found'), input);
         return;
       }
       if (target.length > 1) {
         if (!target.filter(function() { return selected.filter(this).length === 0; }).length) {
-          error.text(this.form.data('rcfm-target-error')).prop('hidden', false);
+          this.showMoveError(this.form.data('rcfm-target-error'), input);
           return;
         }
         this.showTargetCandidates(target, selected);
@@ -308,7 +330,7 @@
       }
     }
     if (!target.length || selected.filter(target).length) {
-      error.text(this.form.data('rcfm-target-error')).prop('hidden', false);
+      this.showMoveError(this.form.data('rcfm-target-error'), input);
       return;
     }
 
@@ -356,6 +378,8 @@
     var dirty = !arraysEqual(this.baseline, current);
 
     this.form.toggleClass('rcfm-dirty', dirty);
+    this.form.toggleClass('rcfm-has-history', !!(this.undoStack.length || this.redoStack.length));
+    this.form.find('.rcfm-unsaved-notice').prop('hidden', !dirty);
     this.form.find('.rcfm-ordered-ids').val(JSON.stringify(current));
     this.form.find('.rcfm-save, .rcfm-reset').prop('disabled', !dirty || this.saving);
     this.form.find('.rcfm-undo').prop('disabled', !this.undoStack.length || this.saving);
@@ -428,7 +452,7 @@
     }
 
     this.saving = true;
-    this.form.find('.rcfm-error').prop('hidden', true).text('');
+    this.clearError();
     this.form.find('.rcfm-force').val(resolving ? '1' : '0');
     this.form.find('.rcfm-confirmed-digest').val(resolving ? this.conflict.current_digest : '');
     this.form.find('.rcfm-resolution').val(resolution);
@@ -455,7 +479,7 @@
         manager.showConflict(payload);
       } else {
         var message = payload.message || manager.form.data('rcfm-save-error');
-        manager.form.find('.rcfm-error').text(message).prop('hidden', false);
+        manager.showError(message);
       }
       manager.refresh();
     });

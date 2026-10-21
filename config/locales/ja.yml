@@ -2,6 +2,7 @@ ja:
   rcfm_activate_selected: 選択項目を有効化
   rcfm_active_field: "%{name}の有効状態"
   rcfm_after: 後へ
+  rcfm_apply_edit: 変更を反映
   rcfm_before: 前へ
   rcfm_bulk_add: 一括追加
   rcfm_bulk_add_help: 1行に1件ずつ入力してください。「保存」を押すまでサーバーへ反映されません。
@@ -16,7 +17,7 @@ ja:
   rcfm_conflict_server: サーバー現在値
   rcfm_conflict_title: 同時編集の競合を検出しました
   rcfm_continue_editing: 編集を続ける
-  rcfm_custom_fields_help: 並び順の変更は「保存」を押すまでサーバーへ反映されません。
+  rcfm_custom_fields_help: 設定したい項目の種類を上のタブから選びます。並び順を変更すると、画面下部に「変更を保存」が表示されます。押すと変更が確定します。
   rcfm_deactivate_selected: 選択項目を無効化
   rcfm_delete_selected: 選択項目を削除
   rcfm_discard_changes: 未保存の変更をすべて破棄
@@ -38,6 +39,7 @@ ja:
   rcfm_move_target: 移動先
   rcfm_move_target_placeholder: 移動先の名前を入力
   rcfm_move_position: 移動位置
+  rcfm_move_selection: 移動対象
   rcfm_move_selected_group: 移動先を指定して移動
   rcfm_bulk_move_help: 一覧で移動したい項目をチェックし、移動先の項目名と、その前後どちらへ置くかを指定してください。
   rcfm_move_selected_count: "選択した%{count}件を移動"
@@ -46,6 +48,7 @@ ja:
   rcfm_target_candidate: "%{name} — 現在の%{position}番目"
   rcfm_target_candidate_selected: 選択中
   rcfm_no_changes: 未保存の変更はありません
+  rcfm_review_changes: 変更を確認
   rcfm_restore_item: 復元
   rcfm_save_error: 変更を保存できませんでした。
   rcfm_select: 選択
@@ -64,6 +67,7 @@ ja:
   rcfm_save_changes: 変更を保存
   rcfm_undo: 1つ戻す
   rcfm_undo_help: 直前の未保存操作を1つ戻します。
+  rcfm_unsaved_changes_notice: 未保存の変更があります
   rcfm_redo: 1つやり直す
   rcfm_redo_help: 戻した未保存操作を1つやり直します。
   rcfm_individual_actions: 個別操作

@@ -71,6 +71,8 @@
         :rcfm_conflict_server => l(:rcfm_conflict_server),
         :rcfm_conflict_merge => l(:rcfm_conflict_merge),
         :rcfm_edit_label => l(:button_edit),
+        :rcfm_apply_edit_label => l(:rcfm_apply_edit),
+        :rcfm_cancel_edit_label => l(:button_cancel),
         :rcfm_delete_label => l(:button_delete),
         :rcfm_restore_label => l(:rcfm_restore_item),
         :rcfm_select_label => l(:rcfm_select_field, :name => '__NAME__'),
@@ -305,7 +307,14 @@
     </details>
   </div>
 
-  <div class="rcfm-commit-bar">
+  <div class="rcfm-unsaved-notice" role="status" hidden>
+    <span><%= l(:rcfm_unsaved_changes_notice) %></span>
+    <%= button_tag l(:rcfm_review_changes),
+                   :type => 'button',
+                   :class => 'rcfm-review-changes rcfm-button-primary' %>
+  </div>
+
+  <div class="rcfm-commit-bar" tabindex="-1">
     <div class="rcfm-change-summary">
       <span class="rcfm-change-indicator" aria-hidden="true"></span>
       <div class="rcfm-status" aria-live="polite"><%= l(:rcfm_no_changes) %></div>

@@ -2,6 +2,7 @@ en:
   rcfm_activate_selected: Activate selected
   rcfm_active_field: "Active: %{name}"
   rcfm_after: After
+  rcfm_apply_edit: Apply edit
   rcfm_before: Before
   rcfm_bulk_add: Add multiple values
   rcfm_bulk_add_help: Enter one value per line. Nothing is saved until you press Save.
@@ -16,7 +17,7 @@ en:
   rcfm_conflict_server: Current server
   rcfm_conflict_title: Concurrent change detected
   rcfm_continue_editing: Continue editing
-  rcfm_custom_fields_help: Changes to the order stay in this browser until you press Save.
+  rcfm_custom_fields_help: Choose the field type from the tabs above. After you change the order, a Save changes button appears at the bottom of the page. Press it to make the new order final.
   rcfm_deactivate_selected: Deactivate selected
   rcfm_delete_selected: Delete selected
   rcfm_discard_changes: Discard all unsaved changes
@@ -38,6 +39,7 @@ en:
   rcfm_move_target: Destination
   rcfm_move_target_placeholder: Enter a destination name
   rcfm_move_position: Destination side
+  rcfm_move_selection: Move
   rcfm_move_selected_group: Move to a destination
   rcfm_bulk_move_help: Select the items to move in the list, then enter the destination name and choose whether to place them before or after it.
   rcfm_move_selected_count: "Move %{count} selected"
@@ -46,6 +48,7 @@ en:
   rcfm_target_candidate: "%{name} — current position %{position}"
   rcfm_target_candidate_selected: selected
   rcfm_no_changes: No unsaved changes
+  rcfm_review_changes: Review changes
   rcfm_restore_item: Restore
   rcfm_save_error: The changes could not be saved.
   rcfm_select: Select
@@ -64,6 +67,7 @@ en:
   rcfm_save_changes: Save changes
   rcfm_undo: Undo
   rcfm_undo_help: Undo the most recent unsaved action.
+  rcfm_unsaved_changes_notice: You have unsaved changes
   rcfm_redo: Redo
   rcfm_redo_help: Redo one previously undone unsaved action.
   rcfm_individual_actions: Individual actions

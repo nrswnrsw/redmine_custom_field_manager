@@ -150,8 +150,13 @@
   margin-top: 1em;
 }
 
-.rcfm-custom-field-bulk-tools > .rcfm-error {
+.rcfm-custom-field-bulk-tools > .rcfm-error,
+.rcfm-bulk-move .rcfm-move-error {
   margin-top: 0.75em;
+}
+
+.rcfm-bulk-move .rcfm-target[aria-invalid="true"] {
+  border-color: var(--oc-red-7, #b42318);
 }
 
 .rcfm-bulk-move-introduction {
@@ -315,6 +320,30 @@
   color: var(--fg-color-muted, #666);
 }
 
+.rcfm-unsaved-notice {
+  align-items: center;
+  background: var(--oc-white, #fff);
+  border: 1px solid var(--oc-orange-5, #e89a3d);
+  border-inline-start-width: 4px;
+  border-radius: 4px;
+  bottom: 1em;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.18);
+  box-sizing: border-box;
+  display: flex;
+  font-weight: bold;
+  gap: 1em;
+  inset-inline-end: 1em;
+  justify-content: space-between;
+  max-width: calc(100vw - 2em);
+  padding: 0.65em 0.75em;
+  position: fixed;
+  z-index: 30;
+}
+
+.rcfm-unsaved-notice[hidden] {
+  display: none;
+}
+
 .rcfm-commit-bar {
   align-items: center;
   background: var(--oc-white, #fff);
@@ -332,7 +361,7 @@
   z-index: 20;
 }
 
-.rcfm-enumeration-manager:not(.rcfm-dirty):not(.rcfm-has-history) .rcfm-commit-bar {
+.rcfm-manager:not(.rcfm-dirty):not(.rcfm-has-history) .rcfm-commit-bar {
   background: transparent;
   border-color: transparent;
   box-shadow: none;
@@ -340,7 +369,7 @@
   position: static;
 }
 
-.rcfm-enumeration-manager:not(.rcfm-dirty):not(.rcfm-has-history) .rcfm-commit-controls {
+.rcfm-manager:not(.rcfm-dirty):not(.rcfm-has-history) .rcfm-commit-controls {
   display: none;
 }
 
@@ -391,6 +420,11 @@
 .rcfm-enumerations th.rcfm-selection {
   white-space: nowrap;
   width: 3.5em;
+}
+
+.custom_fields th.rcfm-selection {
+  white-space: nowrap;
+  width: 5em;
 }
 
 .rcfm-record-id {
@@ -718,6 +752,83 @@
 }
 
 @media screen and (max-width: 519px) {
+  .rcfm-unsaved-notice {
+    bottom: 0.5em;
+    inset-inline: 0.5em;
+    max-width: none;
+  }
+
+  .custom_fields.rcfm-sortable {
+    display: block;
+  }
+
+  .custom_fields.rcfm-sortable thead {
+    display: none;
+  }
+
+  .custom_fields.rcfm-sortable tbody {
+    display: block;
+  }
+
+  .custom_fields.rcfm-sortable tbody tr {
+    display: grid;
+    grid-template-areas:
+      "selection name"
+      "selection actions";
+    grid-template-columns: 2.75em minmax(0, 1fr);
+    padding: 0.65em 0;
+  }
+
+  .custom_fields.rcfm-sortable tbody td {
+    border: 0;
+    box-sizing: border-box;
+    display: block;
+    width: auto;
+  }
+
+  .custom_fields.rcfm-sortable tbody td.rcfm-selection {
+    align-items: flex-start;
+    display: flex;
+    grid-area: selection;
+    justify-content: center;
+    padding-top: 0.35em;
+  }
+
+  .custom_fields.rcfm-sortable tbody td.name {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2em 0.45em;
+    grid-area: name;
+    padding: 0.25em 0.4em;
+  }
+
+  .custom_fields.rcfm-sortable tbody td.buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35em 0.8em;
+    grid-area: actions;
+    justify-content: flex-start;
+    padding: 0.45em 0.4em 0.15em;
+    text-align: start;
+    white-space: normal;
+  }
+
+  .custom_fields.rcfm-sortable tbody td.buttons > * {
+    margin: 0;
+  }
+
+  .custom_fields .rcfm-field-format,
+  .custom_fields .rcfm-field-required,
+  .custom_fields .rcfm-field-for-all,
+  .custom_fields .rcfm-field-used-by {
+    display: none !important;
+  }
+
+  .custom_fields td.name {
+    overflow-wrap: anywhere;
+  }
+
   .rcfm-history-actions button {
     flex: 1 1 0;
   }

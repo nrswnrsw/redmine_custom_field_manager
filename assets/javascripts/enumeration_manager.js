@@ -129,27 +129,30 @@
       manager.startEditing(String($(this).closest('tr').data('rcfm-client-id')));
     });
 
-    this.form.on('keydown', '.rcfm-name-input', function(event) {
-      var id = String($(this).closest('tr').data('rcfm-client-id'));
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        if (manager.finishEditing(this)) {
-          manager.body.find('tr[data-rcfm-client-id="' + id + '"] .rcfm-edit').trigger('focus');
-        }
-      } else if (event.key === 'Escape') {
-        event.preventDefault();
-        manager.editingId = null;
-        manager.clearError();
-        manager.render();
+    this.form.on('click', '.rcfm-apply-edit', function() {
+      var row = $(this).closest('tr');
+      var id = String(row.data('rcfm-client-id'));
+      if (manager.finishEditing(row.find('.rcfm-name-input')[0])) {
         manager.body.find('tr[data-rcfm-client-id="' + id + '"] .rcfm-edit').trigger('focus');
       }
     });
 
-    this.form.on('blur', '.rcfm-name-input', function() {
-      if (manager.editingId === null) {
+    this.form.on('click', '.rcfm-cancel-edit', function() {
+      manager.cancelEditing(String($(this).closest('tr').data('rcfm-client-id')));
+    });
+
+    this.form.on('keydown', '.rcfm-name-input', function(event) {
+      var id = String($(this).closest('tr').data('rcfm-client-id'));
+      var originalEvent = event.originalEvent || event;
+      if (originalEvent.isComposing || originalEvent.keyCode === 229) {
         return;
       }
-      manager.finishEditing(this);
+      if (event.key === 'Enter') {
+        event.preventDefault();
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        manager.cancelEditing(id);
+      }
     });
 
     this.form.on('click', '.rcfm-delete', function() {
@@ -263,6 +266,12 @@
       manager.refresh();
     });
 
+    this.form.on('click', '.rcfm-review-changes', function() {
+      var save = manager.form.find('.rcfm-save')[0];
+      save.focus({preventScroll: true});
+      manager.form.find('.rcfm-commit-bar')[0].scrollIntoView({behavior: 'smooth', block: 'center'});
+    });
+
     this.form.on('submit', function(event) {
       event.preventDefault();
       manager.save(false, 'normal');
@@ -359,6 +368,10 @@
   };
 
   EnumerationManager.prototype.startEditing = function(clientId) {
+    if (this.editingId !== null) {
+      this.body.find('tr[data-rcfm-client-id="' + this.editingId + '"] .rcfm-name-input').trigger('focus');
+      return;
+    }
     this.clearError();
     this.editingId = clientId;
     this.render();
@@ -381,6 +394,13 @@
       this.render();
     }
     return true;
+  };
+
+  EnumerationManager.prototype.cancelEditing = function(clientId) {
+    this.editingId = null;
+    this.clearError();
+    this.render();
+    this.body.find('tr[data-rcfm-client-id="' + clientId + '"] .rcfm-edit').trigger('focus');
   };
 
   EnumerationManager.prototype.validNames = function(names, input) {
@@ -692,13 +712,24 @@
         buttons.append(
           $('<button type="button" class="rcfm-restore-item">').text(manager.form.data('rcfm-restore-label'))
         );
+      } else if (manager.editingId === String(item.client_id)) {
+        buttons.append(
+          $('<button type="button" class="rcfm-apply-edit rcfm-button-action">')
+            .text(manager.form.data('rcfm-apply-edit-label'))
+        );
+        buttons.append(
+          $('<button type="button" class="rcfm-cancel-edit rcfm-button-quiet">')
+            .text(manager.form.data('rcfm-cancel-edit-label'))
+        );
       } else {
         buttons.append(
           $('<span class="icon-only icon-sort-handle sort-handle rcfm-sort-handle">')
             .attr('title', manager.form.data('rcfm-move-label'))
         );
         buttons.append(
-          $('<button type="button" class="icon icon-edit rcfm-edit">').text(manager.form.data('rcfm-edit-label'))
+          $('<button type="button" class="icon icon-edit rcfm-edit">')
+            .text(manager.form.data('rcfm-edit-label'))
+            .prop('disabled', manager.editingId !== null)
         );
         buttons.append(
           $('<button type="button" class="icon icon-del rcfm-delete">')
@@ -768,6 +799,7 @@
     }
     this.form.toggleClass('rcfm-dirty', dirty);
     this.form.toggleClass('rcfm-has-history', !!(this.undoStack.length || this.redoStack.length));
+    this.form.find('.rcfm-unsaved-notice').prop('hidden', !dirty);
     this.form.find('.rcfm-status').text(summary);
     this.refreshSelection();
     this.form.find('.rcfm-items').val(JSON.stringify(this.items));
