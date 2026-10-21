@@ -38,7 +38,7 @@ en:
   rcfm_move_target: Destination
   rcfm_move_target_placeholder: Enter a destination name
   rcfm_move_position: Destination side
-  rcfm_move_selected_group: Move multiple items
+  rcfm_move_selected_group: Move to a destination
   rcfm_bulk_move_help: Select the items to move in the list, then enter the destination name and choose whether to place them before or after it.
   rcfm_move_selected_count: "Move %{count} selected"
   rcfm_target_not_found: No destination has that name. Select one of the suggestions.
@@ -52,9 +52,11 @@ en:
   rcfm_select_all: Select all
   rcfm_select_field: "Select %{name}"
   rcfm_select_field_for_move: "Select %{name} for moving"
-  rcfm_selection_group: Selection
   rcfm_selection_error: Select one or more items.
   rcfm_selected_item_actions: Selected item actions
+  rcfm_state_delete_actions: Status and deletion
+  rcfm_add_one_placeholder: Enter a value name
+  rcfm_other_tools: Occasional tools
   rcfm_server_state_summary: "The current server list contains %{count} values."
   rcfm_target_error: The destination cannot be one of the selected items.
   rcfm_target_required: Enter a destination name.

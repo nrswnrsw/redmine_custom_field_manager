@@ -40,18 +40,29 @@ test.describe.serial('custom field manager browser behavior', function() {
     await page.goto('/custom_fields/' + fieldId + '/enumerations', {waitUntil: 'networkidle'});
 
     const selectionBar = page.locator('.rcfm-selection-bar');
+    const list = page.locator('.rcfm-enumerations');
+    const singleAdd = page.locator('.rcfm-single-add');
     const statePanel = page.locator('.rcfm-operation-panel--state');
     const movePanel = page.locator('.rcfm-operation-panel--move');
+    const utilities = page.locator('.rcfm-enumeration-utilities');
     const commitBar = page.locator('.rcfm-commit-bar');
+    await expect(list).toBeVisible();
+    await expect(singleAdd).toBeVisible();
     await expect(selectionBar).toBeVisible();
     await expect(statePanel).toBeVisible();
     await expect(movePanel).toBeVisible();
     await expect(movePanel).not.toHaveAttribute('open', '');
+    await expect(movePanel.locator('summary')).toContainText('Move to a destination');
+    await expect(utilities.locator('details')).toHaveCount(2);
+    await expect(utilities.locator('details').nth(0)).not.toHaveAttribute('open', '');
+    await expect(utilities.locator('details').nth(1)).not.toHaveAttribute('open', '');
     await expect(commitBar).toBeVisible();
     await expect(commitBar.locator('.rcfm-save')).toHaveText('Save changes');
     await expect(commitBar.locator('.rcfm-reset')).toHaveText('Discard all unsaved changes');
     await expect(commitBar.locator('.rcfm-undo')).toHaveAttribute('title', 'Undo the most recent unsaved action.');
 
+    const listBox = await list.boundingBox();
+    const singleAddBox = await singleAdd.boundingBox();
     const selectionBox = await selectionBar.boundingBox();
     const stateBox = await statePanel.boundingBox();
     const moveBox = await movePanel.boundingBox();
@@ -59,8 +70,12 @@ test.describe.serial('custom field manager browser behavior', function() {
     const deactivateBox = await statePanel.locator('.rcfm-deactivate-selected').boundingBox();
     const saveBox = await commitBar.locator('.rcfm-save').boundingBox();
     const resetBox = await commitBar.locator('.rcfm-reset').boundingBox();
+    const utilitiesBox = await utilities.boundingBox();
+    expect(listBox.y).toBeLessThan(singleAddBox.y);
+    expect(singleAddBox.y).toBeLessThan(selectionBox.y);
     expect(selectionBox.y).toBeLessThan(stateBox.y);
     expect(stateBox.x).toBeLessThan(moveBox.x);
+    expect(stateBox.y).toBeLessThan(utilitiesBox.y);
     expect(deactivateBox.y).toBeLessThan(deleteBox.y);
     expect(resetBox.x).toBeLessThan(saveBox.x);
 
@@ -119,6 +134,18 @@ test.describe.serial('custom field manager browser behavior', function() {
     await page.locator('.rcfm-reset').click();
     await expect(rows.nth(0).locator('.rcfm-active')).toBeChecked();
 
+    const singleAddInput = page.locator('.rcfm-add-one-input');
+    await singleAddInput.fill('Browser added one');
+    await singleAddInput.press('Enter');
+    await expect(rows).toHaveCount(4);
+    await expect(rows.nth(3).locator('.rcfm-enumeration-name')).toHaveText('Browser added one');
+    await expect(singleAddInput).toHaveValue('');
+    await singleAddInput.fill('Temporary button addition');
+    await page.locator('.rcfm-add-one').click();
+    await expect(rows).toHaveCount(5);
+    await page.locator('.rcfm-undo').click();
+    await expect(rows).toHaveCount(4);
+
     await rows.nth(0).locator('.rcfm-edit').click();
     await rows.nth(0).locator('.rcfm-name-input').fill('Browser renamed');
     await rows.nth(0).locator('.rcfm-name-input').press('Enter');
@@ -134,7 +161,7 @@ test.describe.serial('custom field manager browser behavior', function() {
     await page.locator('.rcfm-bulk-add summary').click();
     await page.locator('.rcfm-bulk-add-input').fill('Browser added 1\nBrowser added 2');
     await page.locator('.rcfm-add-lines').click();
-    await expect(rows).toHaveCount(5);
+    await expect(rows).toHaveCount(6);
 
     await page.locator('.rcfm-csv-import summary').click();
     await expect(page.locator('.rcfm-csv-template')).toHaveAttribute('href', /template=1/);
@@ -146,6 +173,7 @@ test.describe.serial('custom field manager browser behavior', function() {
       'Browser value B',
       'Browser value C',
       'Browser renamed',
+      'Browser added one',
       'Browser added 1',
       'Browser added 2'
     ]);
@@ -166,7 +194,7 @@ test.describe.serial('custom field manager browser behavior', function() {
   test('chooses a duplicate-name destination by its current position', async function({page}) {
     await page.goto('/custom_fields/' + fieldId + '/enumerations', {waitUntil: 'networkidle'});
     const rows = page.locator('.rcfm-enumerations tbody tr');
-    await expect(rows).toHaveCount(5);
+    await expect(rows).toHaveCount(6);
     await page.locator('.rcfm-bulk-move summary').click();
 
     for (let index = 0; index < 2; index += 1) {
@@ -233,11 +261,11 @@ test.describe.serial('custom field manager browser behavior', function() {
     await page.locator('.rcfm-bulk-add-input').fill('Corrected value');
     await page.locator('.rcfm-add-lines').click();
     await expect(page.locator('.rcfm-error')).toBeHidden();
-    await expect(rows).toHaveCount(6);
+    await expect(rows).toHaveCount(7);
 
     await page.locator('.rcfm-undo').click();
     await expect(page.locator('.rcfm-error')).toBeHidden();
-    await expect(rows).toHaveCount(5);
+    await expect(rows).toHaveCount(6);
     await expect(page.locator('.rcfm-save')).toBeDisabled();
   });
 

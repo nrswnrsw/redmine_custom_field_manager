@@ -17,7 +17,7 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select '.rcfm-selection-bar', :count => 0
     assert_select '.rcfm-custom-field-bulk-tools details.rcfm-operation-panel--move:not([open]) button.rcfm-move-selected'
     assert_select '.rcfm-custom-field-bulk-tools button.rcfm-select-all'
-    assert_select '.rcfm-operation-panel--move summary', :text => /Move multiple items/
+    assert_select '.rcfm-operation-panel--move summary', :text => /Move to a destination/
     assert_select '.rcfm-bulk-move-help', :text => /Select the items to move/
     assert_select '.rcfm-commit-bar button.rcfm-save.rcfm-button-primary', :text => 'Save changes'
     assert_select '.rcfm-commit-bar button.rcfm-reset', :text => 'Discard all unsaved changes'
@@ -55,8 +55,9 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select '.rcfm-selection-bar button.rcfm-select-all'
     assert_select '.rcfm-operation-panel--state button.rcfm-activate-selected'
     assert_select '.rcfm-operation-panel--state button.rcfm-delete-selected.rcfm-button-danger'
+    assert_select '.rcfm-operation-panel--state h3', :text => 'Status and deletion'
     assert_select 'details.rcfm-operation-panel--move:not([open]) button.rcfm-move-selected'
-    assert_select '.rcfm-operation-panel--move summary', :text => /Move multiple items/
+    assert_select '.rcfm-operation-panel--move summary', :text => /Move to a destination/
     assert_select '.rcfm-commit-bar button.rcfm-save.rcfm-button-primary', :text => 'Save changes'
     assert_select '.rcfm-commit-bar button.rcfm-reset', :text => 'Discard all unsaved changes'
     assert_select '.rcfm-selection-count', :text => '0 selected'
@@ -71,8 +72,17 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select '.rcfm-csv-import .info', :text => /Save or discard/
     assert_select '.rcfm-protection-indicator[title*="default value"]'
     assert_select '.rcfm-protected-help'
+    assert_select 'input.rcfm-add-one-input[placeholder="Enter a value name"]'
+    assert_select 'button.rcfm-add-one', :text => 'Add'
+    assert_select '.rcfm-enumeration-utilities details:not([open])', :count => 2
     assert_select 'input.rcfm-csv-file'
     assert_select 'button.rcfm-csv-preview-button'
     assert_select 'script[src*="enumeration_manager"]'
+    assert_operator response.body.index('class="list rcfm-enumerations rcfm-sortable"'), :<,
+                    response.body.index('class="rcfm-single-add"')
+    assert_operator response.body.index('class="rcfm-single-add"'), :<,
+                    response.body.index('class="rcfm-toolbar rcfm-enumeration-selection-tools box"')
+    assert_operator response.body.index('class="rcfm-toolbar rcfm-enumeration-selection-tools box"'), :<,
+                    response.body.index('class="rcfm-enumeration-utilities"')
   end
 end

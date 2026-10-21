@@ -13,7 +13,7 @@ The plugin enhances **Administration → Custom fields** instead of adding a sep
 - The custom-field list is fully visible and can be reordered with drag and drop or multi-selection.
 - Reordering and Key/value-list edits stay in the browser until **Save** is pressed. One-step undo/redo, discard-all, and an unsaved-change warning are available.
 - Existing create, edit, copy, and delete actions remain available. Deleting a custom field is still an immediate, single-row Redmine action and is clearly separated from the move selection.
-- A Key/value list can be renamed, activated or deactivated, reordered, added to in bulk, and safely deleted from a single staged editor.
+- A Key/value list can be renamed, activated or deactivated, reordered, added to one value at a time or in bulk, and safely deleted from a single staged editor.
 - Key/value lists can be exported to CSV and imported in append, update, or full-synchronization mode, with a preview before anything is written.
 - Concurrent edits are detected. The plugin displays the editing baseline, your changes, and the current server state instead of silently overwriting another administrator's work.
 - Every successful save records a change history. Administrators can preview and restore an entire field-order scope or Key/value list. Custom-field deletions are also recorded for audit, but cannot be restored by the plugin.
@@ -22,7 +22,7 @@ The screenshots below use Redmine 7.0 with the Japanese locale. Labels may diffe
 
 ### Staged custom-field ordering
 
-Drag individual rows, or select rows in the list and open the collapsed **Move multiple items** panel directly below it to move several fields before or after a named destination. A unique destination can be entered by name alone. If names are duplicated, the page presents clickable choices labeled with their current list positions; users never need to know or enter an internal ID. IDs remain visible only as supplementary information. Checkboxes are used only for bulk moves; per-row actions are shown separately. The pending counter reports the smallest set of moved rows that explains the new order, so moving the last of 100 fields to the top is shown as one move rather than 100 changed positions.
+Drag individual rows, or select one or more rows and open the collapsed **Move to a destination** panel directly below the list. The panel is named for how the destination is specified, not for the number of selected rows. A unique destination can be entered by name alone. If names are duplicated, the page presents clickable choices labeled with their current list positions; users never need to know or enter an internal ID. IDs remain visible only as supplementary information. Checkboxes are used only for selected-row moves; per-row actions are shown separately. The pending counter reports the smallest set of moved rows that explains the new order, so moving the last of 100 fields to the top is shown as one move rather than 100 changed positions.
 
 **Delete this field** always deletes only that row, immediately. Its confirmation names the field, explains that other checked rows are unaffected, and warns that the field, its options, and stored values will be deleted and cannot be restored by this plugin.
 
@@ -30,7 +30,7 @@ Drag individual rows, or select rows in the list and open the collapsed **Move m
 
 ### Key/value list manager
 
-The list editor supports inline renaming, activation, deactivation, deletion, drag and drop, multi-selection, bulk addition, and CSV export/import. Locked values show why they cannot be deleted. The summary reports every pending change before the atomic save.
+The editor shows the value list first. Directly below it, a normal **New value** field adds one value at a time to the staged changes. Selected-item operations follow the primary list, while bulk addition and CSV are kept as compact, collapsed utilities for occasional use. Inline renaming, activation, deactivation, deletion, drag and drop, and multi-selection remain available. Locked values show why they cannot be deleted. The summary reports every pending change before the atomic save.
 
 ![Staged Key/value list editing](docs/images/enumeration-manager.png)
 
@@ -76,7 +76,7 @@ For an update, replace the plugin files while Redmine is stopped, run the same m
 ### Reorder custom fields
 
 1. Open **Administration → Custom fields** and select a field-type tab.
-2. Drag a row, or select the rows to move and open **Move multiple items** below the list.
+2. Drag a row, or select one or more rows and open **Move to a destination** below the list.
 3. Enter a destination field name, choose **Before** or **After**, and move the selection. If several destinations have the same name, click the choice identified by its current list position.
 4. Review the pending state. Use **Undo one step**, **Redo one step**, or **Discard all unsaved changes** if needed.
 5. Press **Save** to commit the complete order for that field type.
@@ -85,7 +85,7 @@ All fields remain ordinary text in the page, so browser find (`Ctrl+F` / `⌘+F`
 
 ### Edit a Key/value list
 
-Open the values of a custom field whose format is **Key/value list** from the standard custom-field screen. Changes to names, active state, order, additions, and deletions remain staged until **Save** is pressed.
+Open the values of a custom field whose format is **Key/value list** from the standard custom-field screen. The list appears first; use **New value** immediately below it for ordinary one-at-a-time additions. Changes to names, active state, order, additions, and deletions remain staged until **Save** is pressed. Bulk addition and CSV are available as compact utilities below the selected-item operations.
 
 Values already in use cannot be deleted. Deactivate them instead. Usage is checked again immediately before saving; if the state has changed, the entire operation is stopped and nothing is partially written.
 

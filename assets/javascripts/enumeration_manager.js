@@ -105,8 +105,15 @@
       manager.clearError();
     });
 
-    this.form.on('input', '.rcfm-name-input, .rcfm-bulk-add-input', function() {
+    this.form.on('input', '.rcfm-name-input, .rcfm-add-one-input, .rcfm-bulk-add-input', function() {
       manager.clearError();
+    });
+
+    this.form.on('keydown', '.rcfm-add-one-input', function(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        manager.addOne();
+      }
     });
 
     this.form.on('change', '.rcfm-active', function() {
@@ -180,6 +187,10 @@
 
     this.form.on('click', '.rcfm-add-lines', function() {
       manager.addLines();
+    });
+
+    this.form.on('click', '.rcfm-add-one', function() {
+      manager.addOne();
     });
 
     this.form.on('change', 'input[name="rcfm_csv_mode"]', function() {
@@ -558,18 +569,14 @@
     this.refreshTargetList();
   };
 
-  EnumerationManager.prototype.addLines = function() {
-    var input = this.form.find('.rcfm-bulk-add-input');
-    var names = input.val().split(/\r?\n/).map(function(name) {
-      return name.trim();
-    }).filter(Boolean);
+  EnumerationManager.prototype.addNames = function(names) {
     if (!names.length) {
       this.showError(this.form.data('rcfm-name-blank'));
-      return;
+      return false;
     }
     if (names.some(function(name) { return Array.from(name).length > 60; })) {
       this.showError(this.form.data('rcfm-name-too-long'));
-      return;
+      return false;
     }
     this.commit(function() {
       names.forEach(function(name) {
@@ -584,7 +591,25 @@
         });
       }, this);
     }.bind(this), true);
-    input.val('');
+    return true;
+  };
+
+  EnumerationManager.prototype.addOne = function() {
+    var input = this.form.find('.rcfm-add-one-input');
+    var name = input.val().trim();
+    if (this.addNames(name ? [name] : [])) {
+      input.val('').trigger('focus');
+    }
+  };
+
+  EnumerationManager.prototype.addLines = function() {
+    var input = this.form.find('.rcfm-bulk-add-input');
+    var names = input.val().split(/\r?\n/).map(function(name) {
+      return name.trim();
+    }).filter(Boolean);
+    if (this.addNames(names)) {
+      input.val('');
+    }
   };
 
   EnumerationManager.prototype.render = function() {

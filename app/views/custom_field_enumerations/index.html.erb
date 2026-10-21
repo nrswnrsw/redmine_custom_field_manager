@@ -115,10 +115,74 @@
   <%= hidden_field_tag :confirmed_digest, '', :class => 'rcfm-confirmed-digest' %>
   <%= hidden_field_tag :resolution, 'normal', :class => 'rcfm-resolution' %>
 
-  <div class="rcfm-toolbar box">
+  <div class="rcfm-conflict box error" hidden>
+    <h3><%= l(:rcfm_conflict_title) %></h3>
+    <p class="rcfm-conflict-message"></p>
+    <p class="rcfm-conflict-server-state"></p>
+    <div class="rcfm-conflict-diffs"></div>
+    <div class="rcfm-toolbar-row">
+      <%= button_tag l(:rcfm_continue_editing), :type => 'button', :class => 'rcfm-conflict-continue' %>
+      <%= button_tag l(:rcfm_discard_and_reload), :type => 'button', :class => 'rcfm-conflict-reload' %>
+      <%= button_tag l(:rcfm_merge_and_save), :type => 'button', :class => 'rcfm-conflict-merge', :hidden => true %>
+      <%= button_tag l(:rcfm_force_overwrite), :type => 'button', :class => 'rcfm-conflict-force' %>
+    </div>
+  </div>
+
+  <table class="list rcfm-enumerations rcfm-sortable">
+    <thead>
+      <tr>
+        <th class="rcfm-selection"><span class="hidden-for-sighted"><%= l(:rcfm_select) %></span></th>
+        <th><%= l(:field_name) %></th>
+        <th><%= l(:field_active) %></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% initial_items.each do |item| %>
+        <tr data-rcfm-client-id="<%= item['client_id'] %>" class="<%= 'rcfm-protected' if item['protected'] %>">
+          <td class="rcfm-selection"><input type="checkbox" class="rcfm-select" aria-label="<%= h l(:rcfm_select_field, :name => item['name']) %>"></td>
+          <td class="name">
+            <span class="rcfm-enumeration-name"><%= item['name'] %></span>
+            <span class="rcfm-record-id">#<%= item['id'] %></span>
+            <% if item['protected'] %>
+              <span class="rcfm-protection-indicator"
+                    title="<%= h item['protected_reason'] %>"
+                    aria-label="<%= h "#{l(:rcfm_protected_indicator)}: #{item['protected_reason']}" %>">🔒</span>
+            <% end %>
+          </td>
+          <td><input type="checkbox" class="rcfm-active" <%= 'checked' if item['active'] %> aria-label="<%= h l(:rcfm_active_field, :name => item['name']) %>"></td>
+          <td class="buttons">
+            <%= tag.span sprite_icon('reorder', ''), :class => 'icon-only icon-sort-handle sort-handle rcfm-sort-handle', :title => l(:button_move) %>
+            <%= button_tag sprite_icon('edit', l(:button_edit)), :type => 'button', :class => 'icon icon-edit rcfm-edit' %>
+            <%= button_tag sprite_icon('del', l(:button_delete)),
+                           :type => 'button',
+                           :class => 'icon icon-del rcfm-delete',
+                           :disabled => item['protected'],
+                           :title => (item['protected'] ? l(:rcfm_error_delete_protected) : l(:button_delete)) %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <div class="rcfm-single-add">
+    <label for="rcfm-add-one-input"><%= l(:label_enumeration_new) %></label>
+    <input id="rcfm-add-one-input"
+           type="text"
+           class="rcfm-add-one-input"
+           maxlength="60"
+           placeholder="<%= l(:rcfm_add_one_placeholder) %>">
+    <%= button_tag sprite_icon('add', l(:button_add)),
+                   :type => 'button',
+                   :class => 'rcfm-add-one rcfm-button-action' %>
+  </div>
+
+  <p class="rcfm-protected-help"><%= l(:rcfm_protected_help) %></p>
+
+  <div class="rcfm-toolbar rcfm-enumeration-selection-tools box">
     <div class="rcfm-selection-bar">
       <div class="rcfm-selection-summary">
-        <span class="rcfm-group-label"><%= l(:rcfm_selection_group) %></span>
+        <span class="rcfm-group-label"><%= l(:rcfm_selected_item_actions) %></span>
         <span class="rcfm-selection-count" aria-live="polite"><%= l(:rcfm_selected_count, :count => 0) %></span>
       </div>
       <div class="rcfm-selection-controls">
@@ -132,8 +196,8 @@
     </div>
 
     <div class="rcfm-operation-grid">
-      <section class="rcfm-operation-panel rcfm-operation-panel--state" aria-labelledby="rcfm-enumeration-bulk-actions">
-        <h3 id="rcfm-enumeration-bulk-actions"><%= l(:rcfm_selected_item_actions) %></h3>
+      <section class="rcfm-operation-panel rcfm-operation-panel--state" aria-labelledby="rcfm-enumeration-state-actions">
+        <h3 id="rcfm-enumeration-state-actions"><%= l(:rcfm_state_delete_actions) %></h3>
         <div class="rcfm-state-actions">
           <%= button_tag sprite_icon('checked', l(:rcfm_activate_selected)),
                          :type => 'button',
@@ -188,97 +252,45 @@
         </div>
       </details>
     </div>
-
-    <div class="rcfm-secondary-tools">
-      <details class="rcfm-bulk-add">
-        <summary><%= l(:rcfm_bulk_add) %></summary>
-        <p><%= l(:rcfm_bulk_add_help) %></p>
-        <textarea class="rcfm-bulk-add-input" rows="6"></textarea>
-        <p><%= button_tag sprite_icon('add', l(:button_add)), :type => 'button', :class => 'rcfm-add-lines' %></p>
-      </details>
-
-      <details class="rcfm-csv-import">
-        <summary><%= l(:rcfm_csv_import) %></summary>
-        <p class="info"><%= l(:rcfm_csv_requires_clean_state) %></p>
-        <p>
-          <%= link_to l(:rcfm_csv_export),
-                      rcfm_export_custom_field_enumerations_path(@custom_field),
-                      :class => 'icon icon-download rcfm-csv-export' %>
-          &nbsp;
-          <%= link_to l(:rcfm_csv_template),
-                      rcfm_export_custom_field_enumerations_path(@custom_field, :template => 1),
-                      :class => 'icon icon-download rcfm-csv-template' %>
-        </p>
-        <p><label><%= l(:rcfm_csv_file) %> <input type="file" class="rcfm-csv-file" accept=".csv,text/csv"></label></p>
-        <p>
-          <label><input type="radio" name="rcfm_csv_mode" value="append"> <%= l(:rcfm_csv_mode_append) %></label>
-          <label><input type="radio" name="rcfm_csv_mode" value="update" checked> <%= l(:rcfm_csv_mode_update) %></label>
-          <label><input type="radio" name="rcfm_csv_mode" value="sync"> <%= l(:rcfm_csv_mode_sync) %></label>
-        </p>
-        <p class="rcfm-csv-missing-default" hidden>
-          <%= l(:rcfm_csv_missing_default) %>
-          <label><input type="radio" name="rcfm_csv_missing_default" value="disable" checked> <%= l(:rcfm_csv_disable) %></label>
-          <label><input type="radio" name="rcfm_csv_missing_default" value="delete"> <%= l(:rcfm_csv_delete) %></label>
-        </p>
-        <p><%= button_tag l(:rcfm_csv_preview), :type => 'button', :class => 'rcfm-csv-preview-button' %></p>
-        <div class="rcfm-csv-preview" hidden></div>
-      </details>
-    </div>
-
-    <div class="rcfm-error error" hidden></div>
   </div>
 
-  <p class="rcfm-protected-help"><%= l(:rcfm_protected_help) %></p>
+  <div class="rcfm-enumeration-utilities" aria-label="<%= l(:rcfm_other_tools) %>">
+    <details class="rcfm-bulk-add">
+      <summary><%= l(:rcfm_bulk_add) %></summary>
+      <p><%= l(:rcfm_bulk_add_help) %></p>
+      <textarea class="rcfm-bulk-add-input" rows="6"></textarea>
+      <p><%= button_tag sprite_icon('add', l(:button_add)), :type => 'button', :class => 'rcfm-add-lines' %></p>
+    </details>
 
-  <div class="rcfm-conflict box error" hidden>
-    <h3><%= l(:rcfm_conflict_title) %></h3>
-    <p class="rcfm-conflict-message"></p>
-    <p class="rcfm-conflict-server-state"></p>
-    <div class="rcfm-conflict-diffs"></div>
-    <div class="rcfm-toolbar-row">
-      <%= button_tag l(:rcfm_continue_editing), :type => 'button', :class => 'rcfm-conflict-continue' %>
-      <%= button_tag l(:rcfm_discard_and_reload), :type => 'button', :class => 'rcfm-conflict-reload' %>
-      <%= button_tag l(:rcfm_merge_and_save), :type => 'button', :class => 'rcfm-conflict-merge', :hidden => true %>
-      <%= button_tag l(:rcfm_force_overwrite), :type => 'button', :class => 'rcfm-conflict-force' %>
-    </div>
+    <details class="rcfm-csv-import">
+      <summary><%= l(:rcfm_csv_import) %></summary>
+      <p class="info"><%= l(:rcfm_csv_requires_clean_state) %></p>
+      <p>
+        <%= link_to l(:rcfm_csv_export),
+                    rcfm_export_custom_field_enumerations_path(@custom_field),
+                    :class => 'icon icon-download rcfm-csv-export' %>
+        &nbsp;
+        <%= link_to l(:rcfm_csv_template),
+                    rcfm_export_custom_field_enumerations_path(@custom_field, :template => 1),
+                    :class => 'icon icon-download rcfm-csv-template' %>
+      </p>
+      <p><label><%= l(:rcfm_csv_file) %> <input type="file" class="rcfm-csv-file" accept=".csv,text/csv"></label></p>
+      <p>
+        <label><input type="radio" name="rcfm_csv_mode" value="append"> <%= l(:rcfm_csv_mode_append) %></label>
+        <label><input type="radio" name="rcfm_csv_mode" value="update" checked> <%= l(:rcfm_csv_mode_update) %></label>
+        <label><input type="radio" name="rcfm_csv_mode" value="sync"> <%= l(:rcfm_csv_mode_sync) %></label>
+      </p>
+      <p class="rcfm-csv-missing-default" hidden>
+        <%= l(:rcfm_csv_missing_default) %>
+        <label><input type="radio" name="rcfm_csv_missing_default" value="disable" checked> <%= l(:rcfm_csv_disable) %></label>
+        <label><input type="radio" name="rcfm_csv_missing_default" value="delete"> <%= l(:rcfm_csv_delete) %></label>
+      </p>
+      <p><%= button_tag l(:rcfm_csv_preview), :type => 'button', :class => 'rcfm-csv-preview-button' %></p>
+      <div class="rcfm-csv-preview" hidden></div>
+    </details>
   </div>
 
-  <table class="list rcfm-enumerations rcfm-sortable">
-    <thead>
-      <tr>
-        <th class="rcfm-selection"><span class="hidden-for-sighted"><%= l(:rcfm_select) %></span></th>
-        <th><%= l(:field_name) %></th>
-        <th><%= l(:field_active) %></th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% initial_items.each do |item| %>
-        <tr data-rcfm-client-id="<%= item['client_id'] %>" class="<%= 'rcfm-protected' if item['protected'] %>">
-          <td class="rcfm-selection"><input type="checkbox" class="rcfm-select" aria-label="<%= h l(:rcfm_select_field, :name => item['name']) %>"></td>
-          <td class="name">
-            <span class="rcfm-enumeration-name"><%= item['name'] %></span>
-            <span class="rcfm-record-id">#<%= item['id'] %></span>
-            <% if item['protected'] %>
-              <span class="rcfm-protection-indicator"
-                    title="<%= h item['protected_reason'] %>"
-                    aria-label="<%= h "#{l(:rcfm_protected_indicator)}: #{item['protected_reason']}" %>">🔒</span>
-            <% end %>
-          </td>
-          <td><input type="checkbox" class="rcfm-active" <%= 'checked' if item['active'] %> aria-label="<%= h l(:rcfm_active_field, :name => item['name']) %>"></td>
-          <td class="buttons">
-            <%= tag.span sprite_icon('reorder', ''), :class => 'icon-only icon-sort-handle sort-handle rcfm-sort-handle', :title => l(:button_move) %>
-            <%= button_tag sprite_icon('edit', l(:button_edit)), :type => 'button', :class => 'icon icon-edit rcfm-edit' %>
-            <%= button_tag sprite_icon('del', l(:button_delete)),
-                           :type => 'button',
-                           :class => 'icon icon-del rcfm-delete',
-                           :disabled => item['protected'],
-                           :title => (item['protected'] ? l(:rcfm_error_delete_protected) : l(:button_delete)) %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+  <div class="rcfm-error error" hidden></div>
 
   <div class="rcfm-commit-bar">
     <div class="rcfm-change-summary">

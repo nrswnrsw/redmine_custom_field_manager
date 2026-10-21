@@ -38,7 +38,7 @@ ja:
   rcfm_move_target: 移動先
   rcfm_move_target_placeholder: 移動先の名前を入力
   rcfm_move_position: 移動位置
-  rcfm_move_selected_group: まとめて移動
+  rcfm_move_selected_group: 移動先を指定して移動
   rcfm_bulk_move_help: 一覧で移動したい項目をチェックし、移動先の項目名と、その前後どちらへ置くかを指定してください。
   rcfm_move_selected_count: "選択した%{count}件を移動"
   rcfm_target_not_found: 入力した名前の移動先が見つかりません。候補から選択してください。
@@ -51,10 +51,12 @@ ja:
   rcfm_select: 選択
   rcfm_select_all: すべて選択
   rcfm_select_field: "%{name}を選択"
-  rcfm_select_field_for_move: "%{name}をまとめて移動の対象にする"
-  rcfm_selection_group: 項目の選択
+  rcfm_select_field_for_move: "%{name}を移動対象にする"
   rcfm_selection_error: 1件以上の項目を選択してください。
   rcfm_selected_item_actions: 選択項目の操作
+  rcfm_state_delete_actions: 有効状態と削除
+  rcfm_add_one_placeholder: 選択肢名を入力
+  rcfm_other_tools: 補助ツール
   rcfm_server_state_summary: "サーバーの現在のリストは%{count}件です。"
   rcfm_target_error: 選択中の項目自身は移動先に指定できません。
   rcfm_target_required: 移動先の名前を入力してください。
