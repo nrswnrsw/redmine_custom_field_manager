@@ -156,7 +156,7 @@ Redmine Custom Field Manager は、カスタムフィールドの並び順と、
 bundle exec rake redmine:plugins:test NAME=redmine_custom_field_manager RAILS_ENV=test
 ```
 
-GitHub Actionsでは、MySQL、MariaDB、PostgreSQLの実際の行ロックを使った同時実行テストと、Redmine 7.0.2上でのPlaywrightによるブラウザテストもあわせて実行しています。実装の詳細は [`docs/implementation.md`](docs/implementation.md)、10,000件での性能測定結果は [`docs/performance.md`](docs/performance.md)（日本語訳：[`docs/performance.ja.md`](docs/performance.ja.md)）を参照してください。
+GitHub Actionsでは、MySQL、MariaDB、PostgreSQLの実際の行ロックを使った同時実行テストと、Redmine 7.0.2上でのPlaywrightによるブラウザテストもあわせて実行しています。実装の詳細は [`docs/implementation.md`](docs/implementation.md)（日本語訳：[`docs/implementation.ja.md`](docs/implementation.ja.md)）、10,000件での性能測定結果は [`docs/performance.md`](docs/performance.md)（日本語訳：[`docs/performance.ja.md`](docs/performance.ja.md)）を参照してください。
 
 ## ライセンス
 
