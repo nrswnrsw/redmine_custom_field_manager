@@ -31,6 +31,7 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_operator response.body.index('class="list custom_fields rcfm-sortable"'), :<,
                     response.body.index('class="rcfm-custom-field-bulk-tools"')
     assert_select 'table.custom_fields thead th:first-child', :text => 'Move'
+    assert_select 'table.custom_fields thead th:first-child .rcfm-sticky-selection-count[hidden]'
     assert_select 'table.custom_fields thead th:first-child .hidden-for-sighted', :count => 0
     assert_select 'th', :text => /Individual actions/
     assert_select 'input.rcfm-select[aria-label*="for moving"]'
@@ -38,10 +39,12 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select 'a.rcfm-delete-custom-field[data-confirm*="cannot be restored from change history"]'
     assert_select 'input.rcfm-target[placeholder="Enter a destination name"][aria-describedby]'
     assert_select '.rcfm-move-error[role="alert"][tabindex="-1"][hidden]'
+    assert_select '.rcfm-history-feedback[role="status"][hidden]'
     assert_select '.rcfm-error[role="alert"][tabindex="-1"][hidden]'
     assert_select 'form.rcfm-manager[data-rcfm-target-required="Enter a destination name."]'
     assert_select 'form.rcfm-manager[data-rcfm-target-candidate*="current position"]'
     assert_select 'form.rcfm-manager[data-rcfm-target-candidate-selected="selected"]'
+    assert_select 'form.rcfm-manager[data-rcfm-confirm-reset]'
     assert_select '.rcfm-target-candidates[hidden]'
     assert_select '.rcfm-conflict .rcfm-conflict-merge'
     assert_select 'script[src*="plugin_assets/redmine_custom_field_manager"]'
@@ -61,6 +64,7 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
                   :text => 'After you add or edit a choice, a Save changes button appears at the bottom of the page. Press it to make your changes final.'
     assert_select '.rcfm-enumeration-name', :text => 'Visible value'
     assert_select 'table.rcfm-enumerations thead th:first-child', :text => 'Select'
+    assert_select 'table.rcfm-enumerations thead th:first-child .rcfm-sticky-selection-count[hidden]'
     assert_select 'table.rcfm-enumerations thead th:first-child .hidden-for-sighted', :count => 0
     assert_select 'table.rcfm-enumerations thead th:last-child .hidden-for-sighted',
                   :text => 'Individual actions'
@@ -81,10 +85,12 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select '.rcfm-commit-bar button.rcfm-save.rcfm-button-primary', :text => 'Save changes'
     assert_select '.rcfm-commit-bar button.rcfm-reset', :text => 'Discard all unsaved changes'
     assert_select '.rcfm-selection-count', :text => '0 selected'
-    assert_select 'input.rcfm-target[placeholder="Enter a destination name"]'
+    assert_select 'input.rcfm-target[placeholder="Enter a destination name"][aria-describedby="rcfm-enumerations-move-error"]'
+    assert_select '#rcfm-enumerations-move-error.rcfm-move-error[role="alert"][hidden]'
     assert_select 'form.rcfm-enumeration-manager[data-rcfm-target-required="Enter a destination name."]'
     assert_select 'form.rcfm-enumeration-manager[data-rcfm-target-candidate*="current position"]'
     assert_select 'form.rcfm-enumeration-manager[data-rcfm-target-candidate-selected="selected"]'
+    assert_select 'form.rcfm-enumeration-manager[data-rcfm-confirm-reset]'
     assert_select 'form.rcfm-enumeration-manager[data-rcfm-apply-edit-label="Apply edit"]'
     assert_select 'form.rcfm-enumeration-manager[data-rcfm-cancel-edit-label="Cancel"]'
     assert_select '.rcfm-target-candidates[hidden]'
@@ -101,6 +107,7 @@ class RedmineCustomFieldManagerCustomFieldsViewTest < Redmine::IntegrationTest
     assert_select '.rcfm-bulk-add-input[aria-label="Add multiple values"][aria-describedby="rcfm-bulk-add-error"]'
     assert_select '#rcfm-bulk-add-error.rcfm-field-error[role="alert"][hidden]'
     assert_select '.rcfm-error[role="alert"][tabindex="-1"][hidden]'
+    assert_select '.rcfm-history-feedback[role="status"][hidden]'
     assert_select '.rcfm-enumeration-utilities details:not([open])', :count => 2
     assert_select 'input.rcfm-csv-file'
     assert_select 'button.rcfm-csv-preview-button'

@@ -10,6 +10,7 @@ en:
   rcfm_clear_selection: Clear selection
   rcfm_selected_count: "%{count} selected"
   rcfm_confirm_discard: Discard your unsaved changes and load the current server state?
+  rcfm_confirm_reset: Discard all additions, edits, and reorderings that have not been saved on this page?
   rcfm_confirm_force: Force overwrite the current server state with your changes? Data-protection rules still apply.
   rcfm_conflict_base: Editing started
   rcfm_conflict_mine: Your edit
@@ -43,8 +44,8 @@ en:
   rcfm_move_selected_group: Move to a destination
   rcfm_bulk_move_help: Select the items to move in the list, then enter the destination name and choose whether to place them before or after it.
   rcfm_move_selected_count: "Move %{count} selected"
-  rcfm_target_not_found: No destination has that name. Select one of the suggestions.
-  rcfm_target_ambiguous: More than one destination has that name. Choose the destination by its current list position.
+  rcfm_target_not_found: No destination contains that name. Try a different search.
+  rcfm_target_ambiguous: Matching destinations were found. Choose one by its current list position.
   rcfm_target_candidate: "%{name} — current position %{position}"
   rcfm_target_candidate_selected: selected
   rcfm_no_changes: No unsaved changes
@@ -67,9 +68,20 @@ en:
   rcfm_save_changes: Save changes
   rcfm_undo: Undo
   rcfm_undo_help: Undo the most recent unsaved action.
+  rcfm_undo_feedback: "Undid %{action}."
   rcfm_unsaved_changes_notice: You have unsaved changes
   rcfm_redo: Redo
   rcfm_redo_help: Redo one previously undone unsaved action.
+  rcfm_redo_feedback: "Redid %{action}."
+  rcfm_action_add: "adding %{count} item(s)"
+  rcfm_action_rename: "renaming %{count} item(s)"
+  rcfm_action_activate: "activating %{count} item(s)"
+  rcfm_action_deactivate: "deactivating %{count} item(s)"
+  rcfm_action_delete: "deleting %{count} item(s)"
+  rcfm_action_restore: "restoring %{count} item(s)"
+  rcfm_action_move: "moving %{count} item(s)"
+  rcfm_action_discard: discarding all unsaved changes
+  rcfm_action_separator: ", "
   rcfm_individual_actions: Individual actions
   rcfm_delete_custom_field: Delete this field
   rcfm_confirm_custom_field_delete: "Delete custom field ‘%{name}’ (#%{id})?\n\nOther checked fields will not be deleted. Saved values and list choices belonging to this field will also be deleted. This happens immediately without waiting for ‘Save changes’ and cannot be restored from change history."
@@ -118,6 +130,7 @@ en:
   rcfm_confirm_restore_apply: Restore the entire target to this state? The restore will be recorded in history.
   rcfm_confirm_restore_preview: Build a restore preview for this history?
   rcfm_history_changes: Recorded changes
+  rcfm_history_changes_with_count: "Recorded changes (%{count})"
   rcfm_history_cleanup: Delete histories by date
   rcfm_history_delete_before: Delete histories older than
   rcfm_history_deleted: History records were deleted. Current settings were not changed.
@@ -144,6 +157,7 @@ en:
   rcfm_history_technical_details: Technical details (JSON)
   rcfm_history_snapshot: Snapshot
   rcfm_history_state: Reconstructed target state
+  rcfm_history_state_with_count: "Reconstructed target state (%{count})"
   rcfm_history_target: Target
   rcfm_history_title: Change history
   rcfm_history_restored: The entire target was restored and the restore was recorded.

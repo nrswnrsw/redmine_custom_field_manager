@@ -44,7 +44,9 @@
     this.items = JSON.parse(this.form.find('.rcfm-items').val());
     this.baseline = clone(this.items);
     this.undoStack = [];
+    this.undoActions = [];
     this.redoStack = [];
+    this.redoActions = [];
     this.selected = {};
     this.editingId = null;
     this.newSequence = 0;
@@ -55,6 +57,7 @@
     this.bind();
     this.enableSorting();
     this.refresh();
+    window.setTimeout(this.restoreInitialPosition.bind(this), 0);
     if (window.performance && window.performance.mark && window.performance.measure) {
       window.performance.mark('rcfm-enumerations-init-end');
       window.performance.measure(
@@ -71,6 +74,63 @@
     });
   };
 
+  EnumerationManager.prototype.restoreInitialPosition = function() {
+    var addInput = this.form.find('.rcfm-add-one-input')[0];
+    if (!window.location.hash && document.activeElement === addInput) {
+      addInput.blur();
+      window.scrollTo(window.pageXOffset, 0);
+    }
+  };
+
+  EnumerationManager.prototype.actionSummary = function(before, after) {
+    var beforeById = {};
+    var counts = {add: 0, rename: 0, activate: 0, deactivate: 0, delete: 0, restore: 0, move: 0};
+    before.forEach(function(item) {
+      beforeById[String(item.client_id)] = item;
+    });
+    after.forEach(function(item) {
+      var original = beforeById[String(item.client_id)];
+      if (!original) {
+        if (!item.deleted) {
+          counts.add += 1;
+        }
+        return;
+      }
+      if (!original.deleted && item.deleted) {
+        counts.delete += 1;
+        return;
+      }
+      if (original.deleted && !item.deleted) {
+        counts.restore += 1;
+      }
+      if (!item.deleted && item.name !== original.name) {
+        counts.rename += 1;
+      }
+      if (!item.deleted && item.active !== original.active) {
+        counts[item.active ? 'activate' : 'deactivate'] += 1;
+      }
+    });
+    counts.move = minimumMovedCount(
+      before.filter(function(item) { return !item.deleted; }).map(function(item) { return item.client_id; }),
+      after.filter(function(item) { return !item.deleted; }).map(function(item) { return item.client_id; })
+    );
+    return Object.keys(counts).filter(function(key) {
+      return counts[key] > 0;
+    }).map(function(key) {
+      return this.form.data('rcfm-action-' + key).replace('__COUNT__', counts[key]);
+    }, this).join(this.form.data('rcfm-action-separator'));
+  };
+
+  EnumerationManager.prototype.clearHistoryFeedback = function() {
+    this.form.find('.rcfm-history-feedback').prop('hidden', true).text('');
+  };
+
+  EnumerationManager.prototype.showHistoryFeedback = function(template, action) {
+    this.form.find('.rcfm-history-feedback')
+      .text(template.replace('__ACTION__', action))
+      .prop('hidden', false);
+  };
+
   EnumerationManager.prototype.commit = function(mutator, render) {
     var before = clone(this.items);
     mutator();
@@ -78,8 +138,11 @@
       return;
     }
     this.undoStack.push(before);
+    this.undoActions.push(this.actionSummary(before, this.items));
     this.redoStack = [];
+    this.redoActions = [];
     this.conflict = null;
+    this.clearHistoryFeedback();
     this.clearError();
     this.form.find('.rcfm-conflict').prop('hidden', true);
     if (render) {
@@ -164,7 +227,8 @@
       var id = String($(this).closest('tr').data('rcfm-client-id'));
       manager.commit(function() {
         manager.findItem(id).deleted = false;
-      }, true);
+      }, false);
+      manager.renderItems([id], true);
     });
 
     this.form.on('click', '.rcfm-select-all', function() {
@@ -234,12 +298,16 @@
         return;
       }
       manager.redoStack.push(clone(manager.items));
+      var action = manager.undoActions.pop();
+      manager.redoActions.push(action);
       manager.items = manager.undoStack.pop();
       manager.conflict = null;
       manager.clearError();
       manager.form.find('.rcfm-conflict').prop('hidden', true);
       manager.render();
       manager.refresh();
+      manager.form.find('.rcfm-undo').trigger('focus');
+      manager.showHistoryFeedback(manager.form.data('rcfm-undo-feedback'), action);
     });
 
     this.form.on('click', '.rcfm-redo', function() {
@@ -247,21 +315,31 @@
         return;
       }
       manager.undoStack.push(clone(manager.items));
+      var action = manager.redoActions.pop();
+      manager.undoActions.push(action);
       manager.items = manager.redoStack.pop();
       manager.conflict = null;
       manager.clearError();
       manager.form.find('.rcfm-conflict').prop('hidden', true);
       manager.render();
       manager.refresh();
+      manager.form.find('.rcfm-redo').trigger('focus');
+      manager.showHistoryFeedback(manager.form.data('rcfm-redo-feedback'), action);
     });
 
     this.form.on('click', '.rcfm-reset', function() {
+      if (!manager.isDirty() || !window.confirm(manager.form.data('rcfm-confirm-reset'))) {
+        return;
+      }
       manager.undoStack.push(clone(manager.items));
+      manager.undoActions.push(manager.form.data('rcfm-action-discard'));
       manager.redoStack = [];
+      manager.redoActions = [];
       manager.items = clone(manager.baseline);
       manager.selected = {};
       manager.conflict = null;
       manager.clearError();
+      manager.clearHistoryFeedback();
       manager.render();
       manager.refresh();
     });
@@ -346,8 +424,11 @@
         manager.syncOrderFromDom();
         if (JSON.stringify(before) !== JSON.stringify(manager.items)) {
           manager.undoStack.push(before);
+          manager.undoActions.push(manager.actionSummary(before, manager.items));
           manager.redoStack = [];
+          manager.redoActions = [];
           manager.conflict = null;
+          manager.clearHistoryFeedback();
           manager.form.find('.rcfm-conflict').prop('hidden', true);
         }
         draggedRows = [];
@@ -374,7 +455,8 @@
     }
     this.clearError();
     this.editingId = clientId;
-    this.render();
+    this.renderItems([clientId], false);
+    this.body.find('.rcfm-edit').prop('disabled', true);
     this.body.find('tr[data-rcfm-client-id="' + clientId + '"] .rcfm-name-input').trigger('focus').trigger('select');
   };
 
@@ -389,17 +471,18 @@
     if (changed) {
       this.commit(function() {
         this.findItem(id).name = value;
-      }.bind(this), true);
-    } else {
-      this.render();
+      }.bind(this), false);
     }
+    this.renderItems([id], changed);
+    this.body.find('.rcfm-edit').prop('disabled', false);
     return true;
   };
 
   EnumerationManager.prototype.cancelEditing = function(clientId) {
     this.editingId = null;
     this.clearError();
-    this.render();
+    this.renderItems([clientId], false);
+    this.body.find('.rcfm-edit').prop('disabled', false);
     this.body.find('tr[data-rcfm-client-id="' + clientId + '"] .rcfm-edit').trigger('focus');
   };
 
@@ -427,6 +510,7 @@
     var selectedText = this.form.data('rcfm-selected-count').replace('__COUNT__', count);
     this.form.toggleClass('rcfm-has-selection', count > 0);
     this.form.find('.rcfm-selection-count, .rcfm-bulk-move-count').text(selectedText);
+    this.form.find('.rcfm-sticky-selection-count').text(selectedText).prop('hidden', count === 0);
     this.form.find('.rcfm-move-selected-label').text(
       this.form.data('rcfm-move-selected-count').replace('__COUNT__', count)
     );
@@ -458,7 +542,10 @@
           item.active = active;
         }
       }, this);
-    }.bind(this), true);
+    }.bind(this), false);
+    ids.forEach(function(id) {
+      this.body.find('tr[data-rcfm-client-id="' + id + '"] .rcfm-active').prop('checked', active);
+    }, this);
   };
 
   EnumerationManager.prototype.deleteItems = function(ids) {
@@ -474,6 +561,10 @@
       this.showError(this.form.data('rcfm-delete-protected'));
       return;
     }
+    var stopsEditing = this.editingId !== null && ids.indexOf(String(this.editingId)) >= 0;
+    if (stopsEditing) {
+      this.editingId = null;
+    }
     this.commit(function() {
       ids.forEach(function(id) {
         var item = this.findItem(id);
@@ -482,7 +573,11 @@
           this.selected[id] = false;
         }
       }, this);
-    }.bind(this), true);
+    }.bind(this), false);
+    this.renderItems(ids, true);
+    if (stopsEditing) {
+      this.body.find('.rcfm-edit').prop('disabled', false);
+    }
   };
 
   EnumerationManager.prototype.hideTargetCandidates = function() {
@@ -491,9 +586,19 @@
   };
 
   EnumerationManager.prototype.clearError = function() {
-    this.form.find('.rcfm-error').prop('hidden', true).text('');
+    this.form.find('.rcfm-error, .rcfm-move-error').prop('hidden', true).text('');
     this.form.find('.rcfm-field-error').prop('hidden', true).text('');
     this.form.find('[aria-invalid="true"]').removeAttr('aria-invalid');
+  };
+
+  EnumerationManager.prototype.showMoveError = function(message, input) {
+    this.clearError();
+    var error = this.form.find('.rcfm-move-error').text(message).prop('hidden', false);
+    if (input && input.length) {
+      input.attr('aria-invalid', 'true').trigger('focus');
+    } else {
+      error.trigger('focus');
+    }
   };
 
   EnumerationManager.prototype.showFieldError = function(input, message) {
@@ -540,6 +645,7 @@
     });
     this.clearError();
     panel.prop('hidden', false);
+    list.find('.rcfm-target-candidate:not(:disabled)').first().trigger('focus');
   };
 
   EnumerationManager.prototype.moveSelected = function(targetClientId) {
@@ -549,11 +655,11 @@
     this.hideTargetCandidates();
     this.clearError();
     if (!ids.length) {
-      this.showError(this.form.data('rcfm-selection-error'));
+      this.showMoveError(this.form.data('rcfm-selection-error'));
       return;
     }
     if (!value) {
-      this.showError(this.form.data('rcfm-target-required'));
+      this.showMoveError(this.form.data('rcfm-target-required'), this.form.find('.rcfm-target'));
       return;
     }
 
@@ -572,14 +678,21 @@
         return !item.deleted && String(item.name).trim().toLocaleLowerCase() === lowered;
       });
       if (!candidates.length) {
-        this.showError(this.form.data('rcfm-target-not-found'));
+        candidates = this.items.filter(function(item) {
+          return !item.deleted && String(item.name).trim().toLocaleLowerCase().indexOf(lowered) >= 0;
+        });
+        if (candidates.length) {
+          this.showTargetCandidates(candidates, ids);
+          return;
+        }
+        this.showMoveError(this.form.data('rcfm-target-not-found'), this.form.find('.rcfm-target'));
         return;
       }
       if (candidates.length > 1) {
         if (!candidates.some(function(item) {
           return ids.indexOf(String(item.client_id)) < 0;
         })) {
-          this.showError(this.form.data('rcfm-target-error'));
+          this.showMoveError(this.form.data('rcfm-target-error'));
           return;
         }
         this.showTargetCandidates(candidates, ids);
@@ -588,7 +701,7 @@
     }
     var target = candidates[0];
     if (!target || ids.indexOf(String(target.client_id)) >= 0) {
-      this.showError(this.form.data('rcfm-target-error'));
+      this.showMoveError(this.form.data('rcfm-target-error'));
       return;
     }
 
@@ -620,19 +733,27 @@
     if (!this.validNames(names, input)) {
       return false;
     }
+    var added = [];
     this.commit(function() {
       names.forEach(function(name) {
         this.newSequence += 1;
-        this.items.push({
+        var item = {
           client_id: 'new-' + Date.now() + '-' + this.newSequence,
           id: null,
           name: name,
           active: true,
           deleted: false,
           protected: false
-        });
+        };
+        this.items.push(item);
+        added.push(item);
       }, this);
-    }.bind(this), true);
+    }.bind(this), false);
+    added.forEach(function(item) {
+      this.body.append(this.buildRow(item));
+    }, this);
+    this.body.sortable('refresh');
+    this.refreshTargetList();
     return true;
   };
 
@@ -654,6 +775,103 @@
     }
   };
 
+  EnumerationManager.prototype.buildRow = function(item) {
+    var manager = this;
+    var row = $('<tr>').attr('data-rcfm-client-id', item.client_id);
+    row.toggleClass('rcfm-deleted', !!item.deleted);
+    row.toggleClass('rcfm-protected', !!item.protected);
+    row.toggleClass('rcfm-selected', !!manager.selected[String(item.client_id)]);
+
+    var selection = $('<input type="checkbox" class="rcfm-select">')
+      .prop('checked', !!manager.selected[String(item.client_id)])
+      .prop('disabled', !!item.deleted)
+      .attr('aria-label', manager.form.data('rcfm-select-label').replace('__NAME__', item.name));
+    row.append($('<td class="rcfm-selection">').append(selection));
+
+    var nameCell = $('<td class="name">');
+    var nameError = null;
+    if (manager.editingId === String(item.client_id) && !item.deleted) {
+      var errorId = 'rcfm-name-error-' + String(item.client_id).replace(/[^a-zA-Z0-9_-]/g, '-');
+      nameCell.append(
+        $('<input type="text" class="rcfm-name-input">')
+          .val(item.name)
+          .attr('maxlength', 60)
+          .attr('aria-describedby', errorId)
+      );
+      nameError = $('<span class="rcfm-field-error">').attr({id: errorId, role: 'alert', hidden: true});
+    } else {
+      nameCell.append($('<span class="rcfm-enumeration-name">').text(item.name));
+    }
+    if (item.id) {
+      nameCell.append($('<span class="rcfm-record-id">').text('#' + item.id));
+    }
+    if (item.protected) {
+      var protectionIndicator = $('<span class="rcfm-protection-indicator">')
+        .attr('title', item.protected_reason)
+        .attr('aria-label', manager.form.data('rcfm-protected-indicator') + ': ' + item.protected_reason);
+      protectionIndicator.append(manager.protectionIcon.clone());
+      nameCell.append(protectionIndicator);
+    }
+    if (nameError) {
+      nameCell.append(nameError);
+    }
+    row.append(nameCell);
+
+    var active = $('<input type="checkbox" class="rcfm-active">')
+      .prop('checked', !!item.active)
+      .prop('disabled', !!item.deleted)
+      .attr('aria-label', manager.form.data('rcfm-active-label').replace('__NAME__', item.name));
+    row.append($('<td>').append(active));
+
+    var buttons = $('<td class="buttons">');
+    if (item.deleted) {
+      buttons.append(
+        $('<button type="button" class="rcfm-restore-item">').text(manager.form.data('rcfm-restore-label'))
+      );
+    } else if (manager.editingId === String(item.client_id)) {
+      buttons.append(
+        $('<button type="button" class="rcfm-apply-edit rcfm-button-action">')
+          .text(manager.form.data('rcfm-apply-edit-label'))
+      );
+      buttons.append(
+        $('<button type="button" class="rcfm-cancel-edit rcfm-button-quiet">')
+          .text(manager.form.data('rcfm-cancel-edit-label'))
+      );
+    } else {
+      buttons.append(
+        $('<span class="icon-only icon-sort-handle sort-handle rcfm-sort-handle">')
+          .attr('title', manager.form.data('rcfm-move-label'))
+      );
+      buttons.append(
+        $('<button type="button" class="icon icon-edit rcfm-edit">')
+          .text(manager.form.data('rcfm-edit-label'))
+          .prop('disabled', manager.editingId !== null)
+      );
+      buttons.append(
+        $('<button type="button" class="icon icon-del rcfm-delete">')
+          .text(manager.form.data('rcfm-delete-label'))
+          .prop('disabled', !!item.protected)
+          .attr('title', item.protected ? item.protected_reason : manager.form.data('rcfm-delete-label'))
+      );
+    }
+    row.append(buttons);
+    return row;
+  };
+
+  EnumerationManager.prototype.renderItems = function(clientIds, refreshTargets) {
+    clientIds.forEach(function(clientId) {
+      var item = this.findItem(clientId);
+      var row = this.body.find('tr[data-rcfm-client-id="' + clientId + '"]');
+      if (item && row.length) {
+        row.replaceWith(this.buildRow(item));
+      }
+    }, this);
+    this.body.sortable('refresh');
+    if (refreshTargets) {
+      this.refreshTargetList();
+    }
+  };
+
   EnumerationManager.prototype.render = function() {
     var manager = this;
     var fragment = document.createDocumentFragment();
@@ -661,85 +879,7 @@
     this.body.empty();
 
     this.items.forEach(function(item) {
-      var row = $('<tr>').attr('data-rcfm-client-id', item.client_id);
-      row.toggleClass('rcfm-deleted', !!item.deleted);
-      row.toggleClass('rcfm-protected', !!item.protected);
-      row.toggleClass('rcfm-selected', !!manager.selected[String(item.client_id)]);
-
-      var selection = $('<input type="checkbox" class="rcfm-select">')
-        .prop('checked', !!manager.selected[String(item.client_id)])
-        .prop('disabled', !!item.deleted)
-        .attr('aria-label', manager.form.data('rcfm-select-label').replace('__NAME__', item.name));
-      row.append($('<td class="rcfm-selection">').append(selection));
-
-      var nameCell = $('<td class="name">');
-      var nameError = null;
-      if (manager.editingId === String(item.client_id) && !item.deleted) {
-        var errorId = 'rcfm-name-error-' + String(item.client_id).replace(/[^a-zA-Z0-9_-]/g, '-');
-        nameCell.append(
-          $('<input type="text" class="rcfm-name-input">')
-            .val(item.name)
-            .attr('maxlength', 60)
-            .attr('aria-describedby', errorId)
-        );
-        nameError = $('<span class="rcfm-field-error">').attr({id: errorId, role: 'alert', hidden: true});
-      } else {
-        nameCell.append($('<span class="rcfm-enumeration-name">').text(item.name));
-      }
-      if (item.id) {
-        nameCell.append($('<span class="rcfm-record-id">').text('#' + item.id));
-      }
-      if (item.protected) {
-        var protectionIndicator = $('<span class="rcfm-protection-indicator">')
-          .attr('title', item.protected_reason)
-          .attr('aria-label', manager.form.data('rcfm-protected-indicator') + ': ' + item.protected_reason);
-        protectionIndicator.append(manager.protectionIcon.clone());
-        nameCell.append(protectionIndicator);
-      }
-      if (nameError) {
-        nameCell.append(nameError);
-      }
-      row.append(nameCell);
-
-      var active = $('<input type="checkbox" class="rcfm-active">')
-        .prop('checked', !!item.active)
-        .prop('disabled', !!item.deleted)
-        .attr('aria-label', manager.form.data('rcfm-active-label').replace('__NAME__', item.name));
-      row.append($('<td>').append(active));
-
-      var buttons = $('<td class="buttons">');
-      if (item.deleted) {
-        buttons.append(
-          $('<button type="button" class="rcfm-restore-item">').text(manager.form.data('rcfm-restore-label'))
-        );
-      } else if (manager.editingId === String(item.client_id)) {
-        buttons.append(
-          $('<button type="button" class="rcfm-apply-edit rcfm-button-action">')
-            .text(manager.form.data('rcfm-apply-edit-label'))
-        );
-        buttons.append(
-          $('<button type="button" class="rcfm-cancel-edit rcfm-button-quiet">')
-            .text(manager.form.data('rcfm-cancel-edit-label'))
-        );
-      } else {
-        buttons.append(
-          $('<span class="icon-only icon-sort-handle sort-handle rcfm-sort-handle">')
-            .attr('title', manager.form.data('rcfm-move-label'))
-        );
-        buttons.append(
-          $('<button type="button" class="icon icon-edit rcfm-edit">')
-            .text(manager.form.data('rcfm-edit-label'))
-            .prop('disabled', manager.editingId !== null)
-        );
-        buttons.append(
-          $('<button type="button" class="icon icon-del rcfm-delete">')
-            .text(manager.form.data('rcfm-delete-label'))
-            .prop('disabled', !!item.protected)
-            .attr('title', item.protected ? item.protected_reason : manager.form.data('rcfm-delete-label'))
-        );
-      }
-      row.append(buttons);
-      fragment.appendChild(row[0]);
+      fragment.appendChild(manager.buildRow(item)[0]);
     });
 
     this.body[0].appendChild(fragment);

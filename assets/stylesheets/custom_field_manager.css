@@ -2,6 +2,16 @@
   color: var(--fg-color-muted, #666);
 }
 
+body.controller-custom_field_enumerations.action-index #wrapper,
+body.controller-custom_fields.action-index #wrapper {
+  overflow: clip;
+}
+
+body.controller-custom_field_enumerations.action-index #content,
+body.controller-custom_fields.action-index #content {
+  overflow-x: visible;
+}
+
 .rcfm-toolbar {
   background: var(--oc-gray-0, #f7f7f7);
   overflow: hidden;
@@ -59,6 +69,23 @@
   background: var(--oc-blue-1, #e6f2fb);
   border-color: var(--oc-blue-3, #9fc8e8);
   color: var(--oc-blue-9, #18537e);
+}
+
+.rcfm-sticky-selection-count {
+  background: var(--oc-blue-1, #e6f2fb);
+  border: 1px solid var(--oc-blue-3, #9fc8e8);
+  border-radius: 999px;
+  color: var(--oc-blue-9, #18537e);
+  display: block;
+  font-size: 0.8em;
+  font-weight: bold;
+  margin-top: 0.25em;
+  padding: 0.1em 0.45em;
+  white-space: nowrap;
+}
+
+.rcfm-sticky-selection-count[hidden] {
+  display: none;
 }
 
 .rcfm-operation-grid {
@@ -403,6 +430,31 @@
   padding-inline-end: 0.75em;
 }
 
+.rcfm-history-feedback {
+  color: var(--fg-color-muted, #666);
+  font-size: 0.9em;
+  margin-top: 0.4em;
+}
+
+.rcfm-history-feedback[hidden] {
+  display: none;
+}
+
+.rcfm-history-section {
+  margin: 1em 0;
+}
+
+.rcfm-history-section > summary {
+  cursor: pointer;
+  font-size: 1.1em;
+  font-weight: bold;
+  padding: 0.4em 0;
+}
+
+.rcfm-history-section[open] > summary {
+  margin-bottom: 0.6em;
+}
+
 .rcfm-commit-bar button {
   min-height: 2.25em;
   white-space: nowrap;
@@ -417,9 +469,21 @@
   width: 2em;
 }
 
+table.rcfm-enumerations,
+table.custom_fields.rcfm-sortable {
+  overflow: visible;
+}
+
 .rcfm-enumerations th.rcfm-selection {
   white-space: nowrap;
   width: 3.5em;
+}
+
+.rcfm-enumerations thead th,
+.custom_fields.rcfm-sortable thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .custom_fields th.rcfm-selection {

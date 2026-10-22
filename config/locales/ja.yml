@@ -10,6 +10,7 @@ ja:
   rcfm_clear_selection: 選択解除
   rcfm_selected_count: "%{count}件選択中"
   rcfm_confirm_discard: 未保存の変更を破棄し、サーバーの現在状態を読み込みますか？
+  rcfm_confirm_reset: 追加、編集、並び替えなど、この画面の未保存の変更をすべて元に戻しますか？
   rcfm_confirm_force: サーバーの現在状態を自分の変更で強制上書きしますか？データ保護制約は迂回できません。
   rcfm_conflict_base: 編集開始時
   rcfm_conflict_mine: 自分の編集
@@ -43,8 +44,8 @@ ja:
   rcfm_move_selected_group: 移動先を指定して移動
   rcfm_bulk_move_help: 一覧で移動したい項目をチェックし、移動先の項目名と、その前後どちらへ置くかを指定してください。
   rcfm_move_selected_count: "選択した%{count}件を移動"
-  rcfm_target_not_found: 入力した名前の移動先が見つかりません。候補から選択してください。
-  rcfm_target_ambiguous: 同じ名前の移動先が複数あります。現在の一覧位置を見て移動先を選んでください。
+  rcfm_target_not_found: 入力した名前を含む移動先が見つかりません。別の名前で検索してください。
+  rcfm_target_ambiguous: 一致する移動先があります。現在の一覧位置を見て移動先を選んでください。
   rcfm_target_candidate: "%{name} — 現在の%{position}番目"
   rcfm_target_candidate_selected: 選択中
   rcfm_no_changes: 未保存の変更はありません
@@ -67,9 +68,20 @@ ja:
   rcfm_save_changes: 変更を保存
   rcfm_undo: 1つ戻す
   rcfm_undo_help: 直前の未保存操作を1つ戻します。
+  rcfm_undo_feedback: "%{action}を元に戻しました。"
   rcfm_unsaved_changes_notice: 未保存の変更があります
   rcfm_redo: 1つやり直す
   rcfm_redo_help: 戻した未保存操作を1つやり直します。
+  rcfm_redo_feedback: "%{action}をやり直しました。"
+  rcfm_action_add: "%{count}件の追加"
+  rcfm_action_rename: "%{count}件の名称変更"
+  rcfm_action_activate: "%{count}件の有効化"
+  rcfm_action_deactivate: "%{count}件の無効化"
+  rcfm_action_delete: "%{count}件の削除"
+  rcfm_action_restore: "%{count}件の復元"
+  rcfm_action_move: "%{count}件の移動"
+  rcfm_action_discard: 未保存変更の一括破棄
+  rcfm_action_separator: "、"
   rcfm_individual_actions: 個別操作
   rcfm_delete_custom_field: このフィールドを削除
   rcfm_confirm_custom_field_delete: "カスタムフィールド「%{name}」（#%{id}）を削除しますか？\n\nチェック中の他のフィールドは削除されません。このフィールドの保存済み入力値と選択肢も削除されます。「変更を保存」を待たず直ちに実行され、変更履歴からは復元できません。"
@@ -118,6 +130,7 @@ ja:
   rcfm_confirm_restore_apply: 対象全体をこの状態へ復元しますか？復元操作も履歴に記録されます。
   rcfm_confirm_restore_preview: この履歴の復元プレビューを作成しますか？
   rcfm_history_changes: 記録された変更
+  rcfm_history_changes_with_count: "記録された変更（%{count}件）"
   rcfm_history_cleanup: 日時を指定して履歴を削除
   rcfm_history_delete_before: この日時より古い履歴を削除
   rcfm_history_deleted: 履歴を削除しました。現在の設定は変更していません。
@@ -144,6 +157,7 @@ ja:
   rcfm_history_technical_details: 技術情報（JSON）
   rcfm_history_snapshot: スナップショット
   rcfm_history_state: 再構成した対象全体の状態
+  rcfm_history_state_with_count: "再構成した対象全体の状態（%{count}件）"
   rcfm_history_target: 対象
   rcfm_history_title: 変更履歴
   rcfm_history_restored: 対象全体を復元し、復元操作を履歴へ記録しました。

@@ -22,7 +22,14 @@
   </div>
 <% end %>
 
-<h3><%= l(:rcfm_history_changes) %></h3>
+<% changes = Array(@changes['diff']) %>
+<% collapse_changes = changes.length > 20 %>
+<% if collapse_changes %>
+  <details class="rcfm-history-section rcfm-history-changes-section">
+    <summary><%= l(:rcfm_history_changes_with_count, :count => changes.length) %></summary>
+<% else %>
+  <h3><%= l(:rcfm_history_changes) %></h3>
+<% end %>
 <table class="list rcfm-history-changes">
   <thead>
     <tr>
@@ -33,7 +40,7 @@
     </tr>
   </thead>
   <tbody>
-    <% Array(@changes['diff']).each do |change| %>
+    <% changes.each do |change| %>
       <tr>
         <td><%= change['id'] %></td>
         <td><%= rcfm_history_change(change) %></td>
@@ -43,21 +50,26 @@
     <% end %>
   </tbody>
 </table>
+<% if collapse_changes %>
+  </details>
+<% end %>
 
-<h3><%= l(:rcfm_history_state) %></h3>
-<table class="list rcfm-history-state">
-  <thead><tr><th>ID</th><th><%= l(:field_name) %></th><% if @history.target_type == 'custom_field_enumerations' %><th><%= l(:field_active) %></th><% end %><th><%= l(:label_position) %></th></tr></thead>
-  <tbody>
-    <% @snapshot.each do |item| %>
-      <tr>
-        <td><%= item['id'] %></td>
-        <td><%= item['name'] %></td>
-        <% if @history.target_type == 'custom_field_enumerations' %><td><%= checked_image(item['active']) %></td><% end %>
-        <td><%= item['position'] %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<details class="rcfm-history-section rcfm-history-state-section">
+  <summary><%= l(:rcfm_history_state_with_count, :count => @snapshot.length) %></summary>
+  <table class="list rcfm-history-state">
+    <thead><tr><th>ID</th><th><%= l(:field_name) %></th><% if @history.target_type == 'custom_field_enumerations' %><th><%= l(:field_active) %></th><% end %><th><%= l(:label_position) %></th></tr></thead>
+    <tbody>
+      <% @snapshot.each do |item| %>
+        <tr>
+          <td><%= item['id'] %></td>
+          <td><%= item['name'] %></td>
+          <% if @history.target_type == 'custom_field_enumerations' %><td><%= checked_image(item['active']) %></td><% end %>
+          <td><%= item['position'] %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</details>
 
 <details class="rcfm-history-technical">
   <summary><%= l(:rcfm_history_technical_details) %></summary>

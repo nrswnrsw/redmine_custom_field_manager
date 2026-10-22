@@ -9,7 +9,7 @@ field = GroupCustomField.create!(
   :is_required => false
 )
 %w[Browser\ value\ A Browser\ value\ B Browser\ value\ C].each_with_index do |name, index|
-  field.enumerations.create!(:name => name, :position => index + 1)
+  field.enumerations.create!(:name => name, :position => index + 1, :active => true)
 end
 GroupCustomField.create!(
   :name => field_names.last,

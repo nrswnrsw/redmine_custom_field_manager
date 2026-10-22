@@ -28,6 +28,16 @@ async function saveAndReload(page) {
   expect(response.ok()).toBeTruthy();
 }
 
+async function confirmReset(page, scope) {
+  let message = '';
+  page.once('dialog', function(dialog) {
+    message = dialog.message();
+    return dialog.accept();
+  });
+  await (scope || page).locator('.rcfm-reset').click();
+  return message;
+}
+
 test.describe.serial('custom field manager browser behavior', function() {
   test.beforeEach(async function({page}) {
     if (!fieldId) {
@@ -48,11 +58,18 @@ test.describe.serial('custom field manager browser behavior', function() {
     const utilities = page.locator('.rcfm-enumeration-utilities');
     const commitBar = page.locator('.rcfm-commit-bar');
     const unsavedNotice = page.locator('.rcfm-unsaved-notice');
+    await expect(page.locator('.rcfm-add-one-input')).not.toBeFocused();
+    expect(await page.evaluate(function() { return window.scrollY; })).toBe(0);
     await expect(page.locator('.rcfm-introduction')).toHaveText(
       'After you add or edit a choice, a Save changes button appears at the bottom of the page. Press it to make your changes final.'
     );
     await expect(list).toBeVisible();
-    await expect(list.locator('thead th').nth(0)).toHaveText('Select');
+    await expect(list).toHaveCSS('overflow', 'visible');
+    await expect(list.locator('thead th').nth(0).locator('> span').first()).toHaveText('Select');
+    await expect(list.locator('thead th').nth(0)).toHaveCSS('position', 'sticky');
+    await expect(list.locator('thead th').nth(0)).toHaveCSS('top', '0px');
+    await expect(page.locator('#wrapper')).toHaveCSS('overflow', 'clip');
+    await expect(page.locator('#content')).toHaveCSS('overflow-x', 'visible');
     await expect(singleAdd).toBeVisible();
     await expect(singleAdd.locator('label')).toHaveText('New choice');
     await expect(selectionBar).toBeVisible();
@@ -110,7 +127,16 @@ test.describe.serial('custom field manager browser behavior', function() {
       return window.getComputedStyle(element).backgroundColor;
     });
     expect(saveBackground).not.toBe(resetBackground);
+    let resetMessage = '';
+    page.once('dialog', function(dialog) {
+      resetMessage = dialog.message();
+      return dialog.dismiss();
+    });
     await commitBar.locator('.rcfm-reset').click();
+    expect(resetMessage).toContain('Discard all additions, edits, and reorderings');
+    await expect(unsavedNotice).toBeVisible();
+    resetMessage = await confirmReset(page, commitBar);
+    expect(resetMessage).toContain('Discard all additions, edits, and reorderings');
     await expect(unsavedNotice).toBeHidden();
     await page.setViewportSize({width: 1280, height: 720});
     await page.evaluate(function() { window.scrollTo(0, 0); });
@@ -146,6 +172,17 @@ test.describe.serial('custom field manager browser behavior', function() {
     expect(Math.abs(narrowStateBox.x - narrowMoveBox.x)).toBeLessThan(2);
     expect(narrowStateBox.y).toBeLessThan(narrowMoveBox.y);
     await expect(commitBar).toHaveCSS('position', 'static');
+
+    await page.setViewportSize({width: 1280, height: 360});
+    await list.locator('tbody').evaluate(function(tbody) {
+      const sourceRows = Array.from(tbody.children);
+      for (let copy = 0; copy < 12; copy += 1) {
+        sourceRows.forEach(function(row) { tbody.appendChild(row.cloneNode(true)); });
+      }
+    });
+    await list.locator('tbody tr').nth(20).scrollIntoViewIfNeeded();
+    const stickyHeaderBox = await list.locator('thead th').nth(0).boundingBox();
+    expect(Math.abs(stickyHeaderBox.y)).toBeLessThan(2);
   });
 
   test('supports staged edit, undo, redo, move, add, save, and CSV preview', async function({page}, testInfo) {
@@ -159,16 +196,22 @@ test.describe.serial('custom field manager browser behavior', function() {
     await firstActive.uncheck();
     await expect(page.locator('.rcfm-save')).toBeEnabled();
     await page.locator('.rcfm-undo').click();
+    await expect(page.locator('.rcfm-undo')).toBeFocused();
+    await expect(page.locator('.rcfm-history-feedback')).toHaveText('Undid deactivating 1 item(s).');
     await expect(rows.nth(0).locator('.rcfm-active')).toBeChecked();
     await page.locator('.rcfm-redo').click();
+    await expect(page.locator('.rcfm-redo')).toBeFocused();
+    await expect(page.locator('.rcfm-history-feedback')).toHaveText('Redid deactivating 1 item(s).');
     await expect(rows.nth(0).locator('.rcfm-active')).not.toBeChecked();
-    await page.locator('.rcfm-reset').click();
+    await confirmReset(page);
     await expect(rows.nth(0).locator('.rcfm-active')).toBeChecked();
 
     const singleAddInput = page.locator('.rcfm-add-one-input');
+    await rows.nth(1).evaluate(function(row) { row.dataset.rcfmRenderMarker = 'preserved'; });
     await singleAddInput.fill('Browser added one');
     await singleAddInput.press('Enter');
     await expect(rows).toHaveCount(4);
+    await expect(rows.nth(1)).toHaveAttribute('data-rcfm-render-marker', 'preserved');
     await expect(rows.nth(3).locator('.rcfm-enumeration-name')).toHaveText('Browser added one');
     await expect(singleAddInput).toHaveValue('');
     await singleAddInput.fill('Temporary button addition');
@@ -177,15 +220,19 @@ test.describe.serial('custom field manager browser behavior', function() {
     await page.locator('.rcfm-undo').click();
     await expect(rows).toHaveCount(4);
 
+    await rows.nth(1).evaluate(function(row) { row.dataset.rcfmRenderMarker = 'preserved'; });
     await rows.nth(0).locator('.rcfm-edit').click();
     await rows.nth(0).locator('.rcfm-name-input').fill('Browser renamed');
     await expect(rows.nth(0).locator('.rcfm-apply-edit')).toHaveText('Apply edit');
     await expect(rows.nth(0).locator('.rcfm-cancel-edit')).toHaveText('Cancel');
     await rows.nth(0).locator('.rcfm-apply-edit').click();
     await expect(rows.nth(0).locator('.rcfm-edit')).toBeFocused();
+    await expect(rows.nth(1)).toHaveAttribute('data-rcfm-render-marker', 'preserved');
 
     await rows.nth(0).locator('.rcfm-select').check();
     await expect(page.locator('.rcfm-selection-count')).toHaveText('1 selected');
+    await expect(page.locator('.rcfm-sticky-selection-count')).toBeVisible();
+    await expect(page.locator('.rcfm-sticky-selection-count')).toHaveText('1 selected');
     const targetName = await rows.nth(2).locator('.rcfm-enumeration-name').textContent();
     await page.locator('.rcfm-target').fill(targetName);
     await page.locator('input[name="rcfm_enumeration_move_side"][value="after"]').check();
@@ -254,7 +301,7 @@ test.describe.serial('custom field manager browser behavior', function() {
     await row.locator('.rcfm-apply-edit').click();
     await expect(row.locator('.rcfm-enumeration-name')).toHaveText('かな');
     await expect(page.locator('.rcfm-save')).toBeEnabled();
-    await page.locator('.rcfm-reset').click();
+    await confirmReset(page);
     await expect(row.locator('.rcfm-enumeration-name')).toHaveText(originalName);
 
     await row.locator('.rcfm-edit').click();
@@ -305,11 +352,11 @@ test.describe.serial('custom field manager browser behavior', function() {
     await page.locator('.rcfm-select-all').click();
     await page.locator('.rcfm-move-selected').click();
     await expect(candidates).toBeHidden();
-    await expect(page.locator('.rcfm-error')).toContainText(
+    await expect(page.locator('.rcfm-move-error')).toContainText(
       'The destination cannot be one of the selected items.'
     );
 
-    await page.locator('.rcfm-reset').click();
+    await confirmReset(page);
     await expect(page.locator('.rcfm-save')).toBeDisabled();
     await expect(page.locator('.rcfm-error')).toBeHidden();
   });
@@ -349,9 +396,21 @@ test.describe.serial('custom field manager browser behavior', function() {
     await rows.nth(0).locator('.rcfm-select').check();
     await expect(page.locator('.rcfm-error')).toBeHidden();
     await page.locator('.rcfm-move-selected').click();
-    await expect(page.locator('.rcfm-error')).toContainText('Enter a destination name.');
-    await page.locator('.rcfm-target').fill('Browser value B');
-    await expect(page.locator('.rcfm-error')).toBeHidden();
+    const moveError = page.locator('.rcfm-move-error');
+    const moveTarget = page.locator('.rcfm-target');
+    await expect(moveError).toContainText('Enter a destination name.');
+    await expect(moveTarget).toBeFocused();
+    await expect(moveTarget).toHaveAttribute('aria-invalid', 'true');
+    const moveTargetBox = await moveTarget.boundingBox();
+    const moveErrorBox = await moveError.boundingBox();
+    expect(moveErrorBox.y).toBeGreaterThanOrEqual(moveTargetBox.y + moveTargetBox.height);
+    await moveTarget.fill('Browser value');
+    await expect(moveError).toBeHidden();
+    await page.locator('.rcfm-move-selected').click();
+    const matchingTargets = page.locator('.rcfm-target-candidates');
+    await expect(matchingTargets).toBeVisible();
+    await expect(matchingTargets.locator('.rcfm-target-candidate')).toHaveCount(2);
+    await expect(matchingTargets.locator('.rcfm-target-candidate:not(:disabled)').first()).toBeFocused();
     await page.locator('.rcfm-clear-selection').click();
 
     await page.locator('.rcfm-bulk-add summary').click();
@@ -411,7 +470,11 @@ test.describe.serial('custom field manager browser behavior', function() {
     const moveError = manager.locator('.rcfm-move-error');
     const targetInput = manager.locator('.rcfm-target');
     await expect(manager.locator('.rcfm-selection-bar')).toHaveCount(0);
-    await expect(manager.locator('table.custom_fields thead th').first()).toHaveText('Move');
+    await expect(
+      manager.locator('table.custom_fields thead th').first().locator('> span').first()
+    ).toHaveText('Move');
+    await expect(manager.locator('table.custom_fields thead th').first()).toHaveCSS('position', 'sticky');
+    await expect(manager.locator('.rcfm-sticky-selection-count')).toBeHidden();
     await expect(commitControls).toBeHidden();
     await expect(unsavedNotice).toBeHidden();
     const tableBox = await manager.locator('table.custom_fields').boundingBox();
@@ -450,17 +513,24 @@ test.describe.serial('custom field manager browser behavior', function() {
     await source.locator('.rcfm-select').check();
     await expect(moveError).toBeHidden();
     await expect(manager.locator('.rcfm-bulk-move-count')).toHaveText('1 selected');
+    await expect(manager.locator('.rcfm-sticky-selection-count')).toBeVisible();
+    await expect(manager.locator('.rcfm-sticky-selection-count')).toHaveText('1 selected');
     await expect(manager.locator('.rcfm-move-selected-label')).toHaveText('Move 1 selected');
     await targetInput.fill('');
     await manager.locator('.rcfm-move-selected').click();
     await expect(moveError).toContainText('Enter a destination name.');
     await expect(targetInput).toBeFocused();
     await expect(targetInput).toHaveAttribute('aria-invalid', 'true');
-    await targetInput.fill('RCFM browser target');
+    await targetInput.fill('browser target');
     await expect(moveError).toBeHidden();
     await expect(targetInput).not.toHaveAttribute('aria-invalid', 'true');
     await manager.locator('input[type="radio"][value="after"]').check();
     await manager.locator('.rcfm-move-selected').click();
+    const targetCandidates = manager.locator('.rcfm-target-candidates');
+    await expect(targetCandidates).toBeVisible();
+    await expect(targetCandidates.locator('.rcfm-target-candidate')).toHaveCount(1);
+    await expect(targetCandidates.locator('.rcfm-target-candidate')).toBeFocused();
+    await targetCandidates.locator('.rcfm-target-candidate').click();
     await expect(manager.locator('.rcfm-status')).toHaveText('Unsaved: 1 item(s) moved');
     await expect(manager.locator('.rcfm-save')).toBeEnabled();
     await expect(commitControls).toBeVisible();
@@ -468,9 +538,13 @@ test.describe.serial('custom field manager browser behavior', function() {
     await unsavedNotice.locator('.rcfm-review-changes').click();
     await expect(manager.locator('.rcfm-save')).toBeFocused();
     await manager.locator('.rcfm-undo').click();
+    await expect(manager.locator('.rcfm-undo')).toBeFocused();
+    await expect(manager.locator('.rcfm-history-feedback')).toHaveText('Undid moving 1 item(s).');
     await expect(unsavedNotice).toBeHidden();
     await expect(manager.locator('.rcfm-save')).toBeDisabled();
     await manager.locator('.rcfm-redo').click();
+    await expect(manager.locator('.rcfm-redo')).toBeFocused();
+    await expect(manager.locator('.rcfm-history-feedback')).toHaveText('Redid moving 1 item(s).');
     await expect(unsavedNotice).toBeVisible();
     await expect(manager.locator('.rcfm-save')).toBeEnabled();
 
@@ -481,7 +555,8 @@ test.describe.serial('custom field manager browser behavior', function() {
     await expect(manager.locator('.rcfm-status')).toHaveText('Unsaved: 1 item(s) moved');
     await expect(manager.locator('.rcfm-save')).toBeEnabled();
 
-    await manager.locator('.rcfm-reset').click();
+    const customFieldResetMessage = await confirmReset(page, manager);
+    expect(customFieldResetMessage).toContain('Discard all additions, edits, and reorderings');
     await expect(manager.locator('.rcfm-save')).toBeDisabled();
 
     await source.locator('.rcfm-select').check();

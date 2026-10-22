@@ -44,7 +44,9 @@
     this.body = this.form.find('tbody');
     this.baseline = this.currentOrder();
     this.undoStack = [];
+    this.undoActions = [];
     this.redoStack = [];
+    this.redoActions = [];
     this.dragStartOrder = null;
     this.draggedRows = [];
     this.saving = false;
@@ -81,14 +83,32 @@
     this.refresh();
   };
 
+  CustomFieldManager.prototype.actionSummary = function(before, after) {
+    var count = minimumMovedCount(before, after);
+    return this.form.data('rcfm-action-move').replace('__COUNT__', count);
+  };
+
+  CustomFieldManager.prototype.clearHistoryFeedback = function() {
+    this.form.find('.rcfm-history-feedback').prop('hidden', true).text('');
+  };
+
+  CustomFieldManager.prototype.showHistoryFeedback = function(template, action) {
+    this.form.find('.rcfm-history-feedback')
+      .text(template.replace('__ACTION__', action))
+      .prop('hidden', false);
+  };
+
   CustomFieldManager.prototype.recordChange = function(previousOrder) {
     var current = this.currentOrder();
     if (arraysEqual(previousOrder, current)) {
       return;
     }
     this.undoStack.push(previousOrder);
+    this.undoActions.push(this.actionSummary(previousOrder, current));
     this.redoStack = [];
+    this.redoActions = [];
     this.conflict = null;
+    this.clearHistoryFeedback();
     this.clearError();
     this.form.find('.rcfm-conflict').prop('hidden', true);
     this.refreshTargetList();
@@ -163,9 +183,13 @@
         return;
       }
       manager.redoStack.push(manager.currentOrder());
+      var action = manager.undoActions.pop();
+      manager.redoActions.push(action);
       manager.conflict = null;
       manager.clearError();
       manager.restore(manager.undoStack.pop());
+      manager.form.find('.rcfm-undo').trigger('focus');
+      manager.showHistoryFeedback(manager.form.data('rcfm-undo-feedback'), action);
     });
 
     this.form.on('click', '.rcfm-redo', function() {
@@ -173,19 +197,29 @@
         return;
       }
       manager.undoStack.push(manager.currentOrder());
+      var action = manager.redoActions.pop();
+      manager.undoActions.push(action);
       manager.conflict = null;
       manager.clearError();
       manager.restore(manager.redoStack.pop());
+      manager.form.find('.rcfm-redo').trigger('focus');
+      manager.showHistoryFeedback(manager.form.data('rcfm-redo-feedback'), action);
     });
 
     this.form.on('click', '.rcfm-reset', function() {
       if (!manager.isDirty()) {
         return;
       }
+      if (!window.confirm(manager.form.data('rcfm-confirm-reset'))) {
+        return;
+      }
       manager.undoStack.push(manager.currentOrder());
+      manager.undoActions.push(manager.form.data('rcfm-action-discard'));
       manager.redoStack = [];
+      manager.redoActions = [];
       manager.conflict = null;
       manager.clearError();
+      manager.clearHistoryFeedback();
       manager.restore(manager.baseline);
     });
 
@@ -287,6 +321,7 @@
     });
     this.clearError();
     panel.prop('hidden', false);
+    list.find('.rcfm-target-candidate:not(:disabled)').first().trigger('focus');
   };
 
   CustomFieldManager.prototype.moveSelected = function(targetId) {
@@ -317,6 +352,13 @@
         return String($(this).attr('data-rcfm-name')).trim().toLocaleLowerCase() === lowered;
       });
       if (!target.length) {
+        target = this.body.children('tr[data-rcfm-id]').filter(function() {
+          return String($(this).attr('data-rcfm-name')).trim().toLocaleLowerCase().indexOf(lowered) >= 0;
+        });
+        if (target.length) {
+          this.showTargetCandidates(target, selected);
+          return;
+        }
         this.showMoveError(this.form.data('rcfm-target-not-found'), input);
         return;
       }
@@ -354,6 +396,7 @@
     var selectedText = this.form.data('rcfm-selected-count').replace('__COUNT__', count);
     this.form.toggleClass('rcfm-has-selection', count > 0);
     this.form.find('.rcfm-selection-count, .rcfm-bulk-move-count').text(selectedText);
+    this.form.find('.rcfm-sticky-selection-count').text(selectedText).prop('hidden', count === 0);
     this.form.find('.rcfm-move-selected-label').text(
       this.form.data('rcfm-move-selected-count').replace('__COUNT__', count)
     );

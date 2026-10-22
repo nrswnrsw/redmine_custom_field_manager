@@ -57,7 +57,26 @@ class Rcfm::HistoriesControllerTest < Redmine::ControllerTest
     assert_select '.rcfm-json-detail', :count => 2
     assert_select '.rcfm-history-changes tbody tr', :minimum => 1
     assert_select '.rcfm-history-state tbody tr', :minimum => 1
+    assert_select 'details.rcfm-history-state-section:not([open])', :count => 1
     assert_select '.rcfm-history-technical'
+  end
+
+  def test_show_collapses_a_large_change_list_with_its_count
+    changes = 21.times.map do |index|
+      {
+        'id' => index + 1,
+        'action' => 'update',
+        'before' => {'id' => index + 1, 'name' => "Before #{index}", 'position' => index + 1},
+        'after' => {'id' => index + 1, 'name' => "After #{index}", 'position' => index + 1}
+      }
+    end
+    @history.update_columns(:changes_json => {'diff' => changes}.to_json)
+
+    get :show, :params => {:id => @history.id}
+
+    assert_response :success
+    assert_select 'details.rcfm-history-changes-section:not([open]) > summary', :text => /21/
+    assert_select '.rcfm-history-changes tbody tr', :count => 21
   end
 
   def test_restore_preview_is_rendered_before_apply

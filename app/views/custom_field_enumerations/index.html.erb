@@ -65,7 +65,19 @@
         :rcfm_delete_protected => l(:rcfm_error_delete_protected),
         :rcfm_server_state => l(:rcfm_server_state_summary, :count => '__COUNT__'),
         :rcfm_confirm_discard => l(:rcfm_confirm_discard),
+        :rcfm_confirm_reset => l(:rcfm_confirm_reset),
         :rcfm_confirm_force => l(:rcfm_confirm_force),
+        :rcfm_undo_feedback => l(:rcfm_undo_feedback, :action => '__ACTION__'),
+        :rcfm_redo_feedback => l(:rcfm_redo_feedback, :action => '__ACTION__'),
+        :rcfm_action_add => l(:rcfm_action_add, :count => '__COUNT__'),
+        :rcfm_action_rename => l(:rcfm_action_rename, :count => '__COUNT__'),
+        :rcfm_action_activate => l(:rcfm_action_activate, :count => '__COUNT__'),
+        :rcfm_action_deactivate => l(:rcfm_action_deactivate, :count => '__COUNT__'),
+        :rcfm_action_delete => l(:rcfm_action_delete, :count => '__COUNT__'),
+        :rcfm_action_restore => l(:rcfm_action_restore, :count => '__COUNT__'),
+        :rcfm_action_move => l(:rcfm_action_move, :count => '__COUNT__'),
+        :rcfm_action_discard => l(:rcfm_action_discard),
+        :rcfm_action_separator => l(:rcfm_action_separator),
         :rcfm_conflict_base => l(:rcfm_conflict_base),
         :rcfm_conflict_mine => l(:rcfm_conflict_mine),
         :rcfm_conflict_server => l(:rcfm_conflict_server),
@@ -135,7 +147,10 @@
   <table class="list rcfm-enumerations rcfm-sortable">
     <thead>
       <tr>
-        <th class="rcfm-selection"><%= l(:rcfm_select) %></th>
+        <th class="rcfm-selection">
+          <span><%= l(:rcfm_select) %></span>
+          <span class="rcfm-sticky-selection-count" aria-hidden="true" hidden></span>
+        </th>
         <th><%= l(:field_name) %></th>
         <th><%= l(:field_active) %></th>
         <th><span class="hidden-for-sighted"><%= l(:rcfm_individual_actions) %></span></th>
@@ -193,7 +208,7 @@
     <summary class="rcfm-selection-bar">
       <span class="rcfm-selection-summary">
         <span class="rcfm-group-label"><%= l(:rcfm_selected_item_actions) %></span>
-        <span class="rcfm-selection-count" aria-live="polite"><%= l(:rcfm_selected_count, :count => 0) %></span>
+        <span class="rcfm-selection-count" role="status" aria-atomic="true"><%= l(:rcfm_selected_count, :count => 0) %></span>
       </span>
     </summary>
 
@@ -240,6 +255,7 @@
                      class="rcfm-target"
                      list="rcfm-enumeration-targets"
                      autocomplete="off"
+                     aria-describedby="rcfm-enumerations-move-error"
                      placeholder="<%= l(:rcfm_move_target_placeholder) %>">
             </label>
             <datalist id="rcfm-enumeration-targets" class="rcfm-target-list">
@@ -262,6 +278,11 @@
               <div class="rcfm-target-candidate-list"></div>
             </div>
           </div>
+          <div id="rcfm-enumerations-move-error"
+               class="rcfm-move-error error"
+               role="alert"
+               tabindex="-1"
+               hidden></div>
         </div>
       </details>
     </div>
@@ -345,6 +366,7 @@
       </div>
     </div>
   </div>
+  <div class="rcfm-history-feedback" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 
   <p class="rcfm-back-link"><%= link_to l(:button_back), edit_custom_field_path(@custom_field) %></p>
 </form>

@@ -49,6 +49,7 @@ const fs = require('fs');
         {timeout: 120000}
       );
       metrics.dnd_long_distance_ms = Date.now() - started;
+      page.once('dialog', function(dialog) { return dialog.accept(); });
       await page.evaluate(function() {
         window.jQuery('.rcfm-reset').trigger('click');
       });

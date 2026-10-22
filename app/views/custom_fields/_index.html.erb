@@ -22,7 +22,12 @@
         :rcfm_save_error => l(:rcfm_save_error),
         :rcfm_server_state => l(:rcfm_server_state_summary, :count => '__COUNT__'),
         :rcfm_confirm_discard => l(:rcfm_confirm_discard),
+        :rcfm_confirm_reset => l(:rcfm_confirm_reset),
         :rcfm_confirm_force => l(:rcfm_confirm_force),
+        :rcfm_undo_feedback => l(:rcfm_undo_feedback, :action => '__ACTION__'),
+        :rcfm_redo_feedback => l(:rcfm_redo_feedback, :action => '__ACTION__'),
+        :rcfm_action_move => l(:rcfm_action_move, :count => '__COUNT__'),
+        :rcfm_action_discard => l(:rcfm_action_discard),
         :rcfm_conflict_base => l(:rcfm_conflict_base),
         :rcfm_conflict_mine => l(:rcfm_conflict_mine),
         :rcfm_conflict_server => l(:rcfm_conflict_server),
@@ -56,7 +61,10 @@
   <table class="list custom_fields rcfm-sortable">
     <thead>
       <tr>
-        <th class="rcfm-selection"><%= l(:rcfm_move_selection) %></th>
+        <th class="rcfm-selection">
+          <span><%= l(:rcfm_move_selection) %></span>
+          <span class="rcfm-sticky-selection-count" aria-hidden="true" hidden></span>
+        </th>
         <th><%= l(:field_name) %></th>
         <th class="rcfm-field-format"><%= l(:field_field_format) %></th>
         <th class="rcfm-field-required"><%= l(:field_is_required) %></th>
@@ -109,7 +117,7 @@
     <details class="rcfm-operation-panel rcfm-operation-panel--move rcfm-bulk-move">
       <summary>
         <span><%= l(:rcfm_move_selected_group) %></span>
-        <span class="rcfm-bulk-move-count" aria-live="polite"><%= l(:rcfm_selected_count, :count => 0) %></span>
+        <span class="rcfm-bulk-move-count" role="status" aria-atomic="true"><%= l(:rcfm_selected_count, :count => 0) %></span>
       </summary>
       <div class="rcfm-operation-panel-body">
         <div class="rcfm-bulk-move-introduction">
@@ -201,4 +209,5 @@
       </div>
     </div>
   </div>
+  <div class="rcfm-history-feedback" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 </form>
