@@ -1,266 +1,273 @@
-# Redmine Custom Field Manager — 製品仕様書
+# Redmine Custom Field Manager — Product Specification
 
-- リポジトリ／プラグインID：`redmine_custom_field_manager`
-- ステータス：**機能要件確定・実装済み（検証継続中）**
-- 仕様基準日：2026-10-20
-- 対象：Redmine管理者向けのカスタムフィールド管理画面
+[日本語](specification.ja.md)
 
-> この文書は合意済みの製品動作を定義する。実装方法の候補や実測が必要な事項は「技術設計・検証事項」に分離する。既存Redmineのデータ整合性を、操作性・性能より優先する。
+- Repository / plugin ID: `redmine_custom_field_manager`
+- Status: **Functional requirements finalized and implemented (verification ongoing)**
+- Specification baseline date: 2026-10-20
+- Scope: Custom-field administration screens for Redmine administrators
 
-## 1. 目的とスコープ
+> This English document is the canonical specification. The Japanese translation, [`specification.ja.md`](specification.ja.md), is provided for reference only. If the two differ, this document takes precedence.
 
-標準Redmineのカスタムフィールド管理を、既存機能を損なわずに改善する。特に、項目が大量にある環境でのドラッグ＆ドロップ、複数選択による一括操作、キー・バリューリストの大量編集、CSV入出力、同時編集の競合確認、変更履歴・復元を提供する。
+> This document defines the agreed product behavior. Candidate implementation approaches and items that require measurement are kept separately in Section 12, "Technical design and verification items". The data integrity of existing Redmine installations takes priority over usability and performance.
 
-対象は次の2領域。
+## 1. Purpose and scope
 
-1. **カスタムフィールド一覧**：カスタムフィールド自体の並び順を管理する。
-2. **キー・バリューリスト**：`Key/value list` 形式のカスタムフィールドに登録された選択肢を管理する。
+The plugin improves Redmine's standard custom-field administration without impairing existing functionality. In particular, it provides drag and drop for environments with a large number of items, bulk operations on multiple selected items, bulk editing of Key/value lists, CSV import and export, confirmation of concurrent-edit conflicts, and change history with restore.
 
-Redmine標準の管理画面を**置き換える**。別個の高度管理画面を併設する設計ではない。標準で可能だった操作や管理機能は維持する。
+It covers the following two areas:
 
-## 2. 対応環境と基本原則
+1. **Custom field list**: manages the order of the custom fields themselves.
+2. **Key/value lists**: manages the values registered in custom fields whose format is `Key/value list`.
 
-- Redmine公式の保守対象となっている**全安定版系列**をサポート対象とする。基準日時点では **7.0.x、6.1.x、6.0.x**。開発版やEOL系列は保証対象外。
-- 新しいRedmine系列に対しては、互換性試験を経て正式対応する。リリース直後から未検証のバージョンを無条件で保証するものではない。
-- Redmine本体のファイルを直接変更せず、プラグインとして導入・更新できるようにする。
-- 標準の管理者権限・CSRF対策・入力検証に従う。管理操作、CSV入出力、競合時の強制上書き、履歴復元・削除はRedmine管理者に限定する。
-- 既存のフィールドID・選択肢ID、およびチケット等に保存された値との対応を保護する。
-- 不整合を黙認して部分保存することは許可しない。保存に失敗した場合は一括ロールバックし、利用者に結果を示す。
+The plugin **replaces** Redmine's standard administration screens; it does not add a separate advanced administration screen alongside them. All operations and administrative features available in the standard screens are retained.
 
-## 3. 共通の編集操作
+In this document, a **value** is an entry in a Key/value list, and a **saved value** is a custom-field value stored on an issue or another object.
 
-### 3.1 表示・並び替え
+## 2. Supported environments and basic principles
 
-- 一覧の**全件表示**を基本とし、ページネーションや表示件数上限を強制しない。
-- ブラウザ標準のページ内検索（`Ctrl+F` / `⌘+F`）で項目名を探せるよう、一覧の名称は通常のテキストとしてDOMに存在させる。
-- 一覧独自の検索欄・検索絞り込みは設けない。
-- 従来のドラッグ＆ドロップ（D&D）を維持し、一覧内の任意の位置へ移動できる。長い一覧でのドラッグ中スクロールにも対応する。
-- 項目を1件以上選択し、選択した項目を一度に並び替えられる。
-- 選択項目の移動先は**項目名の入力による候補検索**で指定し、「その項目の前／後に移動」を選択する。名称が一意なら名称だけで確定でき、内部IDの入力を必須にしない。大量の項目を一覧からスクロール選択するだけのドロップダウンは使わない。
-- 同名項目が複数ある場合は、現在の一覧位置を付けた候補を画面内に表示し、利用者がクリックして移動先を確定できるようにする。内部IDは補助表示および内部的な識別にだけ用い、利用者に把握・入力を求めない。移動対象自身の候補は「選択中」と明示して選択不可にし、候補がすべて移動対象なら理由をエラーで示す。
-- 選択移動時の項目同士の相対順序は維持する。
-- 一括操作中は現在の選択件数を表示し、長い一覧をスクロールしても追従する列見出し内で確認できるようにする。操作後も選択を維持する場合は、選択が残っていることを同じ表示で明示する。
-- 選択移動はカスタムフィールド一覧の直下に「移動先を指定して移動」として配置し、初期状態では折りたたむ。単件・複数件のどちらでも利用でき、展開後に対象選択、移動先、前後指定の手順を説明する。カスタムフィールド一覧のチェックボックスは移動対象の指定であることを明示し、行ごとの個別操作とは区別する。
-- 未保存の移動件数は絶対位置が変わった行数ではなく、変更前後の相対順序から求めた**最小移動項目数**として表示する。追加・削除だけで後続位置がずれた項目は移動件数に含めない。
-- 操作ボタンは目的別に配置する。項目選択は一覧操作の先頭、選択項目への操作と移動は別グループ、Undo／Redoと変更の破棄／保存は一覧末尾の確定バーにまとめる。「保存」は確定操作として視覚的に最も強くし、「削除」は同じグループ内の通常操作から分離して危険操作であることを示す。
+- All **stable Redmine series that the Redmine project officially maintains** are supported. As of the baseline date, these are **7.0.x, 6.1.x, and 6.0.x**. Development versions and end-of-life series are not supported.
+- Support for a new Redmine series is added after compatibility testing. A newly released version that has not been verified is not unconditionally supported.
+- The plugin can be installed and updated without directly modifying Redmine core files.
+- The plugin follows Redmine's standard administrator permissions, CSRF protection, and input validation. Administrative operations, CSV import and export, forced overwrites on conflict, and history restore and deletion are restricted to Redmine administrators.
+- Existing field IDs and value IDs, and their correspondence with saved values on issues and other objects, are protected.
+- Partial saves that silently accept inconsistencies are not allowed. If a save fails, all of its changes are rolled back and the result is shown to the user.
 
-### 3.2 保存・取り消し
+## 3. Common editing operations
 
-- D&D、一括移動、その他の編集は、**保存ボタンを押すまでサーバーへ反映しない**。
-- 標準D&Dの自動保存も、この拡張画面内では行わない。
-- 変更があることを表示し、**保存／すべて取り消し／Undo／Redo** を提供する。
-- 日本語UIでは段階的なUndo／Redoを「1つ戻す／1つやり直す」、基準状態へのResetを「未保存の変更をすべて破棄」と表示し、対象範囲を区別する。Undo／Redo後は対象となった操作内容を通知し、Undo／Redoのうち次に利用できるボタンへフォーカスを維持する。「未保存の変更をすべて破棄」は確認後に実行する。
-- 保存前に編集結果や変更差分を確認できる。
-- 未保存の変更がある状態で画面を離れる場合は警告する。
-- 保存中は重複送信・重複操作を防止する。失敗時に成功と表示しない。
+### 3.1 Display and reordering
 
-## 4. カスタムフィールド一覧
+- Lists show **all items** by default. No pagination or limit on the number of displayed items is imposed.
+- Item names are present in the DOM as ordinary text so that they can be found with the browser's built-in find (`Ctrl+F` / `⌘+F`).
+- Lists do not have their own search box or search filter.
+- Conventional drag and drop (D&D) is retained, and items can be moved to any position in the list. Scrolling while dragging in a long list is supported.
+- One or more items can be selected, and the selected items can be reordered at once.
+- The destination for selected items is specified by **entering an item name and searching for candidates**, then choosing to move the items before or after that item. If the name is unique, the name alone is enough; entering an internal ID is never required. A drop-down that only lets users scroll through a large number of items is not used.
+- If several items share the same name, candidates labeled with their current list positions are shown on the page, and the user confirms the destination by clicking one. Internal IDs are used only as supplementary information and for internal identification; users are never required to know or enter them. Candidates that are themselves being moved are marked as "selected" and cannot be chosen. If every candidate is being moved, an error explains why.
+- When selected items are moved, their relative order is preserved.
+- During bulk operations, the number of selected items is shown in the column header, which stays visible while scrolling through a long list. If the selection is kept after an operation, the same indicator makes it clear that items are still selected.
+- The number of unsaved moves is shown as the **minimum number of moved items**, derived from the relative order before and after the change, rather than as the number of rows whose absolute position changed. Items whose positions shifted only because of additions or deletions are not counted as moves.
+- Controls are grouped by purpose. Item selection comes first among the list controls; actions on selected items and moves form a separate group; Undo/Redo, Discard, and Save are placed together in a confirmation bar at the end of the list. **Save** is given the strongest visual emphasis as the committing action, and **Delete** is set apart from the regular actions in its group to indicate that it is destructive.
 
-- Redmine標準のフィールド種別別表示、フィールド管理機能を維持する。
-- 各フィールドの選択・D&D・複数選択・名称検索による移動先指定・保存・取り消しに対応する。
-- 移動先の完全一致がない場合は、入力文字を含む候補を入力欄の近くに表示する。候補もない場合のエラーは入力欄に関連付け、入力欄へフォーカスを戻す。
-- 表示中の種別タブだけで順序を処理すると他の種別へ影響する可能性があるため、サーバー側では**Redmine本体の位置管理ルールに整合する順序**として保存する。
-- 並び順以外の標準管理機能（個々のフィールドの作成、編集、削除等）を失わせない。
-- カスタムフィールドの行削除はチェック中の他項目へ影響しない**単件の即時操作**として表示する。確認時には対象名とID、保存済み入力値・選択肢への影響、「変更を保存」を待たず実行されること、履歴から復元できないことを明示する。
-- 種別切り替えや画面遷移時に未保存状態を見失わないようにする。
+### 3.2 Saving and undoing
 
-## 5. キー・バリューリスト
+- D&D, bulk moves, and other edits are **not sent to the server until the Save button is pressed**.
+- The standard D&D auto-save is not performed on these enhanced screens.
+- The screen indicates when there are unsaved changes and provides **Save, Discard all, Undo, and Redo**.
+- Labels distinguish step-by-step Undo/Redo from resetting to the baseline state. The English UI uses "Undo", "Redo", and "Discard all unsaved changes"; the Japanese UI uses 「1つ戻す」, 「1つやり直す」, and 「未保存の変更をすべて破棄」. After an Undo or Redo, the affected operation is announced, and keyboard focus stays on the same button if it can be used again, or otherwise moves to the other one. "Discard all unsaved changes" runs only after confirmation.
+- Users can review the edited result and the differences before saving.
+- Users are warned when leaving the page with unsaved changes.
+- Duplicate submissions and duplicate operations are prevented while saving. A failed save is never reported as successful.
 
-### 5.1 一覧・編集
+## 4. Custom field list
 
-- 全選択肢を表示し、従来どおりD&Dで任意の位置へ移動できる。
-- 一覧をスクロールしている間も列見出しを画面上部に追従させ、「選択」と「有効」のチェックボックスを識別できるようにする。
-- 画面では選択肢一覧を最初に表示し、その直下に単件追加、選択項目の操作、一括追加・CSVの順で配置する。選択項目の操作はカスタムフィールド一覧と同様に初期状態で折りたたむ。一括追加とCSVも利用頻度の低い補助ツールとして、初期状態では小さく折りたたむ。
-- 通常時は**軽量なテキスト行**として表示し、名称のクリックまたは編集ボタンでその行だけ入力欄へ切り替える。
-- 大量の選択肢がある場合も、画面を開いた直後は一覧の先頭と説明を表示し、下部の追加欄へ自動スクロールしない。
-- 名称編集中は「変更を反映」と「キャンセル」を明示する。Enterキーだけでは編集を確定せず、日本語入力の変換確定を妨げない。
-- 編集を確定しても保存ボタンを押すまではサーバーへ反映しない。
-- 名称変更、追加、並び替え、有効／無効の切り替え、削除を扱う。
-- **単件追加**：標準画面と同様に、選択肢名を1件入力して追加できる。追加内容はほかの編集と同じく保存前状態へ積み、保存、破棄、Undo／Redoの対象とする。
-- 複数選択から一括移動・一括有効化／無効化・一括削除ができる。
-- **一括追加**：改行区切りで複数の選択肢を貼り付けて追加できる。追加前に入力を検証する。
-- 個々の選択肢の内部IDを保護し、名称変更や並び替えでIDを振り直さない。
+- Redmine's standard tabs for each custom field type and the standard field management features are retained.
+- Selecting fields, D&D, multi-selection, destination selection by name search, saving, and undoing are supported.
+- The selection-based move is placed directly below the custom field list as "Move to a destination" and is collapsed by default. It works for one or many fields, and when expanded it explains the steps: select the fields, enter the destination, and choose before or after. The checkboxes in the custom field list are clearly labeled as selecting fields to move and are kept distinct from per-row actions.
+- If no field exactly matches the destination, candidates that contain the entered text are shown near the input field. If there are no candidates either, the error is associated with the input field and focus returns to it.
+- Processing the order only within the displayed type tab could affect other types, so the server saves an order that is **consistent with Redmine core's position management rules**.
+- Standard administration features other than ordering, such as creating, editing, and deleting individual fields, are not lost.
+- Deleting a custom field from its row is presented as an **immediate single-field operation** that does not affect other checked fields. The confirmation states the field's name and ID, the impact on its saved values and Key/value list values, that the deletion runs immediately without waiting for "Save changes", and that it cannot be restored from history.
+- Users do not lose track of unsaved changes when switching type tabs or leaving the page.
 
-### 5.2 削除と既存データの保護
+## 5. Key/value lists
 
-- **使用中の選択肢は削除不可**。無効化のみ許可する。
-- 削除不可の選択肢には、使用中または既定値である理由を一覧上の表示とツールチップで示す。
-- **未使用の選択肢は削除または無効化を選択可能**。
-- 一括削除・CSV全件同期・履歴復元でも、同じ制約を適用する。
-- 使用状況は保存時に再確認する。編集開始時に未使用でも、保存時点で使用中なら削除しない。
-- 使用の有無は、チケット以外のカスタムフィールド利用先、既定値等も含め、対応Redmineの参照仕様に基づいて判定する。
-- 削除できない項目が保存内容に含まれていたら、理由を表示して**操作全体を中断**する。黙って無効化へ置換したり部分保存したりしない。ただし全件同期の欠落項目については、後述のユーザー選択に従う。
+### 5.1 List and editing
 
-## 6. CSVエクスポート・インポート
+- All values are shown, and they can be moved to any position by D&D as before.
+- The column header stays at the top of the screen while scrolling so that the "Select" and "Active" checkboxes remain identifiable.
+- The value list is shown first, followed by single-value addition, selected item actions, and then bulk addition and CSV, in that order. As with the selection-based move in the custom field list, selected item actions are collapsed by default. Bulk addition and CSV are also collapsed by default as compact auxiliary tools for occasional use.
+- Values are normally displayed as **lightweight text rows**. Clicking a name or its edit button switches only that row to an input field.
+- Even when there are many values, the page initially shows the top of the list and its description, and does not automatically scroll to the add field at the bottom.
+- While a name is being edited, "Apply edit" and "Cancel" are clearly shown. Pressing Enter alone does not commit the edit, so it does not interfere with confirming conversions in Japanese input methods (IME).
+- A committed edit is not sent to the server until the Save button is pressed.
+- Renaming, adding, reordering, activating and deactivating, and deleting values are supported.
+- **Single-value addition**: as in the standard screen, a single value name can be entered and added. The addition is staged like any other edit and is subject to Save, Discard, and Undo/Redo.
+- Selected values can be moved, activated or deactivated, and deleted in bulk.
+- **Bulk addition**: multiple values can be pasted, one per line, and added. The input is validated before the values are added.
+- The internal ID of each value is protected. Renaming or reordering never reassigns IDs.
 
-### 6.1 エクスポート
+### 5.2 Deletion and protection of existing data
 
-- 対象のキー・バリューリストの全選択肢を、現在の並び順でCSV出力する。
-- 現在の対象情報と列構成を含む空のCSVテンプレートをダウンロードできる。
-- CSV操作は保存済み状態を基準にする。画面上に未保存の変更がある場合は、先に保存または取り消す必要がある旨を表示し、プレビューを開始しない。
-- 少なくとも選択肢の**内部ID、名称、有効／無効、並び順**を含める。
-- 異なるRedmine環境に持ち込んでも出自が分かるよう、ソース環境と対象フィールドの識別情報を扱う。
-- 文字エンコーディング・引用符・改行・重複名称などを安全に処理し、再インポート可能な形式とする。
+- **Values in use cannot be deleted**; they can only be deactivated.
+- For a value that cannot be deleted, the reason (in use, or set as a default) is shown both in the list and in a tooltip.
+- **Unused values can be either deleted or deactivated.**
+- The same restrictions apply to bulk deletion, CSV full synchronization, and history restore.
+- Usage is checked again when saving. Even if a value was unused when editing started, it is not deleted if it is in use at save time.
+- Whether a value is in use is determined according to the reference rules of the supported Redmine versions, including custom-field usage outside issues and default values.
+- If the changes being saved include a value that cannot be deleted, the reason is shown and **the entire operation is aborted**. The value is never silently deactivated instead, and nothing is partially saved. The only exception is values missing from the CSV in full synchronization, which follow the user's choice described in Section 6.3.
 
-### 6.2 インポートのモード
+## 6. CSV export and import
 
-- **追加モード**：新規選択肢を追加する。
-- **更新モード**：既存選択肢の名称、有効状態、並び順を更新し、新規行も追加できる。
-- **全件同期モード**：CSVを基準に追加・更新・並び替えを行い、CSVにない既存選択肢の削除／無効化も実行できる。
-- CSVにない項目を削除・無効化の対象とするのは、**全件同期モードを明示的に選んだ場合のみ**。
-- インポートでは差分（追加・名称変更・順序変更・有効化／無効化・削除）を**保存前にプレビュー**する。
-- 不正なデータ、重複ID、存在しないID、曖昧な対応付け等は適切なエラーとして扱う。曖昧な状態で自動更新しない。
+CSV operations are based on the saved state. If there are unsaved changes on the page, a message asks the user to save or discard them first, and no import preview is started.
 
-### 6.3 全件同期時にCSVにない項目
+### 6.1 Export
 
-- **使用中**：無効化のみ可能。削除は認めない。
-- **未使用**：削除と無効化から選べる。
-- 未使用項目について「原則削除／原則無効化」の一括指定を用意し、必要に応じて項目ごとに変更できる。
-- 対象項目と最終操作は保存前に確認できる。
-- 保存直前にも使用状況を再判定し、条件に反した場合は全体を中断する。
+- All values of the target Key/value list are exported to CSV in their current order.
+- An empty CSV template containing the current target information and the column structure can be downloaded.
+- The export includes at least each value's **internal ID, name, active state, and position**.
+- Identifying information for the source environment and the target field is included so that the origin of the file is clear even after it is brought into a different Redmine environment.
+- Character encoding, quoting, line breaks, duplicate names, and similar issues are handled safely, and the output can be imported again.
 
-### 6.4 別環境間のインポート
+### 6.2 Import modes
 
-- **異なるRedmine環境間での移行に対応**する。
-- 環境間では内部IDの一致を前提にしない。IDだけで他環境の選択肢を更新しない。
-- 同名などの候補を提示し、**管理者が既存項目との対応付けを確認**してからインポートする。対応付けない項目は新規追加できる。
-- 同名項目が複数ある場合など、対応が曖昧なときは必ず確認させる。
-- 2回目以降のインポートを安全に扱えるよう、確認済みの対応関係を識別・再利用可能な設計とする。ただし別環境のIDをそのままDBに再現しない。
+- **Append mode**: adds new values.
+- **Update and add mode**: updates the names, active states, and positions of existing values, and can also add new rows.
+- **Full synchronization mode**: adds, updates, and reorders values based on the CSV, and can also delete or deactivate existing values that are not in the CSV.
+- Values missing from the CSV are deleted or deactivated **only when full synchronization mode is explicitly selected**.
+- An import **previews the differences before saving**: additions, renames, reorderings, activations and deactivations, and deletions.
+- Invalid data, duplicate IDs, nonexistent IDs, ambiguous mappings, and similar problems are reported as errors. Nothing is updated automatically while the situation is ambiguous.
 
-## 7. 同時編集と競合解決
+### 6.3 Values missing from the CSV in full synchronization
 
-### 7.1 競合判定
+- **In use**: can only be deactivated. Deletion is not allowed.
+- **Unused**: can be either deleted or deactivated.
+- For unused values, a default of "delete" or "deactivate" can be set for all of them at once and then changed for individual values as needed.
+- The affected values and the final action for each can be reviewed before saving.
+- Usage is checked again immediately before saving, and the entire operation is aborted if any condition is violated.
 
-- 管理画面を開いたときの基準状態を保持する。
-- 他の管理者が先に対象データを保存した場合、**次の保存では競合を検知**する。
-- 比較対象は単なる表示名だけではなく、ID・並び順・有効状態・追加・削除を含む。
-- カスタムフィールド全体の並び順と、個々のキー・バリューリストの選択肢編集は、適切な独立単位で競合を判定する。
-- 同時保存で両者が誤って成功しないよう、**競合判定と書き込みをサーバー側で不可分に実行**する。
-- Redmine標準の管理経路から行われる変更も競合保護の対象に含める。DB直接変更・未知の他プラグイン等による書き込みを完全に制御できると無検証に主張しない。
+### 6.4 Import between different environments
 
-### 7.2 競合時の確認画面
+- **Migration between different Redmine environments is supported.**
+- Internal IDs are not assumed to match between environments. Existing values are never updated based on matching IDs alone.
+- Candidates such as values with the same name are presented, and the import proceeds only after **an administrator confirms the mapping to existing values**. Values that are not mapped can be added as new values.
+- When a mapping is ambiguous, for example because several values share the same name, the administrator must always confirm it.
+- To handle second and later imports safely, confirmed mappings are designed to be identifiable and reusable. IDs from another environment are never reproduced as-is in the database.
 
-競合時には、**自動統合・自動上書きは行わず、必ず確認画面**を表示する。サーバー現在値と自分の編集内容、その差分を確認可能にする。
+## 7. Concurrent editing and conflict resolution
 
-以下の選択肢を用意する。
+### 7.1 Conflict detection
 
-1. **編集を続ける**：保存せず、自分の変更を保持する。
-2. **自分の変更を破棄して再読み込み**：サーバーの最新状態に戻す。
-3. **統合案を確認して保存**：安全に統合可能な場合だけ表示する。統合案をプレビューし、明示的な確定操作後に保存する。
-4. **自分の変更で強制上書き**：警告と差分を示し、管理者の明示的な操作で保存する。
+- The baseline state at the time the administration screen was opened is retained.
+- If another administrator saves the target data first, **the next save detects the conflict**.
+- The comparison covers not only display names but also IDs, positions, active states, additions, and deletions.
+- Conflicts are detected in appropriate independent units: the overall order of custom fields, and the value edits of each Key/value list.
+- **Conflict detection and writing are performed atomically on the server** so that two simultaneous saves cannot both succeed incorrectly.
+- Changes made through Redmine's standard administration paths are also covered by conflict protection. The plugin does not claim, without verification, that it can fully control writes made directly to the database or by unknown third-party plugins.
 
-- 統合可能でもユーザー確認なしに保存しない。
-- 強制上書きは**データ保護の制約を迂回できない**。使用中選択肢の削除などは禁止したままにする。
-- 統合／上書きの確定直前に対象状態が再度変わった場合、もう一度競合確認へ戻す。
-- 同時保存・失敗・タイムアウトでも部分保存を残さず、結果を正確に表示する。
+### 7.2 Conflict confirmation screen
 
-## 8. 変更履歴・復元
+When a conflict occurs, **a confirmation screen is always shown instead of merging or overwriting automatically**. The user can review the current server state, their own edits, and the differences between them.
 
-### 8.1 履歴
+The following options are provided:
 
-- 保存操作ごとに、対象、日時、操作者、変更内容を追跡できる履歴を記録する。
-- 差分履歴と定期的なスナップショットを併用し、通常操作のDB負荷と履歴容量を抑える。
-- 履歴一覧では軽量なメタデータを優先表示し、詳細データは必要なときだけ読み込む。
-- 履歴詳細の変更件数が多い場合は件数付きで折りたたみ、対象全体の再構成状態も折りたたんで、復元操作や概要を長い表の下へ追いやらない。
-- 履歴一覧・詳細・復元プレビューでは内部キーや生の操作コードを主表示せず、対象名、操作名、名称、位置、有効／無効を人間向けに表示する。生データは折りたたんだ技術情報としてのみ参照できる。
-- 保存データと履歴の確定は整合性を保証する。
-- Redmine標準経路からカスタムフィールドを削除した場合も、対象、操作者、削除された保存済み入力値数・選択肢数を監査履歴として記録する。履歴記録に失敗した場合は削除もロールバックする。
-- カスタムフィールド削除履歴は監査専用とし、削除されたフィールド、入力値、選択肢を復元できるかのように表示しない。
+1. **Continue editing**: keep your changes without saving.
+2. **Discard and reload**: discard your changes and return to the latest server state.
+3. **Review and save merge proposal**: shown only when the changes can be merged safely. The merge proposal is previewed and saved only after an explicit confirmation.
+4. **Force overwrite with my changes**: shows a warning and the differences, and saves only after an explicit action by the administrator.
 
-### 8.2 復元
+- Even when a merge is possible, nothing is saved without the user's confirmation.
+- A forced overwrite **cannot bypass data-protection constraints**. For example, deleting values in use remains prohibited.
+- If the target state changes again just before a merge or overwrite is confirmed, the user is returned to the conflict confirmation.
+- Simultaneous saves, failures, and timeouts never leave partial saves, and the result is reported accurately.
 
-- 履歴から、**選択した時点の対象全体の状態に復元**する。
-- 個々の変更だけを選んで取り消す「選択的な逆操作」は提供しない。
-- 復元対象は、カスタムフィールドの並び順または指定したキー・バリューリスト。無関係な設定は巻き戻さない。
-- 復元前に差分プレビューと競合確認を行う。復元操作自体も履歴に残す。
-- 復元のために使用中の選択肢を削除する必要がある場合や、安全なIDの復元ができない場合は、**復元全体を中断**し、理由を表示する。
-- 部分復元はしない。
+## 8. Change history and restore
 
-### 8.3 履歴保持と手動削除
+### 8.1 History
 
-- 管理画面で**保存期間と最大世代数**を設定できる。
-- デフォルトは**無期限保存**。
-- 履歴を1件ずつ／複数選択で手動削除できる。
-- 指定日時より古い履歴を一括削除できる。削除前には対象と影響を確認させる。
-- 履歴削除は現在の設定を変更しない。
-- 差分履歴とスナップショットの依存関係を保ち、削除後も**残す履歴からの復元が可能**なように再構成または削除制限を行う。
+- Each save records a history entry from which the target, date and time, operator, and changes can be traced.
+- Incremental (diff) history is combined with periodic snapshots to reduce both the database load of normal operations and the size of the history.
+- The history list shows lightweight metadata first and loads detailed data only when needed.
+- In history details, long lists of changes are collapsed with their count shown, and the reconstructed state of the entire target is also collapsed, so that the restore controls and the summary are not pushed below long tables.
+- The history list, details, and restore preview do not show internal keys or raw operation codes as primary content. Instead, they show target names, operation names, names, positions, and active/inactive states in human-readable form. Raw data is available only as collapsed technical information.
+- Saved data and its history are committed together and remain consistent with each other.
+- When a custom field is deleted through Redmine's standard path, the target, the operator, and the numbers of deleted saved values and Key/value list values are also recorded as an audit history entry. If recording the history fails, the deletion is rolled back as well.
+- Custom-field deletion history is for auditing only and is never presented as if the deleted field, its saved values, or its Key/value list values could be restored.
 
-## 9. 性能・操作品質
+### 8.2 Restore
 
-- **1リスト10,000件以上**を扱えることを性能設計・検証目標とする。登録件数にハード上限を設けない。
-- 全件表示、ブラウザページ内検索、自由なD&Dの機能を、性能対策のために一方的に廃止しない。
-- 不要なテキスト入力欄や高負荷なD&D初期化を避ける。選択肢の表示は軽量なテキスト行を基本とする。
-- 名称編集、追加、有効状態変更、削除などの日常操作では、変更した行を中心にDOMを更新し、全行の不要な再描画を避ける。
-- サーバーへ渡す更新内容は可能な限り差分にし、未変更のレコードを無駄に更新しない。
-- 保存時間・描画時間・D&D初期化・長距離移動・メモリ使用量・CSVインポート／エクスポート・復元について、10,000件規模で負荷試験する。
-- 実用上の応答性能は**実測で検証**する。現時点で具体的な処理時間保証が検証済みであるとは扱わない。
-- 仮想スクロールで未表示項目をDOMから取り除くと、ブラウザ内検索の要件と衝突するため、安易に採用しない。
+- The **entire target is restored to its state at the selected point in history**.
+- "Selective reversal", which undoes only individual changes, is not provided.
+- The restore target is either the custom field order or a specified Key/value list. Unrelated settings are not rolled back.
+- A restore is preceded by a difference preview and a conflict check. The restore itself is also recorded in history.
+- If restoring would require deleting a value in use, or if the original IDs cannot be restored safely, **the entire restore is aborted** and the reason is shown.
+- Partial restores are not performed.
 
-## 10. セキュリティ・データ整合性
+### 8.3 History retention and manual deletion
 
-- 管理者のみが読み書き可能な管理用機能として実装する。
-- すべてのサーバー更新に認可・入力検証・CSRF対策を適用する。
-- CSVインポートでの不正データ、過大リクエスト、CSV数式インジェクション等を考慮する。
-- 追加・更新・削除・順序変更・復元は、単位ごとに**原子的な保存**を保証する。
-- 標準の編集画面・API等との同時実行を含め、競合時に他人の変更が意図せず消えないようにする。
-- 競合時に管理者が明示した強制上書きのみを許可し、その操作も履歴に残す。
-- プラグインを削除・無効化しても、標準Redmineのカスタムフィールドと既存チケットの値が壊れないようにする。
+- The **retention period and the maximum number of generations** can be configured in the plugin settings.
+- The default is **unlimited retention**.
+- History entries can be deleted manually, either one at a time or by selecting several.
+- History older than a specified date and time can be deleted in bulk. Before deletion, the user confirms the affected entries and the impact.
+- Deleting history does not change the current settings.
+- Dependencies between incremental history and snapshots are maintained. History is reconstructed, or deletion is restricted, so that **the remaining history can still be restored** after deletion.
 
-## 11. 受け入れ条件（主要シナリオ）
+## 9. Performance and usability
 
-1. カスタムフィールドを手でD&Dし、別の複数項目を一括移動できる。保存前にはDBの順序が変わらず、保存後に指定順になる。
-2. 全件表示の200件以上の選択肢を、ページまたぎを強制されずにD&Dできる。ブラウザ標準検索で画面内の名称を探せる。
-3. 10,000件規模の一覧を対象に、描画・D&D・保存・CSV操作の負荷試験を実施し、結果と検証環境を記録する。
-4. 一覧は通常テキスト表示で、特定の選択肢を編集するときのみ入力欄が出現する。
-5. 改行区切りの複数選択肢を一度に追加でき、途中の不正データで部分保存しない。
-6. CSVで既存IDを維持した名称・有効状態・並び順の更新ができる。
-7. CSV全件同期で欠落項目を削除／無効化でき、**使用中の項目は削除できない**。未使用項目は操作を選べる。
-8. 別環境のCSV取り込みで、既存候補との対応を管理者が確認でき、IDが一致しないだけで誤更新しない。
-9. 二人が同じ対象を編集して先に片方が保存したら、後の保存では必ず競合確認を表示する。統合可能でも勝手に統合せず、強制上書きには明示的な確認が必要。
-10. 同時保存・通信失敗・DBエラー時、設定や履歴に不完全な更新が残らない。
-11. 過去の状態を対象全体で復元でき、使用中の選択肢削除等が必要なら安全に中断する。
-12. 履歴の期間／世代数設定・手動削除ができ、削除後も残存履歴の復元可能性が維持される。
-13. 現行保守対象のRedmine全系列で、最低限の管理操作・保存・CSV・競合・復元について互換性試験を実施する。
+- The performance design and verification target is **10,000 or more values per list**. No hard limit is placed on the number of values.
+- Showing all items, browser find, and free D&D are not abandoned for the sake of performance.
+- Unnecessary text input fields and expensive D&D initialization are avoided. Values are displayed primarily as lightweight text rows.
+- Everyday operations such as renaming, adding, changing the active state, and deleting update the DOM only around the changed rows and avoid unnecessarily re-rendering every row.
+- Updates sent to the server are limited to differences wherever possible, and unchanged records are not updated needlessly.
+- Save time, rendering time, D&D initialization, long-distance moves, memory usage, CSV import and export, and restore are load-tested at the 10,000-item scale.
+- Practical responsiveness is **verified by measurement**. No specific processing-time guarantee is considered verified at this point. Measured results are recorded in [`performance.md`](performance.md).
+- Virtual scrolling, which removes off-screen items from the DOM, conflicts with the browser find requirement and is therefore not adopted lightly.
 
-## 12. 技術設計・検証事項（未確定の実装詳細）
+## 10. Security and data integrity
 
-以下は**製品仕様の未合意事項ではなく、コードとテストで判断・確立する事項**。実現のために合意済みの動作を変更する必要が生じた場合のみ、仕様として再検討する。
+- These features are implemented as administration functions that only administrators can read and write.
+- Authorization, input validation, and CSRF protection are applied to every server-side update.
+- Invalid data in CSV imports, oversized requests, CSV formula injection, and similar threats are taken into account.
+- Additions, updates, deletions, reorderings, and restores are **saved atomically** per unit.
+- Other users' changes are never lost unintentionally on conflict, including when operations run concurrently with Redmine's standard edit screens, API, and other paths.
+- On conflict, only a forced overwrite explicitly chosen by an administrator is allowed, and that operation is also recorded in history.
+- Removing or disabling the plugin does not corrupt Redmine's standard custom fields or the values stored on existing issues.
 
-- Redmine 6.0／6.1／7.0でのView置換方法、標準の作成／更新／削除経路との統合方法、他プラグインとのView競合。
-- データベース別のトランザクション分離・ロック設計と、複数プロセス／複数サーバー同時保存時の挙動。
-- CustomFieldの種別をまたぐ位置管理の正しい実装。
-- 別環境CSVの出自識別・確認済みマッピング保存形式、および履歴復元時の既存ID衝突対策。
-- Redmineの選択肢使用状況判定（チケット以外の利用先、既定値、他プラグインの参照も含めた制約）。
-- スナップショットの作成間隔、差分形式、圧縮方法、履歴保持／削除時の依存関係の保護。
-- 10,000件以上でのブラウザ描画・D&D、DB更新、CSVの性能最適化。
-- サポート対象のDB製品およびRedmine系列ごとのテストマトリクス。
+## 11. Acceptance criteria (key scenarios)
 
-## 13. 仕様判断の記録
+1. Custom fields can be dragged and dropped manually, and several other fields can be moved in bulk. The database order does not change before saving and matches the specified order after saving.
+2. In a list that shows all items, 200 or more values can be dragged and dropped without being forced to switch pages. Names on the page can be found with the browser's built-in find.
+3. Load tests of rendering, D&D, saving, and CSV operations are run against a list of 10,000 items, and the results and the test environment are recorded.
+4. The list is displayed as plain text, and an input field appears only when a particular value is being edited.
+5. Multiple values separated by line breaks can be added at once, and invalid data partway through does not cause a partial save.
+6. A CSV can update names, active states, and positions while preserving existing IDs.
+7. CSV full synchronization can delete or deactivate values missing from the CSV. **Values in use cannot be deleted**, and an action can be chosen for unused values.
+8. When importing a CSV from another environment, the administrator can confirm mappings to existing candidates, and values are never updated incorrectly just because their IDs happen to match.
+9. When two administrators edit the same target and one saves first, the later save always shows the conflict confirmation. Even when the changes can be merged, they are not merged automatically, and a forced overwrite requires explicit confirmation.
+10. Simultaneous saves, communication failures, and database errors leave no incomplete updates in settings or history.
+11. A past state can be restored for the entire target, and the restore is aborted safely if it would require deleting a value in use or another unsafe change.
+12. The history retention period and number of generations can be configured, history can be deleted manually, and the remaining history stays restorable after deletion.
+13. Compatibility tests covering at least administrative operations, saving, CSV, conflicts, and restore are run on every currently maintained Redmine series.
 
-| Q | 確定内容 |
+## 12. Technical design and verification items (open implementation details)
+
+The following are **not unresolved product requirements but items to be decided and established through code and tests**. They are reconsidered as specification issues only if achieving them would require changing agreed behavior.
+
+- How to replace views on Redmine 6.0, 6.1, and 7.0, how to integrate with the standard create, update, and delete paths, and how to handle view conflicts with other plugins.
+- Transaction isolation and locking design for each database, and behavior when multiple processes or servers save simultaneously.
+- A correct implementation of position management across custom field types.
+- Origin identification for CSVs from other environments, the storage format for confirmed mappings, and how to avoid collisions with existing IDs when restoring history.
+- Redmine's rules for determining whether a value is in use, including constraints from usage outside issues, default values, and references from other plugins.
+- Snapshot interval, diff format, compression method, and protection of dependencies when retaining or deleting history.
+- Performance optimization of browser rendering and D&D, database updates, and CSV processing at 10,000 or more items.
+- The test matrix for each supported database product and Redmine series.
+
+## 13. Decision log
+
+| Q | Decision |
 |---|---|
-| Q1 | 既存管理画面を置き換える |
-| Q2 | 競合時の強制上書きを許可（警告・明示操作が必要） |
-| Q3 | CSVは全件同期まで対応 |
-| Q4 | 異なるRedmine環境間でのインポートにも対応 |
-| Q5 | 選択肢の一括削除に対応 |
-| Q6 | 1リスト10,000件以上を性能目標とする |
-| Q7 | 公式保守対象の全安定版Redmine系列に対応 |
-| Q8 | 別環境では候補提示＋管理者による対応付け確認 |
-| Q9 | 使用中の選択肢は削除禁止、無効化のみ |
-| Q10 | 競合時は必ず確認画面。安全な統合案を提示できても自動保存しない |
-| Q11 | CSV欠落項目：使用中は無効化、未使用は削除／無効化を選択可能 |
-| Q12 | 保存履歴＋過去状態への復元機能 |
-| Q13 | 保存期間／世代数の設定（既定無期限）＋履歴手動削除 |
-| Q14 | 対象全体の状態復元のみ。特定変更だけの取り消しは対象外 |
-| Q15 | 一覧独自検索なし。全件表示＋ブラウザ内検索。移動先の検索は維持 |
-| Q16 | 選択肢名は通常テキスト、編集時だけ入力欄 |
+| Q1 | Replace the existing administration screens |
+| Q2 | Allow forced overwrite on conflict (requires a warning and an explicit action) |
+| Q3 | Support CSV up to and including full synchronization |
+| Q4 | Support import between different Redmine environments |
+| Q5 | Support bulk deletion of values |
+| Q6 | Set 10,000 or more values per list as the performance target |
+| Q7 | Support all officially maintained stable Redmine series |
+| Q8 | Between environments, present candidates and require the administrator to confirm mappings |
+| Q9 | Values in use cannot be deleted, only deactivated |
+| Q10 | Always show a confirmation screen on conflict. Never save automatically, even when a safe merge proposal is available |
+| Q11 | Values missing from the CSV: only deactivation if in use; a choice between deletion and deactivation if unused |
+| Q12 | Keep a history of saves and allow restoring past states |
+| Q13 | Configurable retention period and number of generations (unlimited by default), plus manual history deletion |
+| Q14 | Only restore the state of the entire target. Undoing specific changes is out of scope |
+| Q15 | No list-specific search: show all items and rely on browser find. Destination search is retained |
+| Q16 | Value names are plain text, with an input field only while editing |
 
-## 14. 技術参考資料
+## 14. Technical references
 
-- [Redmine公式ダウンロード・バージョンサポート方針](https://www.redmine.org/projects/redmine/wiki/download)
-- [Redmine公式 Plugin Internals](https://www.redmine.org/projects/redmine/wiki/Plugin_Internals)
-- [Redmine公式 Plugin FAQ](https://www.redmine.org/projects/redmine/wiki/Plugin_FAQ)
-- [Redmine 7.0.2 / 6.1.5 リリース案内](https://www.redmine.org/news)
+- [Redmine download page and version support policy](https://www.redmine.org/projects/redmine/wiki/download)
+- [Redmine Plugin Internals](https://www.redmine.org/projects/redmine/wiki/Plugin_Internals)
+- [Redmine Plugin FAQ](https://www.redmine.org/projects/redmine/wiki/Plugin_FAQ)
+- [Redmine 7.0.2 / 6.1.5 release announcements](https://www.redmine.org/news)
 
-これらの外部資料は技術的根拠であり、本書の確定した製品要求より優先されるものではない。利用するRedmineのソースを系列ごとに確認して実装する。
+These external resources provide technical background and do not take precedence over the finalized product requirements in this document. The implementation is checked against the Redmine source code of each supported series.

@@ -4,7 +4,7 @@
 
 Redmine Custom Field Manager は、カスタムフィールドの並び順と、項目数の多いキー・バリューリスト（Key/value list）を安全に管理するためのRedmineプラグインです。Redmine標準の管理画面はそのままに、保存前にまとめて確認できる一括編集、CSVでの入出力、同時編集の競合対応、復元できる変更履歴といった機能を追加します。
 
-現在のバージョン `0.1.0` は開発版です。プロジェクトの概要と操作ガイドは英語版の [`README.md`](README.md) を正本とし、製品の動作仕様は [`docs/specification.md`](docs/specification.md) に従います。
+現在のバージョン `0.1.0` は開発版です。プロジェクトの概要と操作ガイドは英語版の [`README.md`](README.md) を正本とし、製品の動作仕様は英語版の [`docs/specification.md`](docs/specification.md) に従います（日本語訳：[`docs/specification.ja.md`](docs/specification.ja.md)）。
 
 ## 導入すると変わること
 
@@ -156,7 +156,7 @@ Redmine Custom Field Manager は、カスタムフィールドの並び順と、
 bundle exec rake redmine:plugins:test NAME=redmine_custom_field_manager RAILS_ENV=test
 ```
 
-GitHub Actionsでは、MySQL、MariaDB、PostgreSQLの実際の行ロックを使った同時実行テストと、Redmine 7.0.2上でのPlaywrightによるブラウザテストもあわせて実行しています。実装の詳細は [`docs/implementation.md`](docs/implementation.md)、10,000件での性能測定結果は [`docs/performance.md`](docs/performance.md) を参照してください。
+GitHub Actionsでは、MySQL、MariaDB、PostgreSQLの実際の行ロックを使った同時実行テストと、Redmine 7.0.2上でのPlaywrightによるブラウザテストもあわせて実行しています。実装の詳細は [`docs/implementation.md`](docs/implementation.md)、10,000件での性能測定結果は [`docs/performance.md`](docs/performance.md)（日本語訳：[`docs/performance.ja.md`](docs/performance.ja.md)）を参照してください。
 
 ## ライセンス
 
