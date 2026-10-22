@@ -4,7 +4,7 @@
 
 Redmine Custom Field Manager は、カスタムフィールドの並び順と、項目数の多いキー・バリューリスト（Key/value list）を安全に管理するためのRedmineプラグインです。Redmine標準の管理画面はそのままに、保存前にまとめて確認できる一括編集、CSVでの入出力、同時編集の競合対応、復元できる変更履歴といった機能を追加します。
 
-現在のバージョン `0.1.0` は開発版です。プロジェクトの概要と操作ガイドは英語版の [`README.md`](README.md) を正本とし、製品の動作仕様は英語版の [`docs/specification.md`](docs/specification.md) に従います（日本語訳：[`docs/specification.ja.md`](docs/specification.ja.md)）。
+バージョン `1.0.0` は最初の安定版です。プロジェクトの概要と操作ガイドは英語版の [`README.md`](README.md) を正本とし、製品の動作仕様は英語版の [`docs/specification.md`](docs/specification.md) に従います（日本語訳：[`docs/specification.ja.md`](docs/specification.ja.md)）。
 
 ## 導入すると変わること
 
@@ -160,4 +160,6 @@ GitHub Actionsでは、MySQL、MariaDB、PostgreSQLの実際の行ロックを�
 
 ## ライセンス
 
-ライセンスは最初の安定版リリースまでに決定します。現時点では、このリポジトリが公開されていても、内容の利用・改変・再配布を許諾するものではありません。
+Copyright (C) 2026 Narusawa
+
+このプロジェクトは、GNU General Public Licenseバージョン2またはそれ以降（`GPL-2.0-or-later`）の下で提供する。ライセンス全文は [`LICENSE`](LICENSE) を参照すること。

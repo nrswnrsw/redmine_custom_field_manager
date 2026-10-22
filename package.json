@@ -1,6 +1,7 @@
 {
   "name": "redmine-custom-field-manager-tests",
   "private": true,
+  "license": "GPL-2.0-or-later",
   "scripts": {
     "test:browser": "playwright test"
   },

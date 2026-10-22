@@ -4,7 +4,7 @@
 
 Redmine Custom Field Manager is a Redmine plugin for safely managing custom-field order and large Key/value lists. It keeps Redmine's familiar administration screens and adds staged bulk editing, CSV import and export, conflict handling, and restorable history.
 
-Version `0.1.0` is currently a development release. This English README is the canonical project overview and operating guide; [`docs/specification.md`](docs/specification.md) remains the source of truth for product behavior.
+Version `1.0.0` is the first stable release. This English README is the canonical project overview and operating guide; [`docs/specification.md`](docs/specification.md) remains the source of truth for product behavior.
 
 ## What changes after installation
 
@@ -160,4 +160,6 @@ The GitHub Actions matrix also runs row-lock concurrency tests against real MySQ
 
 ## License
 
-The license will be finalized before the first stable release. Until then, the public availability of this repository does not grant permission to use, modify, or redistribute its contents.
+Copyright (C) 2026 Narusawa
+
+This project is licensed under the GNU General Public License version 2 or any later version (`GPL-2.0-or-later`). See [`LICENSE`](LICENSE) for the full license text.
