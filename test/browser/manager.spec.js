@@ -196,11 +196,11 @@ test.describe.serial('custom field manager browser behavior', function() {
     await firstActive.uncheck();
     await expect(page.locator('.rcfm-save')).toBeEnabled();
     await page.locator('.rcfm-undo').click();
-    await expect(page.locator('.rcfm-undo')).toBeFocused();
+    await expect(page.locator('.rcfm-redo')).toBeFocused();
     await expect(page.locator('.rcfm-history-feedback')).toHaveText('Undid deactivating 1 item(s).');
     await expect(rows.nth(0).locator('.rcfm-active')).toBeChecked();
     await page.locator('.rcfm-redo').click();
-    await expect(page.locator('.rcfm-redo')).toBeFocused();
+    await expect(page.locator('.rcfm-undo')).toBeFocused();
     await expect(page.locator('.rcfm-history-feedback')).toHaveText('Redid deactivating 1 item(s).');
     await expect(rows.nth(0).locator('.rcfm-active')).not.toBeChecked();
     await confirmReset(page);
@@ -538,12 +538,12 @@ test.describe.serial('custom field manager browser behavior', function() {
     await unsavedNotice.locator('.rcfm-review-changes').click();
     await expect(manager.locator('.rcfm-save')).toBeFocused();
     await manager.locator('.rcfm-undo').click();
-    await expect(manager.locator('.rcfm-undo')).toBeFocused();
+    await expect(manager.locator('.rcfm-redo')).toBeFocused();
     await expect(manager.locator('.rcfm-history-feedback')).toHaveText('Undid moving 1 item(s).');
     await expect(unsavedNotice).toBeHidden();
     await expect(manager.locator('.rcfm-save')).toBeDisabled();
     await manager.locator('.rcfm-redo').click();
-    await expect(manager.locator('.rcfm-redo')).toBeFocused();
+    await expect(manager.locator('.rcfm-undo')).toBeFocused();
     await expect(manager.locator('.rcfm-history-feedback')).toHaveText('Redid moving 1 item(s).');
     await expect(unsavedNotice).toBeVisible();
     await expect(manager.locator('.rcfm-save')).toBeEnabled();

@@ -188,7 +188,7 @@
       manager.conflict = null;
       manager.clearError();
       manager.restore(manager.undoStack.pop());
-      manager.form.find('.rcfm-undo').trigger('focus');
+      manager.form.find(manager.undoStack.length ? '.rcfm-undo' : '.rcfm-redo').trigger('focus');
       manager.showHistoryFeedback(manager.form.data('rcfm-undo-feedback'), action);
     });
 
@@ -202,7 +202,7 @@
       manager.conflict = null;
       manager.clearError();
       manager.restore(manager.redoStack.pop());
-      manager.form.find('.rcfm-redo').trigger('focus');
+      manager.form.find(manager.redoStack.length ? '.rcfm-redo' : '.rcfm-undo').trigger('focus');
       manager.showHistoryFeedback(manager.form.data('rcfm-redo-feedback'), action);
     });
 
