@@ -62,7 +62,7 @@ class Rcfm::HistoriesControllerTest < Redmine::ControllerTest
   end
 
   def test_show_collapses_a_large_change_list_with_its_count
-    changes = 21.times.map do |index|
+    changes = Array.new(21) do |index|
       {
         'id' => index + 1,
         'action' => 'update',
