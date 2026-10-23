@@ -9,7 +9,8 @@ module RedmineCustomFieldManager
       History.transaction do
         revision = Revision.lock_for!("history:#{scope_key}")
         generation = revision.sequence + 1
-        has_snapshot = generation == 1 || (generation % SNAPSHOT_INTERVAL).zero?
+        history_exists = History.where(:scope_key => scope_key).exists?
+        has_snapshot = !history_exists || generation == 1 || (generation % SNAPSHOT_INTERVAL).zero?
         changes = metadata.stringify_keys.merge('diff' => diff(before_snapshot, after_snapshot))
         history = History.create!(
           :scope_key => scope_key,

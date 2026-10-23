@@ -30,6 +30,27 @@ class RedmineCustomFieldManagerHistoryRestorerTest < ActiveSupport::TestCase
     assert_equal 'restore', RedmineCustomFieldManager::History.last.operation
   end
 
+  def test_restores_history_created_after_deleting_the_entire_scope
+    update_enumerations('State A', true)
+    scope_key = RedmineCustomFieldManager::History.last.scope_key
+    history_ids = RedmineCustomFieldManager::History.where(:scope_key => scope_key).pluck(:id)
+    RedmineCustomFieldManager::HistoryMaintenance.delete_ids!(history_ids)
+    update_enumerations('State B', false)
+    selected_history = RedmineCustomFieldManager::History.last
+    update_enumerations('State C', true)
+    restorer = RedmineCustomFieldManager::HistoryRestorer.new(
+      :history => selected_history,
+      :user => User.find(1)
+    )
+    preview = restorer.preview
+
+    restorer.apply!(:base_digest => preview.base_digest, :plan_digest => preview.plan_digest)
+
+    assert selected_history.has_snapshot?
+    assert_equal 'State B', @first.reload.name
+    assert_not @second.reload.active?
+  end
+
   def test_restore_is_blocked_when_it_would_delete_a_used_value
     update_enumerations('Historical', true)
     selected_history = RedmineCustomFieldManager::History.last

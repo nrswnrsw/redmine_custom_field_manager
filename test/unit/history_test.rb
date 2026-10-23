@@ -32,6 +32,23 @@ class RedmineCustomFieldManagerHistoryTest < ActiveSupport::TestCase
     assert_equal 21, histories.sum {|history| history.parsed_changes.fetch('diff').length}
   end
 
+  def test_history_after_deleting_entire_scope_starts_a_new_snapshot_chain
+    before = [{'id' => 1, 'name' => 'Value 0', 'active' => true, 'position' => 1}]
+    first_after = [before.first.merge('name' => 'Value 1')]
+    first = record(before, first_after)
+    RedmineCustomFieldManager::HistoryMaintenance.delete_ids!([first.id])
+
+    second_after = [first_after.first.merge('name' => 'Value 2')]
+    second = record(first_after, second_after)
+
+    revision = RedmineCustomFieldManager::Revision.find_by!(
+      :scope_key => 'history:custom_field_enumerations:99'
+    )
+    assert_equal 2, revision.sequence
+    assert second.has_snapshot?
+    assert_equal second_after, second.reconstructed_snapshot
+  end
+
   def test_manual_deletion_materializes_remaining_histories
     before = [{'id' => 1, 'name' => 'Value 0', 'active' => true, 'position' => 1}]
     3.times do |index|
@@ -81,6 +98,30 @@ class RedmineCustomFieldManagerHistoryTest < ActiveSupport::TestCase
     assert_equal 2, histories.length
     assert_equal [true, false], histories.map(&:has_snapshot?)
     assert_equal ['Value 2', 'Value 3'], histories.map {|history| history.reconstructed_snapshot.first.fetch('name')}
+  end
+
+  def test_retention_after_deleting_entire_scope_keeps_remaining_histories_reconstructable
+    before = [{'id' => 1, 'name' => 'Value 0', 'active' => true, 'position' => 1}]
+    first_after = [before.first.merge('name' => 'Value 1')]
+    first = record(before, first_after)
+    RedmineCustomFieldManager::HistoryMaintenance.delete_ids!([first.id])
+    Setting.plugin_redmine_custom_field_manager = {
+      'retention_days' => '',
+      'max_generations' => '2'
+    }
+
+    before = first_after
+    3.times do |index|
+      after = [before.first.merge('name' => "Value #{index + 2}")]
+      record(before, after)
+      before = after
+    end
+
+    histories = RedmineCustomFieldManager::History.order(:id).to_a
+    assert_equal 2, histories.length
+    assert_equal [true, false], histories.map(&:has_snapshot?)
+    assert_equal ['Value 3', 'Value 4'],
+                 histories.map {|history| history.reconstructed_snapshot.first.fetch('name')}
   end
 
   def test_retention_does_not_reset_the_periodic_snapshot_sequence
