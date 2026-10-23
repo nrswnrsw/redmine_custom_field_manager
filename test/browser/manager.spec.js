@@ -368,17 +368,27 @@ test.describe.serial('custom field manager browser behavior', function() {
     await page.locator('.rcfm-add-one').click();
     await expect(page.locator('#rcfm-add-one-error')).toContainText('Value names cannot be blank.');
     await expect(singleAddInput).toHaveAttribute('aria-invalid', 'true');
+    await expect(singleAddInput).not.toHaveAttribute('maxlength');
     await expect(page.locator('.rcfm-error')).toBeHidden();
     const singleAddBox = await singleAddInput.boundingBox();
     const singleAddErrorBox = await page.locator('#rcfm-add-one-error').boundingBox();
     expect(singleAddErrorBox.y).toBeGreaterThanOrEqual(singleAddBox.y + singleAddBox.height);
-    await singleAddInput.fill('Corrected single value');
+    await singleAddInput.fill('😀'.repeat(60));
     await expect(page.locator('#rcfm-add-one-error')).toBeHidden();
     await expect(singleAddInput).not.toHaveAttribute('aria-invalid', 'true');
+    await page.locator('.rcfm-add-one').click();
+    await expect(rows.last().locator('.rcfm-enumeration-name')).toHaveText('😀'.repeat(60));
+    await page.locator('.rcfm-undo').click();
+    await singleAddInput.fill('😀'.repeat(61));
+    await page.locator('.rcfm-add-one').click();
+    await expect(page.locator('#rcfm-add-one-error')).toContainText('Value names cannot exceed 60 characters.');
+    await singleAddInput.fill('Corrected single value');
+    await expect(page.locator('#rcfm-add-one-error')).toBeHidden();
 
     const originalName = await rows.nth(0).locator('.rcfm-enumeration-name').textContent();
     await rows.nth(0).locator('.rcfm-edit').click();
     const inlineNameInput = rows.nth(0).locator('.rcfm-name-input');
+    await expect(inlineNameInput).not.toHaveAttribute('maxlength');
     await inlineNameInput.fill('');
     await rows.nth(0).locator('.rcfm-apply-edit').click();
     await expect(rows.nth(0).locator('.rcfm-field-error')).toContainText('Value names cannot be blank.');

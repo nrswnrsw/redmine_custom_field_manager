@@ -62,6 +62,7 @@
         :rcfm_save_error => l(:rcfm_save_error),
         :rcfm_name_blank => l(:rcfm_error_name_blank),
         :rcfm_name_too_long => l(:rcfm_error_name_too_long),
+        :rcfm_name_max_length => RedmineCustomFieldManager::EnumerationUpdater::MAX_NAME_LENGTH,
         :rcfm_delete_protected => l(:rcfm_error_delete_protected),
         :rcfm_server_state => l(:rcfm_server_state_summary, :count => '__COUNT__'),
         :rcfm_confirm_discard => l(:rcfm_confirm_discard),
@@ -193,7 +194,6 @@
         <input id="rcfm-add-one-input"
                type="text"
                class="rcfm-add-one-input"
-               maxlength="60"
                aria-describedby="rcfm-add-one-error"
                placeholder="<%= l(:rcfm_add_one_placeholder) %>">
         <%= button_tag sprite_icon('add', l(:button_add)),

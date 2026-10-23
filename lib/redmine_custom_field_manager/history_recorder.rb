@@ -7,9 +7,9 @@ module RedmineCustomFieldManager
     def self.record!(scope_key:, target_type:, target_id:, operation:, user:, base_digest:,
                      result_digest:, before_snapshot:, after_snapshot:, metadata: {})
       History.transaction do
-        Revision.lock_for!("history:#{scope_key}")
-        previous_count = History.where(:scope_key => scope_key).count
-        has_snapshot = previous_count.zero? || ((previous_count + 1) % SNAPSHOT_INTERVAL).zero?
+        revision = Revision.lock_for!("history:#{scope_key}")
+        generation = revision.sequence + 1
+        has_snapshot = generation == 1 || (generation % SNAPSHOT_INTERVAL).zero?
         changes = metadata.stringify_keys.merge('diff' => diff(before_snapshot, after_snapshot))
         history = History.create!(
           :scope_key => scope_key,
@@ -23,6 +23,7 @@ module RedmineCustomFieldManager
           :snapshot_json => has_snapshot ? JSON.generate(after_snapshot) : 'null',
           :has_snapshot => has_snapshot
         )
+        revision.bump!
         HistoryMaintenance.prune_scope!(scope_key)
         history
       end

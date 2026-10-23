@@ -218,6 +218,23 @@ class RedmineCustomFieldManagerCsvImportTest < ActiveSupport::TestCase
     end
   end
 
+  def test_parser_reports_the_original_row_when_metadata_is_not_first
+    data = CSV.generate do |csv|
+      csv << RedmineCustomFieldManager::CsvExporter::HEADERS
+      csv << [
+        'enumeration', '1', 'instance', 1, @field.type, @field.name, '0',
+        1, '', '0', '1', 1
+      ]
+      csv << ['metadata', '1', 'instance', 1, @field.type, @field.name, '0', nil, nil, '0', nil, nil]
+    end
+
+    error = assert_raises RedmineCustomFieldManager::InvalidChangeError do
+      RedmineCustomFieldManager::CsvParser.new(data).parse
+    end
+
+    assert_equal 'CSV row 2 has a blank name', error.message
+  end
+
   private
 
   def csv_data(source_instance_id:, source_field_id:, rows:)

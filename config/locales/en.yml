@@ -173,6 +173,7 @@ en:
   rcfm_restore_blocker_custom_field_ids: The current custom-field set differs from this history and cannot be restored safely.
   rcfm_restore_blocker_missing_enumeration: "Value #%{id} from this history no longer exists and cannot be recreated safely."
   rcfm_restore_blocker_used_enumeration: "Current value #%{id} is in use and cannot be deleted."
-  rcfm_retention_blank_unlimited: Leave blank for unlimited retention.
+  rcfm_retention_blank_unlimited: Leave blank for unlimited retention. Changes apply to each target when its next history entry is recorded.
+  rcfm_retention_invalid: Retention days and maximum generations must be blank or positive integers.
   rcfm_retention_days: Retention days
   rcfm_select_history: "Select history #%{id}"

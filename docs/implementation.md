@@ -30,9 +30,9 @@ Custom-field order, conflict locks, and digests are handled per custom field typ
 
 ## History
 
-Each history entry stores the target scope, operation, operator, before and after digests, and a reversible diff. A snapshot of the entire target is stored for the first entry and every 20th entry. The history list does not select the large JSON columns; they are loaded only for the detail view and restores.
+Each history entry stores the target scope, operation, operator, before and after digests, and a reversible diff. A monotonic per-scope revision sequence stores a snapshot of the entire target for the first entry and every 20th entry, so retention and manual deletion do not reset the interval. The history list does not select the large JSON columns; they are loaded only for the detail view and restores.
 
-When selected history entries, or entries older than a specified date and time, are deleted, only the first remaining entry immediately after each deleted range is converted to a self-contained snapshot, within the same transaction. Automatic pruning by retention period or maximum number of generations uses the same process. Because only the boundaries of the diff chain are converted, the remaining history stays restorable without expanding every remaining entry.
+When selected history entries, or entries older than a specified date and time, are deleted, only the first remaining entry immediately after each deleted range is converted to a self-contained snapshot, within the same transaction. Automatic pruning by retention period or maximum number of generations uses the same process after the next history entry for that target is recorded. Because only the boundaries of the diff chain are converted, the remaining history stays restorable without expanding every remaining entry.
 
 The diff JSON and snapshot JSON columns can store histories for 10,000-item lists, which exceed 64 KiB, without loss. On MySQL and MariaDB, the migration expands them to `LONGTEXT`; PostgreSQL and SQLite already use a large `TEXT` type. This column-expansion migration is irreversible, because shrinking the columns could truncate stored data.
 

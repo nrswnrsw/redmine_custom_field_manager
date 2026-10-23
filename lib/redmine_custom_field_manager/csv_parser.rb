@@ -23,7 +23,6 @@ module RedmineCustomFieldManager
       table = CSV.parse(remove_bom(data), :headers => true, :encoding => 'UTF-8')
       validate_headers!(table.headers)
       metadata_rows = table.select {|row| row['record_type'] == 'metadata'}
-      enumeration_rows = table.select {|row| row['record_type'] == 'enumeration'}
       if metadata_rows.length != 1
         raise InvalidChangeError, 'CSV must contain exactly one metadata row'
       end
@@ -34,8 +33,10 @@ module RedmineCustomFieldManager
       end
 
       metadata = parse_metadata(metadata_rows.first)
-      rows = enumeration_rows.each_with_index.map do |row, index|
-        parse_enumeration(row, index + 3, metadata)
+      rows = table.each_with_index.filter_map do |row, index|
+        next unless row['record_type'] == 'enumeration'
+
+        parse_enumeration(row, index + 2, metadata)
       end
       validate_rows!(rows)
 
@@ -80,8 +81,9 @@ module RedmineCustomFieldManager
 
       name = decode_cell(row['name'], row['name_escaped'])
       raise InvalidChangeError, "CSV row #{row_number} has a blank name" if name.blank?
-      if name.length > 60
-        raise InvalidChangeError, "CSV row #{row_number} name exceeds 60 characters"
+      if name.length > EnumerationUpdater::MAX_NAME_LENGTH
+        raise InvalidChangeError,
+              "CSV row #{row_number} name exceeds #{EnumerationUpdater::MAX_NAME_LENGTH} characters"
       end
 
       Row.new(

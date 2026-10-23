@@ -18,3 +18,5 @@ Redmine::Plugin.register :redmine_custom_field_manager do
 end
 
 RedmineCustomFieldManager::ModelTracking.install!
+SettingsController.include(RedmineCustomFieldManager::SettingsControllerPatch) unless
+  SettingsController < RedmineCustomFieldManager::SettingsControllerPatch

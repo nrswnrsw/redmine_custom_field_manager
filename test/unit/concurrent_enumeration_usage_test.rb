@@ -30,7 +30,8 @@ class RedmineCustomFieldManagerConcurrentEnumerationUsageTest < ActiveSupport::T
     skip_unless_row_locks!
     usage_ready = Queue.new
     release_usage = Queue.new
-    deletion_started = Queue.new
+    start_deletion = Queue.new
+    lock_attempted = Queue.new
     base_digest = RedmineCustomFieldManager::Snapshot.enumerations_digest(@field)
 
     usage_thread = Thread.new do
@@ -50,7 +51,7 @@ class RedmineCustomFieldManagerConcurrentEnumerationUsageTest < ActiveSupport::T
 
     deletion_thread = Thread.new do
       ActiveRecord::Base.connection_pool.with_connection do
-        deletion_started << true
+        wait_for(start_deletion)
         begin
           enumeration_updater(base_digest).call
           nil
@@ -59,11 +60,15 @@ class RedmineCustomFieldManagerConcurrentEnumerationUsageTest < ActiveSupport::T
         end
       end
     end
-    wait_for(deletion_started)
-    release_usage << true
-
-    thread_value!(usage_thread)
-    error = thread_value!(deletion_thread)
+    error = nil
+    with_revision_lock_probe(deletion_thread, lock_attempted) do
+      start_deletion << true
+      wait_for(lock_attempted)
+      assert_nil deletion_thread.join(0.2), 'deletion did not wait for the usage transaction lock'
+      release_usage << true
+      thread_value!(usage_thread)
+      error = thread_value!(deletion_thread)
+    end
     assert_kind_of RedmineCustomFieldManager::ProtectedDeletionError, error
     assert CustomFieldEnumeration.exists?(@value.id)
     assert CustomValue.where(:custom_field_id => @field.id, :value => @value.id.to_s).exists?
@@ -77,7 +82,8 @@ class RedmineCustomFieldManagerConcurrentEnumerationUsageTest < ActiveSupport::T
     skip_unless_row_locks!
     deletion_ready = Queue.new
     release_deletion = Queue.new
-    usage_started = Queue.new
+    start_usage = Queue.new
+    lock_attempted = Queue.new
 
     deletion_thread = Thread.new do
       ActiveRecord::Base.connection_pool.with_connection do
@@ -93,7 +99,7 @@ class RedmineCustomFieldManagerConcurrentEnumerationUsageTest < ActiveSupport::T
 
     usage_thread = Thread.new do
       ActiveRecord::Base.connection_pool.with_connection do
-        usage_started << true
+        wait_for(start_usage)
         begin
           CustomValue.create!(
             :customized => Group.find(@group.id),
@@ -106,11 +112,15 @@ class RedmineCustomFieldManagerConcurrentEnumerationUsageTest < ActiveSupport::T
         end
       end
     end
-    wait_for(usage_started)
-    release_deletion << true
-
-    thread_value!(deletion_thread)
-    error = thread_value!(usage_thread)
+    error = nil
+    with_revision_lock_probe(usage_thread, lock_attempted) do
+      start_usage << true
+      wait_for(lock_attempted)
+      assert_nil usage_thread.join(0.2), 'usage did not wait for the deletion transaction lock'
+      release_deletion << true
+      thread_value!(deletion_thread)
+      error = thread_value!(usage_thread)
+    end
     assert_kind_of ActiveRecord::RecordInvalid, error
     assert_not CustomFieldEnumeration.exists?(@value.id)
     assert_not CustomValue.where(:custom_field_id => @field.id, :value => @value.id.to_s).exists?
@@ -153,5 +163,18 @@ class RedmineCustomFieldManagerConcurrentEnumerationUsageTest < ActiveSupport::T
     raise 'concurrent test thread timed out' unless thread.join(10)
 
     thread.value
+  end
+
+  def with_revision_lock_probe(thread, attempted)
+    singleton = RedmineCustomFieldManager::Revision.singleton_class
+    original = RedmineCustomFieldManager::Revision.method(:lock_for!)
+    expected_scope = scope_key
+    singleton.send(:define_method, :lock_for!) do |requested_scope|
+      attempted << true if Thread.current.equal?(thread) && requested_scope == expected_scope
+      original.call(requested_scope)
+    end
+    yield
+  ensure
+    singleton.send(:define_method, :lock_for!, original) if singleton && original
   end
 end

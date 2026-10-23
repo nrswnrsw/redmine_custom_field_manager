@@ -2,6 +2,8 @@
 
 module RedmineCustomFieldManager
   class EnumerationUpdater
+    MAX_NAME_LENGTH = 60
+
     Result = Struct.new(:changed_ids, :created_ids, :digest, :snapshot, keyword_init: true)
 
     def initialize(custom_field:, items:, base_digest:, user:, force: false, confirmed_digest: nil,
@@ -127,8 +129,8 @@ module RedmineCustomFieldManager
         if item['name'].blank?
           raise InvalidChangeError, 'enumeration names cannot be blank'
         end
-        if item['name'].length > 60
-          raise InvalidChangeError, 'enumeration names cannot exceed 60 characters'
+        if item['name'].length > MAX_NAME_LENGTH
+          raise InvalidChangeError, "enumeration names cannot exceed #{MAX_NAME_LENGTH} characters"
         end
       end
     end

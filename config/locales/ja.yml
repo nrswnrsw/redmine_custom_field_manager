@@ -173,6 +173,7 @@ ja:
   rcfm_restore_blocker_custom_field_ids: 現在のカスタムフィールド構成がこの履歴と異なるため、安全に復元できません。
   rcfm_restore_blocker_missing_enumeration: "履歴にある項目 #%{id} は現在存在しないため、安全に再作成できません。"
   rcfm_restore_blocker_used_enumeration: "現在の項目 #%{id} は使用中のため削除できません。"
-  rcfm_retention_blank_unlimited: 空欄の場合は無期限で保存します。
+  rcfm_retention_blank_unlimited: 空欄の場合は無期限で保存します。変更は、対象の次の履歴が記録されるときに適用されます。
+  rcfm_retention_invalid: 保存期間と最大世代数は、空欄または正の整数で入力してください。
   rcfm_retention_days: 保存期間（日）
   rcfm_select_history: "履歴#%{id}を選択"

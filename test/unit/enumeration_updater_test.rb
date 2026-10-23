@@ -106,6 +106,19 @@ class RedmineCustomFieldManagerEnumerationUpdaterTest < ActiveSupport::TestCase
     assert_equal '  Existing value  ', @first.reload.name
   end
 
+  def test_name_limit_counts_unicode_characters_consistently
+    accepted_name = "😀" * 60
+    updater([item_for(@first, :name => accepted_name), item_for(@second)]).call
+
+    assert_equal accepted_name, @first.reload.name
+
+    @base_digest = digest
+    assert_raises RedmineCustomFieldManager::InvalidChangeError do
+      updater([item_for(@first, :name => "😀" * 61), item_for(@second)]).call
+    end
+    assert_equal accepted_name, @first.reload.name
+  end
+
   def test_database_failure_rolls_back_values_and_history_together
     original = @field.enumerations.reorder(:position, :id).pluck(:id, :name, :position)
     items = [item_for(@second, :name => 'Must roll back'), item_for(@first)]

@@ -122,6 +122,17 @@ jobs:
           done
           npm --prefix plugins/redmine_custom_field_manager run test:browser
 
+      - name: Upload browser failure artifacts
+        if: failure() && matrix.redmine == '7.0.2'
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-failure-redmine-${{ matrix.redmine }}-ruby-${{ matrix.ruby }}
+          if-no-files-found: warn
+          retention-days: 7
+          path: |
+            redmine/plugins/redmine_custom_field_manager/test-results
+            /tmp/rcfm-rails.log
+
   databases:
     name: Redmine ${{ matrix.redmine }} / Ruby ${{ matrix.ruby }} / ${{ matrix.database_label }}
     runs-on: ubuntu-24.04

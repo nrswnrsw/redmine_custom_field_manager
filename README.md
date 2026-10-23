@@ -145,7 +145,7 @@ CI currently tests Redmine 7.0.2, 6.1.5, and 6.0.11 on SQLite, MySQL 8.4, MariaD
 
 ### Manage history retention
 
-- **Limit retention automatically**: open **Administration → Plugins**, click **Configure** for Redmine Custom Field Manager, set **Retention days**, **Maximum generations per target**, or both, and click **Apply**. A blank field means no limit.
+- **Limit retention automatically**: open **Administration → Plugins**, click **Configure** for Redmine Custom Field Manager, set **Retention days**, **Maximum generations per target**, or both, and click **Apply**. A blank field means no limit; other values must be positive integers. The new limits are applied separately to each target when its next history entry is recorded, not immediately when the setting is saved.
 - **Delete history manually**: on the **Change history** page, select entries and click **Delete**, or use **Delete histories by date**.
 
 ## Development and testing

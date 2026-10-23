@@ -7,6 +7,9 @@ class RedmineCustomFieldManagerHistoryTest < ActiveSupport::TestCase
 
   def setup
     RedmineCustomFieldManager::History.delete_all
+    RedmineCustomFieldManager::Revision.where(
+      :scope_key => 'history:custom_field_enumerations:99'
+    ).delete_all
     Setting.plugin_redmine_custom_field_manager = {
       'retention_days' => '',
       'max_generations' => ''
@@ -78,6 +81,46 @@ class RedmineCustomFieldManagerHistoryTest < ActiveSupport::TestCase
     assert_equal 2, histories.length
     assert_equal [true, false], histories.map(&:has_snapshot?)
     assert_equal ['Value 2', 'Value 3'], histories.map {|history| history.reconstructed_snapshot.first.fetch('name')}
+  end
+
+  def test_retention_does_not_reset_the_periodic_snapshot_sequence
+    Setting.plugin_redmine_custom_field_manager = {
+      'retention_days' => '',
+      'max_generations' => '25'
+    }
+    before = [{'id' => 1, 'name' => 'Value 0', 'active' => true, 'position' => 1}]
+    45.times do |index|
+      after = [{'id' => 1, 'name' => "Value #{index + 1}", 'active' => true, 'position' => 1}]
+      record(before, after)
+      before = after
+    end
+
+    histories = RedmineCustomFieldManager::History.order(:id).to_a
+    periodic = histories.find {|history| history.reconstructed_snapshot.first.fetch('name') == 'Value 40'}
+
+    assert_equal 25, histories.length
+    assert periodic
+    assert periodic.has_snapshot?
+    assert_equal 'Value 45', histories.last.reconstructed_snapshot.first.fetch('name')
+  end
+
+  def test_invalid_retention_setting_is_not_treated_as_unlimited
+    Setting.plugin_redmine_custom_field_manager = {
+      'retention_days' => 'invalid',
+      'max_generations' => ''
+    }
+
+    assert_raises RedmineCustomFieldManager::InvalidChangeError do
+      RedmineCustomFieldManager::HistoryMaintenance.retention_settings
+    end
+  end
+
+  def test_malformed_retention_setting_is_not_treated_as_unlimited
+    Setting.plugin_redmine_custom_field_manager = 'invalid'
+
+    assert_raises RedmineCustomFieldManager::InvalidChangeError do
+      RedmineCustomFieldManager::HistoryMaintenance.retention_settings
+    end
   end
 
   def test_history_columns_accept_a_ten_thousand_item_snapshot_and_diff

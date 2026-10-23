@@ -114,6 +114,17 @@ class Rcfm::EnumerationsControllerTest < Redmine::ControllerTest
     assert_equal 'First', @first.reload.name
   end
 
+  def test_import_preview_returns_the_csv_error_reason
+    post :import_preview, :params => {
+      :custom_field_id => @field.id,
+      :csv_data => csv_data(''),
+      :mode => 'update'
+    }
+
+    assert_response :unprocessable_content
+    assert_includes response.parsed_body.fetch('message'), 'CSV row 3 has a blank name'
+  end
+
   def test_import_applies_the_exact_preview
     csv = csv_data('Renamed')
     post :import_preview, :params => {

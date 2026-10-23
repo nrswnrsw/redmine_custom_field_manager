@@ -187,6 +187,8 @@ The following options are provided:
 
 - The **retention period and the maximum number of generations** can be configured in the plugin settings.
 - The default is **unlimited retention**.
+- Retention setting changes are applied independently to each target when its next history entry is recorded. Saving the setting does not immediately delete existing history for inactive targets.
+- A retention value must be blank or a positive integer. Invalid values are rejected rather than treated as unlimited retention.
 - History entries can be deleted manually, either one at a time or by selecting several.
 - History older than a specified date and time can be deleted in bulk. Before deletion, the user confirms the affected entries and the impact.
 - Deleting history does not change the current settings.

@@ -39,6 +39,7 @@
       window.performance.mark('rcfm-enumerations-init-start');
     }
     this.form = $(form);
+    this.maxNameLength = Number(this.form.data('rcfm-name-max-length'));
     this.body = this.form.find('tbody');
     this.protectionIcon = this.form.find('.rcfm-protection-indicator .icon-svg').first().clone();
     this.items = JSON.parse(this.form.find('.rcfm-items').val());
@@ -487,11 +488,12 @@
   };
 
   EnumerationManager.prototype.validNames = function(names, input) {
+    var maxNameLength = this.maxNameLength;
     if (!names.length || names.some(function(name) { return !name; })) {
       this.showFieldError(input, this.form.data('rcfm-name-blank'));
       return false;
     }
-    if (names.some(function(name) { return Array.from(name).length > 60; })) {
+    if (names.some(function(name) { return Array.from(name).length > maxNameLength; })) {
       this.showFieldError(input, this.form.data('rcfm-name-too-long'));
       return false;
     }
@@ -795,7 +797,6 @@
       nameCell.append(
         $('<input type="text" class="rcfm-name-input">')
           .val(item.name)
-          .attr('maxlength', 60)
           .attr('aria-describedby', errorId)
       );
       nameError = $('<span class="rcfm-field-error">').attr({id: errorId, role: 'alert', hidden: true});

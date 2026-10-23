@@ -46,21 +46,31 @@ module RedmineCustomFieldManager
 
     def retention_settings
       values = Setting.plugin_redmine_custom_field_manager || {}
+      raise InvalidChangeError, 'retention settings must be an object' unless values.is_a?(Hash)
+
       {
-        :retention_days => positive_integer(values['retention_days']),
-        :max_generations => positive_integer(values['max_generations'])
+        :retention_days => positive_integer(values['retention_days'], 'retention_days'),
+        :max_generations => positive_integer(values['max_generations'], 'max_generations')
       }
-    rescue NoMethodError
-      {:retention_days => nil, :max_generations => nil}
     end
 
-    def positive_integer(value)
+    def valid_retention_settings?(values)
+      positive_integer(values['retention_days'], 'retention_days')
+      positive_integer(values['max_generations'], 'max_generations')
+      true
+    rescue InvalidChangeError
+      false
+    end
+
+    def positive_integer(value, name)
       return if value.blank?
 
       parsed = Integer(value.to_s, 10)
-      parsed if parsed.positive?
+      raise InvalidChangeError, "#{name} must be a positive integer" unless parsed.positive?
+
+      parsed
     rescue ArgumentError, TypeError
-      nil
+      raise InvalidChangeError, "#{name} must be a positive integer"
     end
 
     def delete_materialized!(targets)

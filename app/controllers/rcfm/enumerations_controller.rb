@@ -161,11 +161,15 @@ module Rcfm
       raise RedmineCustomFieldManager::InvalidChangeError, "#{key} must be an object"
     end
 
-    def render_import_error(_error)
+    def render_import_error(error)
+      message = l(:rcfm_error_invalid_import)
+      if error.is_a?(RedmineCustomFieldManager::InvalidChangeError)
+        message = "#{message} #{error.message}"
+      end
       render :json => {
         :ok => false,
         :error => 'invalid_import',
-        :message => l(:rcfm_error_invalid_import)
+        :message => message
       }, :status => :unprocessable_content
     end
   end
