@@ -16,6 +16,10 @@ class RedmineCustomFieldManagerHistoryTest < ActiveSupport::TestCase
     }
   end
 
+  def teardown
+    Setting.clear_cache
+  end
+
   def test_periodic_snapshots_and_diffs_reconstruct_every_generation
     before = [{'id' => 1, 'name' => 'Value 0', 'active' => true, 'position' => 1}]
     21.times do |index|
